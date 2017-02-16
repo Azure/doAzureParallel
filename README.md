@@ -46,7 +46,7 @@ For your Azure Batch Account, we need to get:
 
 This information can be found in the Azure Portal inside your Batch Account:
 
-![Azure Batch Acccount in the Portal](/doAzureParallel-azurebatch-instructions.PNG "Azure Batch Acccount in the Portal")
+![Azure Batch Acccount in the Portal](./vignettes/doAzureParallel-azurebatch-instructions.PNG "Azure Batch Acccount in the Portal")
 
 For your Azure Storage Account, we need to get:
 - Storage Account Name
@@ -54,7 +54,7 @@ For your Azure Storage Account, we need to get:
 
 This information can be found in the Azure Portal inside your Azure Storage Account:
 
-![Azure Storage Acccount in the Portal](/doAzureParallel-azurestorage-instructions.PNG "Azure Storage Acccount in the Portal")
+![Azure Storage Acccount in the Portal](./vignettes/doAzureParallel-azurestorage-instructions.PNG "Azure Storage Acccount in the Portal")
 
 Keep track of the above keys and account information as it will be used to connect your R session with Azure.
 
