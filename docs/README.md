@@ -5,7 +5,7 @@ This section will provide information about how Azure works, how best to take ad
 
    Using the *Data Science Virtual Machine (DSVM)* & *Azure Batch* 
 
-2. **Virtual Machine Sizes** [(link)](./10-choosing-vm-sizes.md)
+2. **Virtual Machine Sizes** [(link)](./10-vm-sizes.md)
 
    How do you choose the best VM type/size for your workload?
    
