@@ -1,12 +1,12 @@
 registerDoAzureParallel <- function(config){
-  setDoPar(fun = .doAzureBatch, data = list(config = config), info = .info)
+  setDoPar(fun = .doAzureParallel, data = list(config = config), info = .info)
 }
 
 .info <- function(data, item){
   switch(item,
          workers = workers(data),
-         name = "doAzureBatch",
-         version = packageDescription("doAzureBatch", fields = "Version"),
+         name = "doAzureParallel",
+         version = packageDescription("doAzureParallel", fields = "Version"),
          NULL)
 }
 
@@ -76,7 +76,7 @@ getparentenv <- function(pkgname) {
 }
 .getSimpleErrorCall <- function(e) deparse(e$call)
 
-.doAzureBatch <- function(obj, expr, envir, data){
+.doAzureParallel <- function(obj, expr, envir, data){
   stopifnot(inherits(obj, "foreach"))
 
   it <- iter(obj)
@@ -141,6 +141,10 @@ getparentenv <- function(pkgname) {
                  time)
 
   addJob(id, config = data$config, packages = obj$packages)
+
+  print("Job Summary: ")
+  job <- getJob(id)
+  print(sprintf("Id: %s", job$id))
 
   chunkSize <- 1
 
@@ -229,10 +233,6 @@ getparentenv <- function(pkgname) {
   # check for errors
   errorValue <- getErrorValue(it)
   errorIndex <- getErrorIndex(it)
-
-  print("Job Summary: ")
-  job <- getJob(id)
-  print(sprintf("Id: %s", job$id))
 
   print(sprintf("Start Time: %s", job$executionInfo$startTime))
   startTime <- as.POSIXct(job$executionInfo$startTime, format="%FT%T", tz = "GMT")
