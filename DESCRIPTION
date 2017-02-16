@@ -1,0 +1,13 @@
+Package: doAzureParallel
+Type: Package
+Title: doAzureParallel
+Version: 0.1.3
+Author: Brian Hoang
+Maintainer: Who to complain to <yourfault@somewhere.net>
+Description: More about what it does (maybe more than one line)
+License: What license is it under?
+LazyData: TRUE
+Depends:
+  foreach (>= 1.4.3),
+  iterators (>= 1.0.8),
+  rAzureBatch (>= 0.1.0)
