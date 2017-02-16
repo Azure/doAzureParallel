@@ -2,7 +2,7 @@
 
 The *doAzureParallel* package is a parallel backend for the widely popular *foreach* package. With *doAzureParallel*, each iteration of the *foreach* loop runs in parallel on an Azure Virtual Machine (VM), allowing users to scale up their R jobs to tens or hundreds of machines.
 
-*doAzureParallel* is built to support the *foreach* parallel computing package. The *foreach* package supports parallel execution - it can execute multiple processes across some parallel backend. With just a few lines of code, the *doAzureParallel* package helps create a cluster in Azure, register it as a parallel backend, and seamlessly connects to the *foreach* package.
+*doAzureParallel* is built to support the *foreach* parallel computing package. The *foreach* package supports parallel execution - it can execute multiple processes across some parallel backend. With just a few lines of code, the *doAzureParallel* package helps create a pool in Azure, register it as a parallel backend, and seamlessly connects to the *foreach* package.
 
 ## Dependencies
 
@@ -29,7 +29,7 @@ install_github(c("Azure/rAzureBatch", "Azure/doAzureParallel"))
 
 ## Azure Requirements
 
-To run your R code across a cluster in Azure, we'll need to get keys and account information.
+To run your R code across a pool in Azure, we'll need to get keys and account information.
 
 ### Setup Azure Account
 First, set up your Azure Account ([Get started for free!](https://azure.microsoft.com/en-us/free/))
@@ -88,7 +88,7 @@ Run your parallel *foreach* loop with the *%dopar%* keyword. The *foreach* funct
 ```R
 number_of_iterations <- 10
 results <- foreach(i = 1:number_of_iterations) %dopar% {
-  # This code is executed, in parallel, across your Azure cluster
+  # This code is executed, in parallel, across your Azure pool.
 }
 ```
 
@@ -98,13 +98,13 @@ When developing at scale, it is always recommended that you test and debug your 
 # run your code sequentially on your local machine
 results <- foreach(i = 1:number_of_iterations) %do% { ... }
 
-# use the doAzureParallel backend to run your code in parallel across your Azure cluster
+# use the doAzureParallel backend to run your code in parallel across your Azure pool 
 results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
 ```
 
 ### Pool Configuration JSON
 
-Use your pool configuration JSON file to define your cluster in Azure.
+Use your pool configuration JSON file to define your pool in Azure.
 
 ```javascript
 {
@@ -113,10 +113,10 @@ Use your pool configuration JSON file to define your cluster in Azure.
     "key": <Azure Batch Account Key>,
     "url": <Azure Batch Account URL>,
     "pool": {
-      "name": <your cluster name>, // example: "my_new_azure_cluster"
-      "vmsize": <your cluster VM size identifier>, // example: "Standard_A1_v2"
+      "name": <your pool name>, // example: "my_new_azure_pool"
+      "vmsize": <your pool VM size name>, // example: "Standard_A1_v2"
       "poolSize": {
-        "targetDedicated": <number of node you want in your cluster>, // example: 10
+        "targetDedicated": <number of node you want in your pool>, // example: 10
       }
     },
     "rPackages": {
@@ -145,11 +145,11 @@ doAzureParallel is built on top of Azure Batch, which starts with a few quota li
 
 By default, doAzureParallel users are limited to 20 cores in total. (Please refer to the [VM Size Table](./docs/10-vm-sizes.md#vm-size-table) to see how many cores are in the VM size you have selected.)
 
-Our default VM size selection is the **"Standard_A1_v2"** that has 1 core per VM. With this VM size, users are limited to a 20-node cluster.
+Our default VM size selection is the **"Standard_A1_v2"** that has 1 core per VM. With this VM size, users are limited to a 20-node pool.
 
-### Number of Foreach Loops
+### Number of *foreach* Loops
 
-By default, doAzureParallel users are limited to running 20 Foreach loops that run on Azure in succession. This is because each Foreach loops generates a *job*, of which users are by default limited to 20. To go beyond that, users need to delete their *jobs*.
+By default, doAzureParallel users are limited to running 20 *foreach* loops that run on Azure in succession. This is because each *foreach* loops generates a *job*, of which users are by default limited to 20. To go beyond that, users need to delete their *jobs*.
 
 ### Increasing Your Quota
 

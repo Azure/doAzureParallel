@@ -1,8 +1,8 @@
 # Parallelizing Cores
 
-Depending on the VM size you select, you may want your R code running on all the cores in each VM. To do this, we recommend nesting a Foreach loop using *doParallel* package inside the outer Foreach loop that uses doAzureParallel. 
+Depending on the VM size you select, you may want your R code running on all the cores in each VM. To do this, we recommend nesting a *foreach* loop using *doParallel* package inside the outer *foreach* loop that uses doAzureParallel. 
 
-The *doParallel* package can detect the number of cores on a computer and parallelizes each iteration of the foreach loop across those cores. Pairing this with the doAzureParallel package, we can schedule work to each core of each VM in the pool.
+The *doParallel* package can detect the number of cores on a computer and parallelizes each iteration of the *foreach* loop across those cores. Pairing this with the doAzureParallel package, we can schedule work to each core of each VM in the pool.
 
 ```R
 
@@ -19,7 +19,7 @@ results <- foreach(i = 1:number_of_outer_iterations, .packages='doParallel') %do
   # make your 'cluster' using the nodes on the VM
   cl <- makeCluster(cores)
   
-  # register the above cluster as the parallel backend within each VM
+  # register the above pool as the parallel backend within each VM
   registerDoParallel(cl)
   
   # execute your inner foreach loop that will use all the cores in the VM

@@ -15,7 +15,7 @@ results <- foreach(i = 1:number_of_iterations) %dopar% {
 
 ## Chunking Data
 
-A common scenario would be to chunk your data so that each chunk is mapped to an interation of the Foreach loop
+A common scenario would be to chunk your data so that each chunk is mapped to an interation of the *foreach* loop
 
 ```R
 chunks <- split(<data_set>, 10)

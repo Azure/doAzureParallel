@@ -2,7 +2,7 @@
 
 The doAzureParallel package allows you to install packages to your pool in two ways:
 - Installing on pool creation
-- Installing per-Foreach loop
+- Installing per-*foreach* loop
 
 ## Installing Packages on Pool Creation
 You can install packages by specifying the package(s) in your JSON pool configuration file. This will then install the specified packages at the time of pool creation.
@@ -21,7 +21,7 @@ You can install packages by specifying the package(s) in your JSON pool configur
 }
 ```
 
-## Installing Packages per-Foreach Loop
+## Installing Packages per-*foreach* Loop
 You can also install packages by using the **.packages** option in the *foreach* loop. Instead of installing packages during pool creation, packages (and it's dependencies) can be installed before each iteration in the loop is run on your Azure cluster.
 
 To install a single package:

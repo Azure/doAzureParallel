@@ -11,7 +11,7 @@ This section will provide information about how Azure works, how best to take ad
    
 3. **Package Management** [(link)](./20-package-management.md)
 
-   Best practices for managing your R packages across your Azure cluster
+   Best practices for managing your R packages across your Azure pool 
    
 4. **Distributing your Data** [(link)](./21-distributing-data.md)
 
@@ -19,7 +19,7 @@ This section will provide information about how Azure works, how best to take ad
    
 5. **Parallelizing on each VM Core** [(link)](./22-parallelizing-cores.md)
 
-   Best practices and limitations for parallelizing your R code to each core in each VM in your cluster
+   Best practices and limitations for parallelizing your R code to each core in each VM in your pool 
 
 6. **Persistent Storage** [(link)](./23-persistent-storage.md)
 
