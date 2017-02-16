@@ -65,7 +65,7 @@ Import the package
 library(doAzureParallel)
 ```
 
-Set up your parallel backend with Azure
+Set up your parallel backend with Azure. 
 ```R
 # 1. Generate a pool configuration file.  
 generatePoolConfig("my_pool_config.json")
@@ -77,7 +77,7 @@ generatePoolConfig("my_pool_config.json")
 pool <- registerPool("my_pool_config.json")
 
 # 4. Register the pool as your parallel backend
-registerDoAzureParallel
+registerDoAzureParallel(pool)
 
 # 5. Check that your parallel backend has been registered
 getDoParWorkers()
@@ -149,11 +149,15 @@ Our default VM size selection is the **"Standard_A1_v2"** that has 1 core per VM
 
 ### Number of *foreach* Loops
 
-By default, doAzureParallel users are limited to running 20 *foreach* loops that run on Azure in succession. This is because each *foreach* loops generates a *job*, of which users are by default limited to 20. To go beyond that, users need to delete their *jobs*.
+By default, doAzureParallel users are limited to running 20 *foreach* loops in Azure at a time. This is because each *foreach* loops generates a *job*, of which users are by default limited to 20. To go beyond that, users need to wait for their *jobs* to complete. 
 
 ### Increasing Your Quota
 
 To increase your default quota limitations, please visit [this page](https://docs.microsoft.com/en-us/azure/batch/batch-quota-limit#increase-a-quota) for instructions.
+
+## Next Steps
+
+For more information, please visit [our documentation](./docs/README.md).
 
 ## Contributing
 
