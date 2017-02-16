@@ -137,6 +137,24 @@ Use your pool configuration JSON file to define your cluster in Azure.
 }
 ```
 
+## Azure Pool Limitations
+
+doAzureParallel is built on top of Azure Batch, which starts with a few quota limitations.
+
+### Core Count Limitation
+
+By default, doAzureParallel users are limited to 20 cores in total. (Please refer to the [VM Size Table](./docs/10-vm-sizes.md#vm-size-table) to see how many cores are in the VM size you have selected.)
+
+Our default VM size selection is the **"Standard_A1_v2"** that has 1 core per VM. With this VM size, users are limited to a 20-node cluster.
+
+### Number of Foreach Loops
+
+By default, doAzureParallel users are limited to running 20 Foreach loops that run on Azure in succession. This is because each Foreach loops generates a *job*, of which users are by default limited to 20. To go beyond that, users need to delete their *jobs*.
+
+### Increasing Your Quota
+
+To increase your default quota limitations, please visit [this page](https://docs.microsoft.com/en-us/azure/batch/batch-quota-limit#increase-a-quota) for instructions.
+
 ## Contributing
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
