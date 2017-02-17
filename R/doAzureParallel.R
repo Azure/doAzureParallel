@@ -180,7 +180,13 @@ getparentenv <- function(pkgname) {
   remainingtasks <- ntasks %% chunkSize
 
   startIndices <- seq(1, length(argsList), chunkSize)
-  endIndices <- seq(chunkSize, length(argsList), chunkSize)
+
+  if(chunkSize > length(argsList)){
+    endIndices <- seq(length(argsList), length(argsList))
+  }
+  else{
+    endIndices <- seq(chunkSize, length(argsList), chunkSize)
+  }
 
   minLength <- min(length(startIndices), length(endIndices))
 
