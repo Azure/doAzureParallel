@@ -7,7 +7,7 @@ pool <- registerPool("my_pool_config.json")
 # register the pool as my parallel backend
 registerDoAzureParallel(pool)
 
-# run your foreach loop distributed a pool in Azure
+# run my foreach loop on a distributed pool in Azure
 number_of_iterations <- 10
 results <- foreach(i = 1:number_of_iterations) %dopar% {
     myParallelAlgorithm()
