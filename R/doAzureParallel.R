@@ -247,7 +247,6 @@ getparentenv <- function(pkgname) {
     endTime <- as.POSIXct(job$executionInfo$endTime, format="%FT%T", tz = "GMT")
   }
 
-  print(difftime(endTime, startTime))
   print(sprintf("Number of errors: %i", numberOfFailedTasks))
 
   if (identical(obj$errorHandling, 'stop') && !is.null(errorValue)) {
