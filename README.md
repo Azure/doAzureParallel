@@ -1,5 +1,21 @@
 # doAzureParallel
 
+```R
+# setup my pool with a simple config file
+pool <- registerPool("my_pool_config.json")
+
+# register the pool as my parallel backend
+registerDoAzureParallel(pool)
+
+# run my foreach loop on a distributed pool in Azure
+number_of_iterations <- 10
+results <- foreach(i = 1:number_of_iterations) %dopar% {
+    myParallelAlgorithm()
+}
+```
+
+## Introduction
+
 The *doAzureParallel* package is a parallel backend for the widely popular *foreach* package. With *doAzureParallel*, each iteration of the *foreach* loop runs in parallel on an Azure Virtual Machine (VM), allowing users to scale up their R jobs to tens or hundreds of machines.
 
 *doAzureParallel* is built to support the *foreach* parallel computing package. The *foreach* package supports parallel execution - it can execute multiple processes across some parallel backend. With just a few lines of code, the *doAzureParallel* package helps create a pool in Azure, register it as a parallel backend, and seamlessly connects to the *foreach* package.
@@ -65,7 +81,7 @@ Import the package
 library(doAzureParallel)
 ```
 
-Set up your parallel backend with Azure
+Set up your parallel backend with Azure. 
 ```R
 # 1. Generate a pool configuration file.  
 generatePoolConfig("my_pool_config.json")
@@ -77,7 +93,7 @@ generatePoolConfig("my_pool_config.json")
 pool <- registerPool("my_pool_config.json")
 
 # 4. Register the pool as your parallel backend
-registerDoAzureParallel
+registerDoAzureParallel(pool)
 
 # 5. Check that your parallel backend has been registered
 getDoParWorkers()
@@ -149,12 +165,13 @@ Our default VM size selection is the **"Standard_A1_v2"** that has 1 core per VM
 
 ### Number of *foreach* Loops
 
-By default, doAzureParallel users are limited to running 20 *foreach* loops that run on Azure in succession. This is because each *foreach* loops generates a *job*, of which users are by default limited to 20. To go beyond that, users need to delete their *jobs*.
+By default, doAzureParallel users are limited to running 20 *foreach* loops in Azure at a time. This is because each *foreach* loops generates a *job*, of which users are by default limited to 20. To go beyond that, users need to wait for their *jobs* to complete. 
 
 ### Increasing Your Quota
 
 To increase your default quota limitations, please visit [this page](https://docs.microsoft.com/en-us/azure/batch/batch-quota-limit#increase-a-quota) for instructions.
 
-## Contributing
+## Next Steps
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+For more information, please visit [our documentation](./docs/README.md).
+
