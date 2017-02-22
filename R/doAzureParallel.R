@@ -149,6 +149,7 @@ getparentenv <- function(pkgname) {
     tryCatch({
       retryCounter <- retryCounter + 1
       addJob(id, config = data$config, packages = obj$packages)
+      break;
     },
     error=function(e) {
       if (retryCounter == maxRetryCount) {
