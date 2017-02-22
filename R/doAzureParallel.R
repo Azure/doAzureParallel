@@ -135,12 +135,33 @@ getparentenv <- function(pkgname) {
   assign('exportenv', exportenv, .doAzureBatchGlobals)
   assign('packages', obj$packages, .doAzureBatchGlobals)
 
-  time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
+  time <- format(Sys.time(), "%Y%m%d%H%M%OS3", tz = "GMT")
   id <-  sprintf("%s%s",
                  "job",
                  time)
 
-  addJob(id, config = data$config, packages = obj$packages)
+
+  retryCounter <- 0
+  maxRetryCount <- 5
+  while(retryCounter < maxRetryCount){
+    
+    # try to submit the job. We may run into naming conflicts. If so, try again
+    tryCatch({
+      retryCounter <- retryCounter + 1
+      addJob(id, config = data$config, packages = obj$packages)
+    },
+    error=function(e) {
+      if (retryCounter == maxRetryCount) {
+        cat(sprintf('Error creating job: %s\n',
+                  conditionMessage(e)))
+      }
+
+      time <- format(Sys.time(), "%Y%m%d%H%M%OS3", tz = "GMT")
+      id <-  sprintf("%s%s",
+                    "job",
+                    time)
+    })
+  }
 
   print("Job Summary: ")
   job <- getJob(id)
@@ -254,6 +275,8 @@ getparentenv <- function(pkgname) {
   }
 
   print(sprintf("Number of errors: %i", numberOfFailedTasks))
+
+  deleteJob(id)
 
   if (identical(obj$errorHandling, 'stop') && !is.null(errorValue)) {
     msg <- sprintf('task %d failed - "%s"', errorIndex,
