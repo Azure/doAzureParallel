@@ -135,7 +135,7 @@ getparentenv <- function(pkgname) {
   assign('exportenv', exportenv, .doAzureBatchGlobals)
   assign('packages', obj$packages, .doAzureBatchGlobals)
 
-  time <- format(Sys.time(), "%Y%m%d%H%M%OS3", tz = "GMT")
+  time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
   id <-  sprintf("%s%s",
                  "job",
                  time)
@@ -144,7 +144,7 @@ getparentenv <- function(pkgname) {
   retryCounter <- 0
   maxRetryCount <- 5
   while(retryCounter < maxRetryCount){
-    
+    sprintf("job id is: %s", id)
     # try to submit the job. We may run into naming conflicts. If so, try again
     tryCatch({
       retryCounter <- retryCounter + 1
@@ -157,7 +157,7 @@ getparentenv <- function(pkgname) {
                   conditionMessage(e)))
       }
 
-      time <- format(Sys.time(), "%Y%m%d%H%M%OS3", tz = "GMT")
+      time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
       id <-  sprintf("%s%s",
                     "job",
                     time)
@@ -262,18 +262,18 @@ getparentenv <- function(pkgname) {
   errorValue <- getErrorValue(it)
   errorIndex <- getErrorIndex(it)
 
-  print(sprintf("Start Time: %s", job$executionInfo$startTime))
-  startTime <- as.POSIXct(job$executionInfo$startTime, format="%FT%T", tz = "GMT")
-
-  if(is.null(job$executionInfo$endTime)){
-    endTime <- as.POSIXlt(Sys.time(), "UTC", "%FT%T")
-    endTime <- paste0(strftime(endTime, "%FT%TZ"))
-    print(sprintf("End Time: %s", endTime))
-  }
-  else{
-    print(sprintf("End Time: %s", job$executionInfo$endTime))
-    endTime <- as.POSIXct(job$executionInfo$endTime, format="%FT%T", tz = "GMT")
-  }
+  # print(sprintf("Start Time: %s", job$executionInfo$startTime))
+  # startTime <- as.POSIXct(job$executionInfo$startTime, format="%FT%T", tz = "GMT")
+  # 
+  # if(is.null(job$executionInfo$endTime)){
+  #   endTime <- as.POSIXlt(Sys.time(), "UTC", "%FT%T")
+  #   endTime <- paste0(strftime(endTime, "%FT%TZ"))
+  #   print(sprintf("End Time: %s", endTime))
+  # }
+  # else{
+  #   print(sprintf("End Time: %s", job$executionInfo$endTime))
+  #   endTime <- as.POSIXct(job$executionInfo$endTime, format="%FT%T", tz = "GMT")
+  # }
 
   print(sprintf("Number of errors: %i", numberOfFailedTasks))
 
