@@ -181,12 +181,14 @@ getparentenv <- function(pkgname) {
 
   startIndices <- seq(1, length(argsList), chunkSize)
 
-  if(chunkSize > length(argsList)){
-    endIndices <- seq(length(argsList), length(argsList))
-  }
-  else{
-    endIndices <- seq(chunkSize, length(argsList), chunkSize)
-  }
+  endIndices <-
+    if(chunkSize >= length(argsList))
+    {
+      c(length(argsList))
+    }
+    else {
+      seq(chunkSize, length(argsList), chunkSize)
+    }
 
   minLength <- min(length(startIndices), length(endIndices))
 
