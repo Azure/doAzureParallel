@@ -4,7 +4,7 @@ doAzureParallel is built on top of Azure Batch, which starts with a few quota li
 
 ## Core Count Limitation
 
-By default, doAzureParallel users are limited to 20 cores in total. (Please refer to the [VM Size Table](./docs/10-vm-sizes.md#vm-size-table) to see how many cores are in the VM size you have selected.)
+By default, doAzureParallel users are limited to 20 cores in total. (Please refer to the [VM Size Table](./10-vm-sizes.md#vm-size-table) to see how many cores are in the VM size you have selected.)
 
 Our default VM size selection is the **"Standard_F2"** that has 2 core per VM. With this VM size, users are limited to a 10-node pool.
 
