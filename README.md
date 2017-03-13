@@ -81,16 +81,16 @@ Import the package
 library(doAzureParallel)
 ```
 
-Set up your parallel backend with Azure. 
+Set up your parallel backend with Azure. This is your set of Azure VMs.
 ```R
 # 1. Generate a pool configuration file.  
-generatePoolConfig("my_pool_config.json")
+generateClusterConfig("cluster_config.json")
 
 # 2. Edit your pool configuration file.
 # Enter your Azure Batch Account & Azure Storage keys/account-info and configure your pool settings.
 
 # 3. Register the pool. This will create a new pool if your pool hasn't already been provisioned.
-pool <- registerPool("my_pool_config.json")
+pool <- makeCluster("cluster_config.json")
 
 # 4. Register the pool as your parallel backend
 registerDoAzureParallel(pool)
@@ -118,6 +118,24 @@ results <- foreach(i = 1:number_of_iterations) %do% { ... }
 results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
 ```
 
+You can also run *long running jobs* with doAzureParallel. With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
+
+```R
+# set the .options.azure option in the foreach loop 
+# NOTE - if wait = FALSE, foreach will return your unique job id
+jobid <- foreach(i = 1:number_of_iterations, .options.azure = list(job = 'unique_job_id', wait = FALSE)) %dopar % { ... }
+
+# get back your job results with your unique job id
+results <- getJobResult(jobid)
+```
+
+After you finish running your R code in Azure, you may want to shut down your pool of VMs to make sure that you are not being charged anymore.o
+
+```R
+# shut down your pool
+stopCluster(pool)
+```
+
 ### Pool Configuration JSON
 
 Use your pool configuration JSON file to define your pool in Azure.
@@ -129,16 +147,19 @@ Use your pool configuration JSON file to define your pool in Azure.
     "key": <Azure Batch Account Key>,
     "url": <Azure Batch Account URL>,
     "pool": {
-      "name": <your pool name>, // example: "my_new_azure_pool"
-      "vmsize": <your pool VM size name>, // example: "Standard_A1_v2"
+      "name": <your pool name>, // example: "myauzrecluster"
+      "vmSize": <your pool VM size name>, // example: "Standard_F2" ([Learn more](./docs/10-vm-sizes.md#vm-size-table) for more info)
+      "maxTasksPerNode": <num task to allocate to each node>, // example: "1" ([Learn more](./docs/22-parallelizing-cores.md))
       "poolSize": {
-        "targetDedicated": <number of node you want in your pool>, // example: 10
+        "minNodes": <min number of nodes in cluster>, // example: "1"
+        "maxNodes": <max number of nodes to scale cluster to>, // example: "10"
+        "autoscaleFormula": <your autoscale formula name>, // recommended: "QUEUE"
       }
     },
     "rPackages": {
-      "cran": {
+      "cran": 
         "source": "http://cran.us.r-project.org",
-        "name": ["some_cran_package", "some_other_cran_package"]
+        "name": ["<some_cran_package", "some_other_cran_package"]
       },
       "github": ["username/some_github_package", "another_username/some_other_github_package"]
     }
@@ -148,7 +169,7 @@ Use your pool configuration JSON file to define your pool in Azure.
     "key": <Azure Storage Account Key>
   },
   "settings": {
-    "verbose": false
+    "verbose": false // set to true to see debug logs
   }
 }
 ```

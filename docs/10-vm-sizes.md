@@ -39,8 +39,6 @@ Please see the below table for a curated list of VM types:
 
 | VM Category | VM Size | Cores | Memory (GB) |
 | ----------- | ------- | ----- | ----------- |
-| Av2-Series | Standard_A1_v2 | 1 | 2 |
-| Av2-Series | Standard_A2_v2 | 2 | 4 |
 | Av2-Series | Standard_A4_v2 | 4 | 8 |
 | Av2-Series | Standard_A8_v2 | 8 | 16 |
 | Av2-Series | Standard_A2m_v2 | 2 | 16 |
