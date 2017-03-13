@@ -10,7 +10,7 @@ The options are:
  - "WEEKEND"
  - "MAX_CPU"
 
-*See more [below]() to learn how each of these settings work.*
+*See more [below](./11-autoscale.md#autoscale-formulas) to learn how each of these settings work.*
 
 When configuring your autoscale formula, you also need to set the mininum number of nodes and the maximum number of nodes. Each autoscale formula will use these as parameters to set it's upper and lower bound limits for pool size. 
 
@@ -32,18 +32,12 @@ By default, doAzureParallel uses autoscale and uses the QUEUE autoscale formula.
 
 For four autoscale settings are can be selected for different scenarios:
 
-### QUEUE
-This is a task-based adjustment - the formula will scale up and down the pool size based on the amount of work in the queue
-
-### WORKDAY/WEEKEND
-These are time-based adjustments - the formula  will adjust your pool size based on the day/time of the week. 
-
-For WORKDAY, we will check the current time, and if it's a weekday during working hours (8am - 6pm), the pool size will increase to the maximum size. Otherwise it will default to the minimum size.
-
-FOR WEEKEND, we will check the current time and see if its the weekend.
-
-### MAX_CPU
-
+| Autoscale Formula | Description | 
+| ----------------- |:----------- |
+| QUEUE | This formula will scale up and down the pool size based on the amount of work in the queue |
+| WORKDAY | This formula  will adjust your pool size based on the day/time of the week. If it's a weekday, during working hours (8am - 6pm), the pool size will increase to maximum size (maxNodes). Otherwise it will default to the minimum size (minNodes). |
+| WEEKEND | This formula  will adjust your pool size based on the day/time of the week. At the beginning of the weekend (Saturday), the pool size will increase to maximum size (maxNodes). At the end of Sunday, the pool will shrink down to the minimum size (minNodes). | 
+| MAX_CPU | tbd | 
 
 ## When to use Autoscale
 
