@@ -2,7 +2,7 @@
 
 ```R
 # setup my pool with a simple config file
-pool <- registerPool("my_pool_config.json")
+pool <- makeCluster("cluster_config.json")
 
 # register the pool as my parallel backend
 registerDoAzureParallel(pool)
@@ -115,7 +115,7 @@ After you finish running your R code in Azure, you may want to shut down your po
 stopCluster(pool)
 ```
 
-### %do% vs %dopar%
+### Using %do% vs %dopar%
 When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
 
 ```R 
@@ -133,11 +133,13 @@ You can also run *long running jobs* with doAzureParallel. With long running job
 ```R
 # set the .options.azure option in the foreach loop 
 # NOTE - if wait = FALSE, foreach will return your unique job id
-jobid <- foreach(i = 1:number_of_iterations, .options.azure = list(job = 'unique_job_id', wait = FALSE)) %dopar % { ... }
+job_id <- foreach(i = 1:number_of_iterations, .options.azure = list(job = 'unique_job_id', wait = FALSE)) %dopar % { ... }
 
 # get back your job results with your unique job id
-results <- getJobResult(jobid)
+results <- getJobResult(job_id)
 ```
+
+You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md).
 
 ### Pool Configuration JSON
 
@@ -192,7 +194,7 @@ doAzureParallel is built on top of Azure Batch, which starts with a few quota li
 
 By default, doAzureParallel users are limited to 20 cores in total. (Please refer to the [VM Size Table](./docs/10-vm-sizes.md#vm-size-table) to see how many cores are in the VM size you have selected.)
 
-Our default VM size selection is the **"Standard_A1_v2"** that has 1 core per VM. With this VM size, users are limited to a 20-node pool.
+Our default VM size selection is the **"Standard_F2"** that has 2 core per VM. With this VM size, users are limited to a 10-node pool.
 
 ### Number of *foreach* Loops
 
