@@ -79,6 +79,9 @@ getparentenv <- function(pkgname) {
 .doAzureParallel <- function(obj, expr, envir, data){
   stopifnot(inherits(obj, "foreach"))
 
+  batchCredentials <- getBatchCredentials()
+  storageCredentials <- getStorageCredentials()
+  
   it <- iter(obj)
   argsList <- as.list(it)
 
@@ -139,16 +142,50 @@ getparentenv <- function(pkgname) {
   id <-  sprintf("%s%s",
                  "job",
                  time)
-
+  
+  if(!is.null(obj$options$azure$job)){
+    id <- obj$options$azure$job
+  }
 
   retryCounter <- 0
   maxRetryCount <- 5
+  startupFolderName <- "startup"
+  containerResponse <- NULL
+  jobquotaReachedResponse <- NULL
   while(retryCounter < maxRetryCount){
     sprintf("job id is: %s", id)
     # try to submit the job. We may run into naming conflicts. If so, try again
     tryCatch({
       retryCounter <- retryCounter + 1
-      addJob(id, config = data$config, packages = obj$packages)
+      
+      response <- createContainer(id, raw = TRUE)
+      if(grepl("ContainerAlreadyExists", response)){
+        if(!is.null(obj$options$azure$job)){
+          containerResponse <- grepl("ContainerAlreadyExists", response)
+          break;
+        }
+        
+        stop("Container already exists. Multiple jobs may possibly be running.")
+      }
+      
+      uploadData(id, system.file(startupFolderName, "splitter.R", package="rAzureBatch"))
+      uploadData(id, system.file(startupFolderName, "worker.R", package="rAzureBatch"))
+      uploadData(id, system.file(startupFolderName, "merger.R", package="rAzureBatch"))
+      
+      sasToken <- constructSas("2016-11-30", "r", "c", id, storageCredentials$key)
+      resourceFiles <- list(generateResourceFile(storageCredentials$name, id, "splitter.R", sasToken),
+                            generateResourceFile(storageCredentials$name, id, "worker.R", sasToken),
+                            generateResourceFile(storageCredentials$name, id, "merger.R", sasToken))
+      
+      response <- addJob(id, config = data$config, packages = obj$packages, resourceFiles = resourceFiles, raw = TRUE)
+      if(grepl("ActiveJobAndScheduleQuotaReached", response)){
+        jobquotaReachedResponse <- grepl("ActiveJobAndScheduleQuotaReached", response)
+      }
+      
+      if(grepl("JobExists", response)){
+        stop("The specified job already exists.")
+      }
+      
       break;
     },
     error=function(e) {
@@ -156,7 +193,8 @@ getparentenv <- function(pkgname) {
         cat(sprintf('Error creating job: %s\n',
                   conditionMessage(e)))
       }
-
+      
+      print(e)
       time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
       id <-  sprintf("%s%s",
                     "job",
@@ -164,6 +202,14 @@ getparentenv <- function(pkgname) {
     })
   }
 
+  if(!is.null(containerResponse)){
+    stop("Aborted mission. The container has already exist with user's specific job id. Please use a different job id.")  
+  }
+  
+  if(!is.null(jobquotaReachedResponse)){
+    stop("Aborted mission. Your active job quota has been reached. To increase your active job quota, go to https://docs.microsoft.com/en-us/azure/batch/batch-quota-limit")  
+  }
+  
   print("Job Summary: ")
   job <- getJob(id)
   print(sprintf("Id: %s", job$id))
