@@ -129,7 +129,7 @@ jobid <- foreach(i = 1:number_of_iterations, .options.azure = list(job = 'unique
 results <- getJobResult(jobid)
 ```
 
-After you finish running your R code in Azure, you may want to shut down your pool of VMs to make sure that you are not being charged anymore.o
+After you finish running your R code in Azure, you may want to shut down your pool of VMs to make sure that you are not being charged anymore.
 
 ```R
 # shut down your pool
@@ -148,8 +148,8 @@ Use your pool configuration JSON file to define your pool in Azure.
     "url": <Azure Batch Account URL>,
     "pool": {
       "name": <your pool name>, // example: "myauzrecluster"
-      "vmSize": <your pool VM size name>, // example: "Standard_F2" ([Learn more](./docs/10-vm-sizes.md#vm-size-table) for more info)
-      "maxTasksPerNode": <num task to allocate to each node>, // example: "1" ([Learn more](./docs/22-parallelizing-cores.md))
+      "vmSize": <your pool VM size name>, // example: "Standard_F2" 
+      "maxTasksPerNode": <num task to allocate to each node>, // example: "1" 
       "poolSize": {
         "minNodes": <min number of nodes in cluster>, // example: "1"
         "maxNodes": <max number of nodes to scale cluster to>, // example: "10"
@@ -173,6 +173,13 @@ Use your pool configuration JSON file to define your pool in Azure.
   }
 }
 ```
+
+Learn more:
+ - [batchAccount/storageAccount](./README.md#azure-requirements)
+ - [vmSize](./docs/10-vm-sizes.md#vm-size-table)
+ - [maxTasksPerNode](./docs/22-parallelizing-cores.md)
+ - [poolSize/autoscaleFormula](./docs/11-autoscale.md)
+ - [rPackages](./docs/20-package-management.md)
 
 ## Azure Pool Limitations
 
