@@ -17,7 +17,7 @@ Inside the **.options.azure** option, you can set two parameters: *job* and *wai
 
 Set *job* to the unique job id you want to associate your foreach loop to. This string must be unique otherwise the package will throw an error. 
 
-By default, *wait* is set to TRUE. This blocks the R session. By setting *wait* to FALSE, the foreach loop will not block the R session, and you can continue working.
+By default, *wait* is set to TRUE. This blocks the R session. By setting *wait* to FALSE, the foreach loop will not block the R session, and you can continue working. Setting *wait* to FALSE will also change the return object of the foreach loop. Instead of returning the results, foreach will return the unique job ID associated to the foreach loop.
 
 ## Getting results from storage
 

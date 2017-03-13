@@ -139,7 +139,9 @@ job_id <- foreach(i = 1:number_of_iterations, .options.azure = list(job = 'uniqu
 results <- getJobResult(job_id)
 ```
 
-You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md).
+You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md). 
+
+With long-running jobs, you can take advantage of Azure's autoscaling capabilities to save time and/or money. Learn more about autoscale [here](./docs/11-autoscale.md).
 
 ### Pool Configuration JSON
 
