@@ -108,6 +108,14 @@ results <- foreach(i = 1:number_of_iterations) %dopar% {
 }
 ```
 
+After you finish running your R code in Azure, you may want to shut down your pool of VMs to make sure that you are not being charged anymore.
+
+```R
+# shut down your pool
+stopCluster(pool)
+```
+
+### %do% vs %dopar%
 When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
 
 ```R 
@@ -118,6 +126,8 @@ results <- foreach(i = 1:number_of_iterations) %do% { ... }
 results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
 ```
 
+### Long-running Jobs
+
 You can also run *long running jobs* with doAzureParallel. With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
 
 ```R
@@ -127,13 +137,6 @@ jobid <- foreach(i = 1:number_of_iterations, .options.azure = list(job = 'unique
 
 # get back your job results with your unique job id
 results <- getJobResult(jobid)
-```
-
-After you finish running your R code in Azure, you may want to shut down your pool of VMs to make sure that you are not being charged anymore.
-
-```R
-# shut down your pool
-stopCluster(pool)
 ```
 
 ### Pool Configuration JSON
@@ -181,7 +184,7 @@ Learn more:
  - [poolSize/autoscaleFormula](./docs/11-autoscale.md)
  - [rPackages](./docs/20-package-management.md)
 
-## Azure Pool Limitations
+## Azure Limitations
 
 doAzureParallel is built on top of Azure Batch, which starts with a few quota limitations.
 
