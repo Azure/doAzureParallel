@@ -10,7 +10,8 @@ In order to set your job id, you can use the **.options.azure** option inside th
 
 ```R
 # set the .options.azure option in the foreach loop
-job_id <- foreach(i = 1:number_of_iterations, .options.azure = list(job = 'unique_job_id', wait = FALSE)) %dopar% { ... }
+opt <- list(job = 'unique_job_id', wait = FALSE)
+job_id <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar% { ... }
 ```
 
 Inside the **.options.azure** option, you can set two parameters: *job* and *wait*. 

@@ -115,36 +115,6 @@ After you finish running your R code in Azure, you may want to shut down your po
 stopCluster(pool)
 ```
 
-When developing at scale, you may also want to chunk up your data and distribute the data across your nodes. Learn more about that [here](./docs/21-distributing-data.md#chunking-data)
-
-### Using %do% vs %dopar%
-When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
-
-```R 
-# run your code sequentially on your local machine
-results <- foreach(i = 1:number_of_iterations) %do% { ... }
-
-# use the doAzureParallel backend to run your code in parallel across your Azure pool 
-results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
-```
-
-### Long-running Jobs
-
-You can also run *long running jobs* with doAzureParallel. With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
-
-```R
-# set the .options.azure option in the foreach loop 
-# NOTE - if wait = FALSE, foreach will return your unique job id
-job_id <- foreach(i = 1:number_of_iterations, .options.azure = list(job = 'unique_job_id', wait = FALSE)) %dopar % { ... }
-
-# get back your job results with your unique job id
-results <- getJobResult(job_id)
-```
-
-You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md). 
-
-With long-running jobs, you can take advantage of Azure's autoscaling capabilities to save time and/or money. Learn more about autoscale [here](./docs/11-autoscale.md).
-
 ### Pool Configuration JSON
 
 Use your pool configuration JSON file to define your pool in Azure.
@@ -190,6 +160,62 @@ Learn more:
  - [Autoscale](./docs/11-autoscale.md)
  - [PoolSize Limitations](./docs/12-quota-limitations.md)
  - [rPackages](./docs/20-package-management.md)
+
+### Distributing Data
+When developing at scale, you may also want to chunk up your data and distribute the data across your nodes. Learn more about that [here](./docs/21-distributing-data.md#chunking-data)
+
+### Using %do% vs %dopar%
+When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
+
+```R 
+# run your code sequentially on your local machine
+results <- foreach(i = 1:number_of_iterations) %do% { ... }
+
+# use the doAzureParallel backend to run your code in parallel across your Azure pool 
+results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
+```
+
+### Long-running Jobs
+
+You can also run *long running jobs* with doAzureParallel. With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
+
+```R
+# set the .options.azure option in the foreach loop 
+opt <- list(job = 'unique_job_id', wait = FALSE)
+
+# NOTE - if the option wait = FALSE, foreach will return your unique job id
+job_id <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar % { ... }
+
+# get back your job results with your unique job id
+results <- getJobResult(job_id)
+```
+
+You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md). 
+
+With long-running jobs, you can take advantage of Azure's autoscaling capabilities to save time and/or money. Learn more about autoscale [here](./docs/11-autoscale.md).
+
+### Using the 'chunkSize' option
+
+doAzureParallel also supports custom chunk sizes. This option allows you to group iterations of the foreach loop together and execute them in a single R session.
+
+```R
+# set the chunkSize option
+opt <- list(chunkSize = 3)
+results <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar% { ... }
+```
+
+You should consider using the chunkSize if each iteration in the loop executes very quickly.
+
+If you have a static cluster and want to have a single chunk for each worker, you can compute the chunkSize as follows:
+
+```R
+# compute the chunk size
+cs <- number_of_iterations / getDoParWorkers()
+
+# run the foreach loop with chunkSize optimized
+opt <- list(chunkSize = cs)
+results <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar% { ... }
+```
 
 ## Next Steps
 
