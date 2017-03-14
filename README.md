@@ -84,13 +84,13 @@ library(doAzureParallel)
 Set up your parallel backend with Azure. This is your set of Azure VMs.
 ```R
 # 1. Generate a pool configuration file.  
-generateClusterConfig("cluster_config.json")
+generateClusterConfig("pool_config.json")
 
 # 2. Edit your pool configuration file.
 # Enter your Azure Batch Account & Azure Storage keys/account-info and configure your pool settings.
 
 # 3. Register the pool. This will create a new pool if your pool hasn't already been provisioned.
-pool <- makeCluster("cluster_config.json")
+pool <- makeCluster("pool_config.json")
 
 # 4. Register the pool as your parallel backend
 registerDoAzureParallel(pool)

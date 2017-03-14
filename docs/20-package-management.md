@@ -11,10 +11,7 @@ You can install packages by specifying the package(s) in your JSON pool configur
 {
   ...
   "rPackages": {
-    "cran": {
-      "source": "http://cran.us.r-project.org",
-      "name": ["some_cran_package_name", "some_other_cran_package_name"]
-    },
+    "cran": ["some_cran_package_name", "some_other_cran_package_name"],
     "github": ["github_username/github_package_name", "another_github_username/another_github_package_name"]
   },
   ...
