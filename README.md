@@ -115,6 +115,8 @@ After you finish running your R code in Azure, you may want to shut down your po
 stopCluster(pool)
 ```
 
+When developing at scale, you may also want to chunk up your data and distribute the data across your nodes. Learn more about that [here](./docs/21-distributing-data.md#chunking-data)
+
 ### Using %do% vs %dopar%
 When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
 

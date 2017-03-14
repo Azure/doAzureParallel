@@ -13,7 +13,7 @@ This section will provide information about how Azure works, how best to take ad
 
    Automatically scale up/down your cluster to save time and/or money.
 
-4. **Azure Limitations** [(link)](./12-quota-limitation.md)
+4. **Azure Limitations** [(link)](./12-quota-limitations.md)
 
    Learn about the limitations around the size of your cluster and the number of foreach jobs you can run in Azure.
    

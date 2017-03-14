@@ -37,7 +37,7 @@ For four autoscale settings are can be selected for different scenarios:
 | QUEUE | This formula will scale up and down the pool size based on the amount of work in the queue |
 | WORKDAY | This formula  will adjust your pool size based on the day/time of the week. If it's a weekday, during working hours (8am - 6pm), the pool size will increase to maximum size (maxNodes). Otherwise it will default to the minimum size (minNodes). |
 | WEEKEND | This formula  will adjust your pool size based on the day/time of the week. At the beginning of the weekend (Saturday), the pool size will increase to maximum size (maxNodes). At the end of Sunday, the pool will shrink down to the minimum size (minNodes). | 
-| MAX_CPU | tbd | 
+| MAX_CPU | This formula will adjust your pool size based on the minimum average CPU usage during the last 10 minutes - if the minimum average CPU usage was above 70%, the cluster size will increase 1.1X times. | 
 
 ## When to use Autoscale
 
