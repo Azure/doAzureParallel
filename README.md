@@ -136,10 +136,7 @@ Use your pool configuration JSON file to define your pool in Azure.
       }
     },
     "rPackages": {
-      "cran": 
-        "source": "http://cran.us.r-project.org",
-        "name": ["<some_cran_package", "some_other_cran_package"]
-      },
+      "cran": ["some_cran_package", "some_other_cran_package"],
       "github": ["username/some_github_package", "another_username/some_other_github_package"]
     }
   },
@@ -210,7 +207,7 @@ If you have a static cluster and want to have a single chunk for each worker, yo
 
 ```R
 # compute the chunk size
-cs <- number_of_iterations / getDoParWorkers()
+cs <- ceiling(number_of_iterations / getDoParWorkers())
 
 # run the foreach loop with chunkSize optimized
 opt <- list(chunkSize = cs)
