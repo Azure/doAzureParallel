@@ -8,6 +8,9 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 LazyData: TRUE
 Depends:
-  foreach (>= 1.4.3),
-  iterators (>= 1.0.8),
-  rAzureBatch (>= 0.1.0)
+    foreach (>= 1.4.3),
+    iterators (>= 1.0.8),
+    rAzureBatch (>= 0.1.0)
+Suggests:
+    testthat
+RoxygenNote: 5.0.1

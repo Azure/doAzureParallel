@@ -147,6 +147,11 @@ getparentenv <- function(pkgname) {
     id <- obj$options$azure$job
   }
 
+  wait <- TRUE
+  if(!is.null(obj$options$azure$wait)){
+    wait <- obj$options$azure$wait
+  }
+
   retryCounter <- 0
   maxRetryCount <- 5
   startupFolderName <- "startup"
@@ -287,40 +292,46 @@ getparentenv <- function(pkgname) {
              packages = obj$packages,
              dependsOn = tasks)
 
-  waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
+  if(wait){
+    waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
 
-  results <- downloadBlob(id, paste0("result/", id, "-merge-result.rds"))
+    results <- downloadBlob(id, paste0("result/", id, "-merge-result.rds"))
 
-  failTasks <- sapply(results, .isError)
+    failTasks <- sapply(results, .isError)
 
-  numberOfFailedTasks <- sum(unlist(failTasks))
+    numberOfFailedTasks <- sum(unlist(failTasks))
 
-  if(numberOfFailedTasks > 0){
-    .createErrorViewerPane(id, failTasks)
+    if(numberOfFailedTasks > 0){
+      .createErrorViewerPane(id, failTasks)
+    }
+
+    accumulator <- makeAccum(it)
+
+    tryCatch(accumulator(results, seq(along = results)), error = function(e){
+      cat('error calling combine function:\n')
+      print(e)
+    })
+
+    # check for errors
+    errorValue <- getErrorValue(it)
+    errorIndex <- getErrorIndex(it)
+
+    print(sprintf("Number of errors: %i", numberOfFailedTasks))
+
+    deleteJob(id)
+
+    if (identical(obj$errorHandling, 'stop') && !is.null(errorValue)) {
+      msg <- sprintf('task %d failed - "%s"', errorIndex,
+                     conditionMessage(errorValue))
+      stop(simpleError(msg, call=expr))
+    }
+    else {
+      getResult(it)
+    }
   }
-
-  accumulator <- makeAccum(it)
-
-  tryCatch(accumulator(results, seq(along = results)), error = function(e){
-    cat('error calling combine function:\n')
-    print(e)
-  })
-
-  # check for errors
-  errorValue <- getErrorValue(it)
-  errorIndex <- getErrorIndex(it)
-
-  print(sprintf("Number of errors: %i", numberOfFailedTasks))
-
-  deleteJob(id)
-
-  if (identical(obj$errorHandling, 'stop') && !is.null(errorValue)) {
-    msg <- sprintf('task %d failed - "%s"', errorIndex,
-                   conditionMessage(errorValue))
-    stop(simpleError(msg, call=expr))
-  }
-  else {
-    getResult(it)
+  else{
+    print("Because the 'wait' parameter is set to FALSE, the returned value is the job ID associated with the foreach loop. Use this returned value with getJobResults(job_id) to get the results when the foreach loop is completed in Azure")
+    return(id)
   }
 }
 
