@@ -290,7 +290,8 @@ getparentenv <- function(pkgname) {
              index = i,
              envir = .doAzureBatchGlobals,
              packages = obj$packages,
-             dependsOn = tasks)
+             dependsOn = tasks,
+             numOfTasks = ntasks)
 
   if(wait){
     waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
