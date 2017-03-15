@@ -2,7 +2,7 @@
 
 ```R
 # setup my pool with a simple config file
-pool <- registerPool("my_pool_config.json")
+pool <- makeCluster("cluster_config.json")
 
 # register the pool as my parallel backend
 registerDoAzureParallel(pool)
@@ -84,13 +84,13 @@ library(doAzureParallel)
 Set up your parallel backend with Azure. This is your set of Azure VMs.
 ```R
 # 1. Generate a pool configuration file.  
-generateClusterConfig("cluster_config.json")
+generateClusterConfig("pool_config.json")
 
 # 2. Edit your pool configuration file.
 # Enter your Azure Batch Account & Azure Storage keys/account-info and configure your pool settings.
 
 # 3. Register the pool. This will create a new pool if your pool hasn't already been provisioned.
-pool <- makeCluster("cluster_config.json")
+pool <- makeCluster("pool_config.json")
 
 # 4. Register the pool as your parallel backend
 registerDoAzureParallel(pool)
@@ -108,28 +108,7 @@ results <- foreach(i = 1:number_of_iterations) %dopar% {
 }
 ```
 
-When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
-
-```R 
-# run your code sequentially on your local machine
-results <- foreach(i = 1:number_of_iterations) %do% { ... }
-
-# use the doAzureParallel backend to run your code in parallel across your Azure pool 
-results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
-```
-
-You can also run *long running jobs* with doAzureParallel. With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
-
-```R
-# set the .options.azure option in the foreach loop 
-# NOTE - if wait = FALSE, foreach will return your unique job id
-jobid <- foreach(i = 1:number_of_iterations, .options.azure = list(job = 'unique_job_id', wait = FALSE)) %dopar % { ... }
-
-# get back your job results with your unique job id
-results <- getJobResult(jobid)
-```
-
-After you finish running your R code in Azure, you may want to shut down your pool of VMs to make sure that you are not being charged anymore.o
+After you finish running your R code in Azure, you may want to shut down your pool of VMs to make sure that you are not being charged anymore.
 
 ```R
 # shut down your pool
@@ -148,8 +127,8 @@ Use your pool configuration JSON file to define your pool in Azure.
     "url": <Azure Batch Account URL>,
     "pool": {
       "name": <your pool name>, // example: "myauzrecluster"
-      "vmSize": <your pool VM size name>, // example: "Standard_F2" ([Learn more](./docs/10-vm-sizes.md#vm-size-table) for more info)
-      "maxTasksPerNode": <num task to allocate to each node>, // example: "1" ([Learn more](./docs/22-parallelizing-cores.md))
+      "vmSize": <your pool VM size name>, // example: "Standard_F2" 
+      "maxTasksPerNode": <num task to allocate to each node>, // example: "1" 
       "poolSize": {
         "minNodes": <min number of nodes in cluster>, // example: "1"
         "maxNodes": <max number of nodes to scale cluster to>, // example: "10"
@@ -157,10 +136,7 @@ Use your pool configuration JSON file to define your pool in Azure.
       }
     },
     "rPackages": {
-      "cran": 
-        "source": "http://cran.us.r-project.org",
-        "name": ["<some_cran_package", "some_other_cran_package"]
-      },
+      "cran": ["some_cran_package", "some_other_cran_package"],
       "github": ["username/some_github_package", "another_username/some_other_github_package"]
     }
   },
@@ -174,23 +150,69 @@ Use your pool configuration JSON file to define your pool in Azure.
 }
 ```
 
-## Azure Pool Limitations
+Learn more:
+ - [Batch account / Storage account](./README.md#azure-requirements)
+ - [Choosing VM size](./docs/10-vm-sizes.md#vm-size-table)
+ - [MaxTasksPerNode](./docs/22-parallelizing-cores.md)
+ - [Autoscale](./docs/11-autoscale.md)
+ - [PoolSize Limitations](./docs/12-quota-limitations.md)
+ - [rPackages](./docs/20-package-management.md)
 
-doAzureParallel is built on top of Azure Batch, which starts with a few quota limitations.
+### Distributing Data
+When developing at scale, you may also want to chunk up your data and distribute the data across your nodes. Learn more about that [here](./docs/21-distributing-data.md#chunking-data)
 
-### Core Count Limitation
+### Using %do% vs %dopar%
+When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
 
-By default, doAzureParallel users are limited to 20 cores in total. (Please refer to the [VM Size Table](./docs/10-vm-sizes.md#vm-size-table) to see how many cores are in the VM size you have selected.)
+```R 
+# run your code sequentially on your local machine
+results <- foreach(i = 1:number_of_iterations) %do% { ... }
 
-Our default VM size selection is the **"Standard_A1_v2"** that has 1 core per VM. With this VM size, users are limited to a 20-node pool.
+# use the doAzureParallel backend to run your code in parallel across your Azure pool 
+results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
+```
 
-### Number of *foreach* Loops
+### Long-running Jobs
 
-By default, doAzureParallel users are limited to running 20 *foreach* loops in Azure at a time. This is because each *foreach* loops generates a *job*, of which users are by default limited to 20. To go beyond that, users need to wait for their *jobs* to complete. 
+You can also run *long running jobs* with doAzureParallel. With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
 
-### Increasing Your Quota
+```R
+# set the .options.azure option in the foreach loop 
+opt <- list(job = 'unique_job_id', wait = FALSE)
 
-To increase your default quota limitations, please visit [this page](https://docs.microsoft.com/en-us/azure/batch/batch-quota-limit#increase-a-quota) for instructions.
+# NOTE - if the option wait = FALSE, foreach will return your unique job id
+job_id <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar % { ... }
+
+# get back your job results with your unique job id
+results <- getJobResult(job_id)
+```
+
+You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md). 
+
+With long-running jobs, you can take advantage of Azure's autoscaling capabilities to save time and/or money. Learn more about autoscale [here](./docs/11-autoscale.md).
+
+### Using the 'chunkSize' option
+
+doAzureParallel also supports custom chunk sizes. This option allows you to group iterations of the foreach loop together and execute them in a single R session.
+
+```R
+# set the chunkSize option
+opt <- list(chunkSize = 3)
+results <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar% { ... }
+```
+
+You should consider using the chunkSize if each iteration in the loop executes very quickly.
+
+If you have a static cluster and want to have a single chunk for each worker, you can compute the chunkSize as follows:
+
+```R
+# compute the chunk size
+cs <- ceiling(number_of_iterations / getDoParWorkers())
+
+# run the foreach loop with chunkSize optimized
+opt <- list(chunkSize = cs)
+results <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar% { ... }
+```
 
 ## Next Steps
 
