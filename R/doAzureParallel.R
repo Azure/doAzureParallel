@@ -192,7 +192,7 @@ getparentenv <- function(pkgname) {
                             generateResourceFile(storageCredentials$name, id, "merger.R", sasToken))
 
       # We need to merge any files passed by the calling lib with the resource files specified here
-      resourceFiles <- append(resourceFiles, staticResourceFiles)
+      # resourceFiles <- append(resourceFiles, staticResourceFiles)
 
       response <- addJob(id, config = data$config, packages = obj$packages, resourceFiles = staticResourceFiles, raw = TRUE)
       if(grepl("ActiveJobAndScheduleQuotaReached", response)){
