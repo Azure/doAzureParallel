@@ -177,10 +177,22 @@ getparentenv <- function(pkgname) {
       uploadBlob(id, system.file(startupFolderName, "worker.R", package="rAzureBatch"))
       uploadBlob(id, system.file(startupFolderName, "merger.R", package="rAzureBatch"))
 
+      resourceFiles <- list()
+      if(!is.null(obj$options$azure$resourceFiles)){
+        resourceFiles <- obj$options$azure$resourceFiles
+      }
+
+      if(!is.null(obj$options$azure$resourcefiles)){
+        resourceFiles <- obj$options$azure$resourcefiles
+      }
+
       sasToken <- constructSas("2016-11-30", "r", "c", id, storageCredentials$key)
-      resourceFiles <- list(generateResourceFile(storageCredentials$name, id, "splitter.R", sasToken),
+      staticResourceFiles <- list(generateResourceFile(storageCredentials$name, id, "splitter.R", sasToken),
                             generateResourceFile(storageCredentials$name, id, "worker.R", sasToken),
                             generateResourceFile(storageCredentials$name, id, "merger.R", sasToken))
+
+      # We need to merge any files passed by the calling lib with the resource files specified here
+      resourceFiles <- append(resourceFiles, staticResourceFiles)
 
       response <- addJob(id, config = data$config, packages = obj$packages, resourceFiles = resourceFiles, raw = TRUE)
       if(grepl("ActiveJobAndScheduleQuotaReached", response)){
@@ -227,15 +239,6 @@ getparentenv <- function(pkgname) {
 
   if(!is.null(obj$options$azure$chunksize)){
     chunkSize <- obj$options$azure$chunksize
-  }
-
-  resourceFiles <- list()
-  if(!is.null(obj$options$azure$resourceFiles)){
-    resourceFiles <- obj$options$azure$resourceFiles
-  }
-
-  if(!is.null(obj$options$azure$resourcefiles)){
-    resourceFiles <- obj$options$azure$resourcefiles
   }
 
   inputs <- FALSE
