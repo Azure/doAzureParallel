@@ -187,12 +187,12 @@ getparentenv <- function(pkgname) {
       }
 
       sasToken <- constructSas("2016-11-30", "r", "c", id, storageCredentials$key)
-      staticResourceFiles <- list(generateResourceFile(storageCredentials$name, id, "splitter.R", sasToken),
+      requiredJobResourceFiles <- list(generateResourceFile(storageCredentials$name, id, "splitter.R", sasToken),
                             generateResourceFile(storageCredentials$name, id, "worker.R", sasToken),
                             generateResourceFile(storageCredentials$name, id, "merger.R", sasToken))
 
       # We need to merge any files passed by the calling lib with the resource files specified here
-      resourceFiles <- append(resourceFiles, staticResourceFiles)
+      resourceFiles <- append(resourceFiles, requiredJobResourceFiles)
 
       response <- addJob(id, config = data$config, packages = obj$packages, resourceFiles = resourceFiles, raw = TRUE)
       if(grepl("ActiveJobAndScheduleQuotaReached", response)){
