@@ -44,6 +44,7 @@ test_that("End to end integration simple sum foreach", {
 
   deleteContainer(jobId)
   file.remove(configFileName)
+  file.remove("temp.rds")
 })
 
 test_that("End to end integration job with wait", {
@@ -91,4 +92,47 @@ test_that("End to end integration job with wait", {
   deleteContainer(jobId)
   deleteJob(jobId)
   file.remove(configFileName)
+  file.remove("temp.rds")
+})
+
+test_that("End to end integration job with chunks", {
+  configFileName <- "testthat.json"
+
+  batchAccountName <- Sys.getenv("AZ_BATCH_ACCOUNT_NAME")
+  batchAccountKey <- Sys.getenv("AZ_BATCH_ACCOUNT_KEY")
+  batchAccountUrl <- Sys.getenv("AZ_BATCH_ACCOUNT_URL")
+
+  storageAccountName <- Sys.getenv("AZ_STORAGE_ACCOUNT_NAME")
+  storageAccountKey <- Sys.getenv("AZ_STORAGE_ACCOUNT_KEY")
+
+  generateClusterConfig(configFileName,
+                        batchAccount = batchAccountName,
+                        batchKey = batchAccountKey,
+                        batchUrl = batchAccountUrl,
+                        storageAccount = storageAccountName,
+                        storageKey = storageAccountKey)
+
+  cluster <- makeCluster(configFileName)
+
+  registerDoAzureParallel(cluster)
+
+  jobId <- foreach(i = 1:10, .options.azure = list(job = "chunkjob", wait = FALSE, chunkSize = 3)) %dopar% {
+    c(sum(1, i), sum(2, i), sum(3, i))
+  }
+
+  waitForTasksToComplete(jobId, 60 * 60 * 24, tasks = 5)
+
+  results <- getJobResult(jobId)
+  expect_equal(length(results), 10)
+
+  for(i in 1:length(results)){
+    expect_equal(results[[i]][1], i + 1)
+    expect_equal(results[[i]][2], i + 2)
+    expect_equal(results[[i]][3], i + 3)
+  }
+
+  deleteContainer(jobId)
+  deleteJob(jobId)
+  file.remove(configFileName)
+  file.remove("temp.rds")
 })
