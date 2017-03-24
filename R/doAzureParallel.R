@@ -279,9 +279,11 @@ getparentenv <- function(pkgname) {
   tasks <- lapply(1:length(endIndices), function(i){
     startIndex <- startIndices[i]
     endIndex <- endIndices[i]
+    taskId <- paste0(id, "-task", i)
 
     .addTask(id,
-            taskId = paste0(id, "-task", i),
+            taskId = taskId,
+            rCommand =  sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/%s %s %s > %s.txt", "worker.R", "$AZ_BATCH_TASK_WORKING_DIR", paste0(taskId, ".rds"), taskId),
             args = argsList[startIndex:endIndex],
             envir = .doAzureBatchGlobals,
             packages = obj$packages)
@@ -292,13 +294,12 @@ getparentenv <- function(pkgname) {
   updateJob(id)
 
   i <- length(tasks) + 1
-  r <- .addTaskMerge(id,
+  r <- .addTask(id,
              taskId = paste0(id, "-merge"),
-             index = i,
+             rCommand = sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/%s %s %s %s %s %s > %s.txt", "merger.R", "$AZ_BATCH_TASK_WORKING_DIR", paste0(id, "-merge.rds"), length(tasks), id, ntasks,  paste0(id, "-merge")),
              envir = .doAzureBatchGlobals,
              packages = obj$packages,
-             dependsOn = tasks,
-             numOfTasks = ntasks)
+             dependsOn = tasks)
 
   if(wait){
     waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)

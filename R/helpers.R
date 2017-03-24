@@ -1,4 +1,4 @@
-.addTask <- function(jobId, taskId, ...){
+.addTask <- function(jobId, taskId, rCommand, ...){
   storageCredentials <- getStorageCredentials()
 
   args <- list(...)
@@ -19,17 +19,21 @@
   sasToken <- constructSas("r", "c", jobId, storageCredentials$key)
 
   taskPrep <- getInstallationCommand(packages)
-  rCommand <- sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/%s %s %s > %s.txt", "worker.R", "$AZ_BATCH_TASK_WORKING_DIR", envFile, taskId)
+
+  if(!is.null(args$dependsOn)){
+    dependsOn <- list(taskIds = dependsOn)
+  }
 
   resultFile <- paste0(taskId, "-result", ".rds")
   logsCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --upload --saskey $BLOBXFER_SASKEY --remoteresource logs/%s", storageCredentials$name, jobId, paste0(taskId, ".txt"), paste0(taskId, ".txt"))
   autoUploadCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --upload --saskey $BLOBXFER_SASKEY --remoteresource result/%s", storageCredentials$name, jobId, resultFile, resultFile)
   downloadCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds", storageCredentials$name, jobId, "$AZ_BATCH_TASK_WORKING_DIR")
-  logsCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --upload --saskey $BLOBXFER_SASKEY --remoteresource logs/%s", storageCredentials$name, jobId, paste0(taskId, ".txt"), paste0(taskId, ".txt"))
 
   commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH", downloadCommand, rCommand, logsCommand, autoUploadCommand)
-  if(taskPrep != ""){
-    commands <- c(taskPrep, commands)
+  commands <- linuxWrapCommands(commands)
+
+  if(!is.null(packages)){
+    commands <- paste0(commands, ";", getInstallationCommand(packages))
   }
 
   sasToken <- constructSas("rwcl", "c", jobId, storageCredentials$key)
@@ -44,58 +48,8 @@
           taskId,
           environmentSettings = list(setting),
           resourceFiles = resourceFiles,
-          commandLine = linuxWrapCommands(commands))
-}
-
-.addTaskMerge <- function(jobId, taskId, ...){
-  storageCredentials <- getStorageCredentials()
-
-  args <- list(...)
-  .doAzureBatchGlobals <- args$envir
-  argsList <- args$args
-  packages <- args$packages
-  numOfTasks <- args$numOfTasks
-  dependsOn <- args$dependsOn
-
-  if(!is.null(argsList)){
-    assign('argsList', argsList, .doAzureBatchGlobals)
-  }
-
-  envFile <- paste0(taskId, ".rds")
-  saveRDS(.doAzureBatchGlobals, file = envFile)
-  uploadBlob(jobId, paste0(getwd(), "/", envFile))
-  file.remove(envFile)
-
-  sasToken <- constructSas("r", "c", jobId, storageCredentials$key)
-
-  taskPrep <- getInstallationCommand(packages)
-  rCommand <- sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/%s %s %s %s %s %s > %s.txt", "merger.R", "$AZ_BATCH_TASK_WORKING_DIR", envFile, length(dependsOn), jobId, numOfTasks, taskId)
-
-  resultFile <- paste0(taskId, "-result", ".rds")
-  logsCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --upload --saskey $BLOBXFER_SASKEY --remoteresource logs/%s", storageCredentials$name, jobId, paste0(taskId, ".txt"), paste0(taskId, ".txt"))
-  autoUploadCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --upload --saskey $BLOBXFER_SASKEY --remoteresource result/%s", storageCredentials$name, jobId, resultFile, resultFile)
-  downloadCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds", storageCredentials$name, jobId, "$AZ_BATCH_TASK_WORKING_DIR")
-  logsCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --upload --saskey $BLOBXFER_SASKEY --remoteresource logs/%s", storageCredentials$name, jobId, paste0(taskId, ".txt"), paste0(taskId, ".txt"))
-
-  commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH", downloadCommand, rCommand, logsCommand, autoUploadCommand)
-  if(taskPrep != ""){
-    commands <- c(taskPrep, commands)
-  }
-
-  sasToken <- constructSas("rwcl", "c", jobId, storageCredentials$key)
-  sasQuery <- generateSasUrl(sasToken)
-
-  setting = list(name = "BLOBXFER_SASKEY",
-                 value = sasQuery)
-
-  resourceFiles <- list(generateResourceFile(storageCredentials$name, jobId, envFile, sasToken))
-
-  addTask(jobId,
-          taskId,
-          environmentSettings = list(setting),
-          resourceFiles = resourceFiles,
-          commandLine = linuxWrapCommands(commands),
-          dependsOn = list(taskIds = dependsOn))
+          commandLine = commands,
+          dependsOn = dependsOn)
 }
 
 .addJob <- function(jobId,
