@@ -73,7 +73,7 @@ generateClusterConfig <- function(fileName, ...){
 #' @return The request to the Batch service was successful.
 #' @examples
 #' cluster <- makeCluster("cluster_config.json", fullName = TRUE, wait = TRUE)
-makeCluster <- function(fileName = "az_config.json", fullName = FALSE, wait = TRUE, timeout = 60000){
+makeCluster <- function(fileName = "az_config.json", fullName = FALSE, wait = TRUE){
   setPoolOption(fileName, fullName)
   config <- getOption("az_config")
   pool <- config$batchAccount$pool
@@ -107,7 +107,7 @@ makeCluster <- function(fileName = "az_config.json", fullName = FALSE, wait = TR
   }
   else{
     if(wait){
-      waitForNodesToComplete(pool$id, timeout, targetDedicated = pool$targetDedicated)
+      waitForNodesToComplete(pool$id, 60000, targetDedicated = pool$targetDedicated)
     }
   }
 
