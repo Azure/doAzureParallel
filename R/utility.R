@@ -26,3 +26,7 @@ getGithubInstallationCommand <- function(packages){
 
   installation <- substr(installation, 1, nchar(installation) - 1)
 }
+
+linuxWrapCommands <- function(commands = c()){
+  commandLine <- sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"", paste0(paste(commands, sep = " ", collapse = "; "),"; "))
+}

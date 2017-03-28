@@ -186,7 +186,7 @@ getparentenv <- function(pkgname) {
         resourceFiles <- obj$options$azure$resourcefiles
       }
 
-      sasToken <- constructSas("2016-11-30", "r", "c", id, storageCredentials$key)
+      sasToken <- constructSas("r", "c", id, storageCredentials$key)
       requiredJobResourceFiles <- list(generateResourceFile(storageCredentials$name, id, "splitter.R", sasToken),
                             generateResourceFile(storageCredentials$name, id, "worker.R", sasToken),
                             generateResourceFile(storageCredentials$name, id, "merger.R", sasToken))
@@ -194,7 +194,11 @@ getparentenv <- function(pkgname) {
       # We need to merge any files passed by the calling lib with the resource files specified here
       resourceFiles <- append(resourceFiles, requiredJobResourceFiles)
 
-      response <- addJob(id, config = data$config, packages = obj$packages, resourceFiles = resourceFiles, raw = TRUE)
+      response <- .addJob(jobId = id,
+                          poolId = data$config$batchAccount$pool$name,
+                          resourceFiles = resourceFiles,
+                          packages = obj$packages)
+
       if(grepl("ActiveJobAndScheduleQuotaReached", response)){
         jobquotaReachedResponse <- grepl("ActiveJobAndScheduleQuotaReached", response)
       }
@@ -244,7 +248,7 @@ getparentenv <- function(pkgname) {
   inputs <- FALSE
   if(!is.null(obj$options$azure$inputs)){
     storageCredentials <- getStorageCredentials()
-    sasToken <- constructSas("2016-11-30", "r", "c", inputs, storageCredentials$key)
+    sasToken <- constructSas("r", "c", inputs, storageCredentials$key)
 
     assign("inputs", list(name = storageCredentials$name,
                           sasToken = sasToken),
@@ -275,9 +279,11 @@ getparentenv <- function(pkgname) {
   tasks <- lapply(1:length(endIndices), function(i){
     startIndex <- startIndices[i]
     endIndex <- endIndices[i]
+    taskId <- paste0(id, "-task", i)
 
-    addTask(id,
-            taskId = paste0(id, "-task", i),
+    .addTask(id,
+            taskId = taskId,
+            rCommand =  sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/%s %s %s > %s.txt", "worker.R", "$AZ_BATCH_TASK_WORKING_DIR", paste0(taskId, ".rds"), taskId),
             args = argsList[startIndex:endIndex],
             envir = .doAzureBatchGlobals,
             packages = obj$packages)
@@ -288,13 +294,12 @@ getparentenv <- function(pkgname) {
   updateJob(id)
 
   i <- length(tasks) + 1
-  r <- addTaskMerge(id,
+  r <- .addTask(id,
              taskId = paste0(id, "-merge"),
-             index = i,
+             rCommand = sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/%s %s %s %s %s %s > %s.txt", "merger.R", "$AZ_BATCH_TASK_WORKING_DIR", paste0(id, "-merge.rds"), length(tasks), id, ntasks,  paste0(id, "-merge")),
              envir = .doAzureBatchGlobals,
              packages = obj$packages,
-             dependsOn = tasks,
-             numOfTasks = ntasks)
+             dependsOn = tasks)
 
   if(wait){
     waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)

@@ -92,12 +92,8 @@ makeCluster <- function(fileName = "az_config.json", fullName = FALSE, wait = TR
     }
   }
 
-  response <- addPool(
-    pool$name,
-    pool$vmSize,
-    autoscaleFormula = getAutoscaleFormula(pool$poolSize$autoscaleFormula, pool$poolSize$minNodes, pool$poolSize$maxNodes),
-    maxTasksPerNode = pool$maxTasksPerNode,
-    raw = TRUE,
+  response <- .addPool(
+    pool = pool,
     packages = packages)
 
   pool <- getPool(pool$name)
