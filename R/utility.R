@@ -38,3 +38,39 @@ getGithubInstallationCommand <- function(packages){
 linuxWrapCommands <- function(commands = c()){
   commandLine <- sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"", paste0(paste(commands, sep = " ", collapse = "; "),"; "))
 }
+
+
+getJobList <- function(jobIds = c()){
+  filter <- ""
+
+  if(length(jobIds) > 1){
+    for(i in 1:length(jobIds)){
+      filter <- paste0(filter, sprintf("id eq '%s'", jobIds[i]), " or ")
+    }
+
+    filter <- substr(filter, 1, nchar(filter) - 3)
+  }
+
+  jobs <- listJobs(query = list("$filter" = filter, "$select" = "id,state"))
+  print("Job List: ")
+
+  for(j in 1:length(jobs$value)){
+    tasks <- listTask(jobs$value[[j]]$id)
+    count <- 0
+    if(length(tasks$value) > 0){
+      taskStates <- lapply(tasks$value, function(x) x$state == "completed")
+
+      for(i in 1:length(taskStates)){
+        if(taskStates[[i]] == TRUE){
+          count <- count + 1
+        }
+      }
+
+      summary <- sprintf("[ id: %s, state: %s, status: %d", jobs$value[[j]]$id, jobs$value[[j]]$state, ceiling((count/length(tasks$value) * 100)))
+      print(paste0(summary,  "% ]"))
+    }
+    else {
+      print(sprintf("[ id: %s, state: %s, status: %s ]", jobs$value[[j]]$id, jobs$value[[j]]$state, "No tasks were run."))
+    }
+  }
+}

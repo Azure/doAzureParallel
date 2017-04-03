@@ -1,5 +1,5 @@
 registerDoAzureParallel <- function(config){
-  setDoPar(fun = .doAzureParallel, data = list(config = config), info = .info)
+  setDoPar(fun = .doAzureParallel, data = list(config = list(config$batchAccount, config$storageAccount), poolId = config$poolId), info = .info)
 }
 
 .info <- function(data, item){
@@ -16,10 +16,10 @@ registerDoAzureParallel <- function(config){
 }
 
 workers <- function(data){
-  id <- data$config$batchAccount$pool$name
+  id <- data$poolId
   pool <- getPool(id)
 
-  if(data$config$settings$verbose){
+  if(getOption("verbose")){
     getPoolWorkers(id)
   }
 
@@ -169,7 +169,7 @@ setChunkSize <- function(value = 1){
       resourceFiles <- append(resourceFiles, requiredJobResourceFiles)
 
       response <- .addJob(jobId = id,
-                          poolId = data$config$batchAccount$pool$name,
+                          poolId = data$poolId,
                           resourceFiles = resourceFiles,
                           packages = obj$packages)
 
@@ -271,7 +271,6 @@ setChunkSize <- function(value = 1){
 
   updateJob(id)
 
-  i <- length(tasks) + 1
   r <- .addTask(id,
              taskId = paste0(id, "-merge"),
              rCommand = sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/%s %s %s %s %s %s > %s.txt", "merger.R", "$AZ_BATCH_TASK_WORKING_DIR", paste0(id, "-merge.rds"), length(tasks), id, ntasks,  paste0(id, "-merge")),
