@@ -78,13 +78,13 @@ makeCluster <- function(fileName = "az_config.json", fullName = FALSE, wait = TR
   config <- getOption("az_config")
   pool <- config$batchAccount$pool
 
-  packages <- ""
+  packages <- NULL
   if(!is.null(config$batchAccount$rPackages) && !is.null(config$batchAccount$rPackages$cran) && length(config$batchAccount$rPackages$cran) > 0){
     packages <- getInstallationCommand(config$batchAccount$rPackages$cran)
   }
 
   if(!is.null(config$batchAccount$rPackages) && !is.null(config$batchAccount$rPackages$github) && length(config$batchAccount$rPackages$github) > 0){
-    if(packages == ""){
+    if(is.null(packages)){
       packages <- getGithubInstallationCommand(config$batchAccount$rPackages$github)
     }
     else{
