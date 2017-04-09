@@ -28,11 +28,12 @@
   downloadCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds", storageCredentials$name, jobId, "$AZ_BATCH_TASK_WORKING_DIR")
 
   commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH", downloadCommand, rCommand, logsCommand, autoUploadCommand)
-  commands <- linuxWrapCommands(commands)
 
   if(!is.null(packages)){
-    commands <- paste0(commands, ";", getInstallationCommand(packages))
+    commands <- c(commands, getInstallationCommand(packages))
   }
+
+  commands <- linuxWrapCommands(commands)
 
   sasToken <- constructSas("rwcl", "c", jobId, storageCredentials$key)
   sasQuery <- generateSasUrl(sasToken)
