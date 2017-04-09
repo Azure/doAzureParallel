@@ -10,7 +10,7 @@ registerDoAzureParallel <- function(config){
          NULL)
 }
 
-.makeDotsEnv <- function(){
+.makeDotsEnv <- function(...){
   list(...)
   function() NULL
 }
@@ -24,46 +24,6 @@ workers <- function(data){
   }
 
   return(pool$currentDedicated)
-}
-
-getparentenv <- function(pkgname) {
-  parenv <- NULL
-
-  # if anything goes wrong, print the error object and return
-  # the global environment
-  tryCatch({
-    # pkgname is NULL in many cases, as when the foreach loop
-    # is executed interactively or in an R script
-    if (is.character(pkgname)) {
-      # load the specified package
-      if (require(pkgname, character.only=TRUE)) {
-        # search for any function in the package
-        pkgenv <- as.environment(paste0('package:', pkgname))
-        for (sym in ls(pkgenv)) {
-          fun <- get(sym, pkgenv, inherits=FALSE)
-          if (is.function(fun)) {
-            env <- environment(fun)
-            if (is.environment(env)) {
-              parenv <- env
-              break
-            }
-          }
-        }
-        if (is.null(parenv)) {
-          stop('loaded ', pkgname, ', but parent search failed', call.=FALSE)
-        } else {
-          message('loaded ', pkgname, ' and set parent environment')
-        }
-      }
-    }
-  },
-  error=function(e) {
-    cat(sprintf('Error getting parent environment: %s\n',
-                conditionMessage(e)))
-  })
-
-  # return the global environment by default
-  if (is.null(parenv)) globalenv() else parenv
 }
 
 .isError <- function(x){
@@ -134,9 +94,15 @@ getparentenv <- function(pkgname) {
     }
   }
 
+  pkgName <- if (exists('packageName', mode='function'))
+    packageName(envir)
+  else
+    NULL
+
   assign('expr', expr, .doAzureBatchGlobals)
   assign('exportenv', exportenv, .doAzureBatchGlobals)
   assign('packages', obj$packages, .doAzureBatchGlobals)
+  assign('pkgName', pkgName, .doAzureBatchGlobals)
 
   time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
   id <-  sprintf("%s%s",
@@ -186,7 +152,7 @@ getparentenv <- function(pkgname) {
         resourceFiles <- obj$options$azure$resourcefiles
       }
 
-      sasToken <- constructSas("2016-11-30", "r", "c", id, storageCredentials$key)
+      sasToken <- constructSas("r", "c", id, storageCredentials$key)
       requiredJobResourceFiles <- list(generateResourceFile(storageCredentials$name, id, "splitter.R", sasToken),
                             generateResourceFile(storageCredentials$name, id, "worker.R", sasToken),
                             generateResourceFile(storageCredentials$name, id, "merger.R", sasToken))
@@ -194,7 +160,11 @@ getparentenv <- function(pkgname) {
       # We need to merge any files passed by the calling lib with the resource files specified here
       resourceFiles <- append(resourceFiles, requiredJobResourceFiles)
 
-      response <- addJob(id, config = data$config, packages = obj$packages, resourceFiles = resourceFiles, raw = TRUE)
+      response <- .addJob(jobId = id,
+                          poolId = data$config$batchAccount$pool$name,
+                          resourceFiles = resourceFiles,
+                          packages = obj$packages)
+
       if(grepl("ActiveJobAndScheduleQuotaReached", response)){
         jobquotaReachedResponse <- grepl("ActiveJobAndScheduleQuotaReached", response)
       }
@@ -244,7 +214,7 @@ getparentenv <- function(pkgname) {
   inputs <- FALSE
   if(!is.null(obj$options$azure$inputs)){
     storageCredentials <- getStorageCredentials()
-    sasToken <- constructSas("2016-11-30", "r", "c", inputs, storageCredentials$key)
+    sasToken <- constructSas("r", "c", inputs, storageCredentials$key)
 
     assign("inputs", list(name = storageCredentials$name,
                           sasToken = sasToken),
@@ -275,9 +245,11 @@ getparentenv <- function(pkgname) {
   tasks <- lapply(1:length(endIndices), function(i){
     startIndex <- startIndices[i]
     endIndex <- endIndices[i]
+    taskId <- paste0(id, "-task", i)
 
-    addTask(id,
-            taskId = paste0(id, "-task", i),
+    .addTask(id,
+            taskId = taskId,
+            rCommand =  sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/%s %s %s > %s.txt", "worker.R", "$AZ_BATCH_TASK_WORKING_DIR", paste0(taskId, ".rds"), taskId),
             args = argsList[startIndex:endIndex],
             envir = .doAzureBatchGlobals,
             packages = obj$packages)
@@ -288,13 +260,12 @@ getparentenv <- function(pkgname) {
   updateJob(id)
 
   i <- length(tasks) + 1
-  r <- addTaskMerge(id,
+  r <- .addTask(id,
              taskId = paste0(id, "-merge"),
-             index = i,
+             rCommand = sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/%s %s %s %s %s %s > %s.txt", "merger.R", "$AZ_BATCH_TASK_WORKING_DIR", paste0(id, "-merge.rds"), length(tasks), id, ntasks,  paste0(id, "-merge")),
              envir = .doAzureBatchGlobals,
              packages = obj$packages,
-             dependsOn = tasks,
-             numOfTasks = ntasks)
+             dependsOn = tasks)
 
   if(wait){
     waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
@@ -342,7 +313,7 @@ getparentenv <- function(pkgname) {
 .createErrorViewerPane <- function(id, failTasks){
   storageCredentials <- getStorageCredentials()
 
-  sasToken <- constructSas("2016-11-30", "r", "c", id, storageCredentials$key)
+  sasToken <- constructSas("r", "c", id, storageCredentials$key)
   query <- generateSasUrl(sasToken)
 
   tempDir <- tempfile()
@@ -354,11 +325,13 @@ getparentenv <- function(pkgname) {
     if(failTasks[i] == 1){
       stdoutFile <- sprintf("https://%s.blob.core.windows.net/%s/%s", storageCredentials$name, id, "stdout")
       stderrFile <- sprintf("https://%s.blob.core.windows.net/%s/%s", storageCredentials$name, id, "stderr")
+      RstderrFile <- sprintf("https://%s.blob.core.windows.net/%s/%s", storageCredentials$name, id, "logs")
 
       stdoutFile <- paste0(stdoutFile, "/", id, "-task", i, "-stdout.txt")
       stderrFile <- paste0(stderrFile, "/", id, "-task", i, "-stderr.txt")
+      RstderrFile <- paste0(RstderrFile, "/", id, "-task", i, ".txt")
 
-      staticHtml <- paste0(staticHtml, 'Task ', i, ' | <a href="', paste0(stdoutFile, query),'">', "stdout.txt",'</a> |', ' <a href="', paste0(stderrFile, query),'">', "stderr.txt",'</a> <br/>')
+      staticHtml <- paste0(staticHtml, 'Task ', i, ' | <a href="', paste0(stdoutFile, query),'">', "stdout.txt",'</a> |', ' <a href="', paste0(stderrFile, query),'">', "stderr.txt",'</a> | <a href="', paste0(RstderrFile, query),'">', "R output",'</a> <br/>')
     }
   }
 
