@@ -59,16 +59,16 @@
 
   poolInfo <- list("poolId" = poolId)
 
-  commands <- linuxWrapCommands(c("ls"))
+  commands <- c("ls")
   if(!is.null(packages)){
-    commands <- paste0(commands, ";", getInstallationCommand(packages))
+    commands <- c(commands, getInstallationCommand(packages))
   }
 
   jobPreparationTask <- list(
-    commandLine = commands,
+    commandLine = linuxWrapCommands(commands),
     userIdentity = list(
       autoUser = list(
-        scope = "task",
+        scope = "pool",
         elevationLevel = "admin"
       )
     ),
@@ -94,10 +94,12 @@
   commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH",
                 "sudo env PATH=$PATH pip install --no-dependencies blobxfer")
 
-  commands <- paste0(linuxWrapCommands(commands), ";", packages)
+  if(!is.null(packages)){
+    commands <- c(commands, packages)
+  }
 
   startTask <- list(
-    commandLine = commands,
+    commandLine = linuxWrapCommands(commands),
     userIdentity = list(
       autoUser = list(
         scope = "pool",
