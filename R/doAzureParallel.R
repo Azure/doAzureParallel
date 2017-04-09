@@ -10,7 +10,7 @@ registerDoAzureParallel <- function(config){
          NULL)
 }
 
-.makeDotsEnv <- function(){
+.makeDotsEnv <- function(...){
   list(...)
   function() NULL
 }
@@ -24,46 +24,6 @@ workers <- function(data){
   }
 
   return(pool$currentDedicated)
-}
-
-getparentenv <- function(pkgname) {
-  parenv <- NULL
-
-  # if anything goes wrong, print the error object and return
-  # the global environment
-  tryCatch({
-    # pkgname is NULL in many cases, as when the foreach loop
-    # is executed interactively or in an R script
-    if (is.character(pkgname)) {
-      # load the specified package
-      if (require(pkgname, character.only=TRUE)) {
-        # search for any function in the package
-        pkgenv <- as.environment(paste0('package:', pkgname))
-        for (sym in ls(pkgenv)) {
-          fun <- get(sym, pkgenv, inherits=FALSE)
-          if (is.function(fun)) {
-            env <- environment(fun)
-            if (is.environment(env)) {
-              parenv <- env
-              break
-            }
-          }
-        }
-        if (is.null(parenv)) {
-          stop('loaded ', pkgname, ', but parent search failed', call.=FALSE)
-        } else {
-          message('loaded ', pkgname, ' and set parent environment')
-        }
-      }
-    }
-  },
-  error=function(e) {
-    cat(sprintf('Error getting parent environment: %s\n',
-                conditionMessage(e)))
-  })
-
-  # return the global environment by default
-  if (is.null(parenv)) globalenv() else parenv
 }
 
 .isError <- function(x){
@@ -134,9 +94,15 @@ getparentenv <- function(pkgname) {
     }
   }
 
+  pkgName <- if (exists('packageName', mode='function'))
+    packageName(envir)
+  else
+    NULL
+
   assign('expr', expr, .doAzureBatchGlobals)
   assign('exportenv', exportenv, .doAzureBatchGlobals)
   assign('packages', obj$packages, .doAzureBatchGlobals)
+  assign('pkgName', pkgName, .doAzureBatchGlobals)
 
   time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
   id <-  sprintf("%s%s",
@@ -347,7 +313,7 @@ getparentenv <- function(pkgname) {
 .createErrorViewerPane <- function(id, failTasks){
   storageCredentials <- getStorageCredentials()
 
-  sasToken <- constructSas("2016-11-30", "r", "c", id, storageCredentials$key)
+  sasToken <- constructSas("r", "c", id, storageCredentials$key)
   query <- generateSasUrl(sasToken)
 
   tempDir <- tempfile()
@@ -359,11 +325,13 @@ getparentenv <- function(pkgname) {
     if(failTasks[i] == 1){
       stdoutFile <- sprintf("https://%s.blob.core.windows.net/%s/%s", storageCredentials$name, id, "stdout")
       stderrFile <- sprintf("https://%s.blob.core.windows.net/%s/%s", storageCredentials$name, id, "stderr")
+      RstderrFile <- sprintf("https://%s.blob.core.windows.net/%s/%s", storageCredentials$name, id, "logs")
 
       stdoutFile <- paste0(stdoutFile, "/", id, "-task", i, "-stdout.txt")
       stderrFile <- paste0(stderrFile, "/", id, "-task", i, "-stderr.txt")
+      RstderrFile <- paste0(RstderrFile, "/", id, "-task", i, ".txt")
 
-      staticHtml <- paste0(staticHtml, 'Task ', i, ' | <a href="', paste0(stdoutFile, query),'">', "stdout.txt",'</a> |', ' <a href="', paste0(stderrFile, query),'">', "stderr.txt",'</a> <br/>')
+      staticHtml <- paste0(staticHtml, 'Task ', i, ' | <a href="', paste0(stdoutFile, query),'">', "stdout.txt",'</a> |', ' <a href="', paste0(stderrFile, query),'">', "stderr.txt",'</a> | <a href="', paste0(RstderrFile, query),'">', "R output",'</a> <br/>')
     }
   }
 

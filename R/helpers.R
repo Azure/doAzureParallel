@@ -29,10 +29,6 @@
 
   commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH", downloadCommand, rCommand, logsCommand, autoUploadCommand)
 
-  if(!is.null(packages)){
-    commands <- c(commands, getInstallationCommand(packages))
-  }
-
   commands <- linuxWrapCommands(commands)
 
   sasToken <- constructSas("rwcl", "c", jobId, storageCredentials$key)
@@ -93,7 +89,7 @@
 
 .addPool <- function(pool, packages){
   commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH",
-                "sudo env PATH=$PATH pip install --no-dependencies blobxfer")
+                "env PATH=$PATH pip install --no-dependencies blobxfer")
 
   if(!is.null(packages)){
     commands <- c(commands, packages)
