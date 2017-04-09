@@ -18,8 +18,6 @@
 
   sasToken <- constructSas("r", "c", jobId, storageCredentials$key)
 
-  taskPrep <- getInstallationCommand(packages)
-
   if(!is.null(args$dependsOn)){
     dependsOn <- list(taskIds = dependsOn)
   }
@@ -93,8 +91,7 @@
 }
 
 .addPool <- function(pool, packages){
-  commands <- c("sed -i -e 's/Defaults    requiretty.*/ #Defaults    requiretty/g' /etc/sudoers",
-                "export PATH=/anaconda/envs/py35/bin:$PATH",
+  commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH",
                 "sudo env PATH=$PATH pip install --no-dependencies blobxfer")
 
   commands <- paste0(linuxWrapCommands(commands), ";", packages)
@@ -103,7 +100,7 @@
     commandLine = commands,
     userIdentity = list(
       autoUser = list(
-        scope = "task",
+        scope = "pool",
         elevationLevel = "admin"
       )
     ),
