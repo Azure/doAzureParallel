@@ -87,7 +87,7 @@
   return(response)
 }
 
-.addPool <- function(pool, packages){
+.addPool <- function(pool, packages, resourceFiles){
   commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH",
                 "env PATH=$PATH pip install --no-dependencies blobxfer")
 
@@ -105,6 +105,10 @@
     ),
     waitForSuccess = TRUE
   )
+
+  if(length(resourceFiles) > 0){
+    startTask$resourceFiles = resourceFiles
+  }
 
   virtualMachineConfiguration <- list(
     imageReference = list(publisher = "microsoft-ads",
