@@ -44,6 +44,12 @@ setChunkSize <- function(value = 1){
   assign("chunkSize", value, envir=.doAzureBatchGlobals)
 }
 
+setVerbose <- function(value = FALSE){
+  if(!is.logical(value)) stop("setVerbose requires a logical argument")
+
+  options(verbose = value)
+}
+
 .doAzureParallel <- function(obj, expr, envir, data){
   stopifnot(inherits(obj, "foreach"))
 

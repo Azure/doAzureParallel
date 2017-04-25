@@ -74,3 +74,9 @@ getJobList <- function(jobIds = c()){
     }
   }
 }
+
+resizeCluster <- function(cluster, min, max, algorithm = "QUEUE", timeInterval = "PT5M"){
+  resizePool(cluster$poolId,
+             autoscaleFormula = getAutoscaleFormula(algorithm, min, max),
+             autoscaleInterval = timeInterval)
+}

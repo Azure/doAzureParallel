@@ -14,7 +14,7 @@
 #' generateClusterConfig("test_config.json")
 #' generateClusterConfig("test_config.json", batchAccount = "testbatchaccount", batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com", storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
 #' }
-generateClusterConfig <- function(fileName, ...){
+generateBatchCredentialsFile <- function(fileName, ...){
   args <- list(...)
 
   batchAccount <- ifelse(is.null(args$batchAccount), "batch_account_name", args$batchAccount)
@@ -46,7 +46,7 @@ generateClusterConfig <- function(fileName, ...){
   }
 }
 
-generateClusterTemplate <- function(fileName, ...){
+generateClusterSettingsFile <- function(fileName, ...){
   args <- list(...)
 
   packages <- ifelse(is.null(args$packages), list(), args$packages)
@@ -72,7 +72,7 @@ generateClusterTemplate <- function(fileName, ...){
     configJson <- jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
     write(configJson, file=paste0(getwd(), "/", fileName))
 
-    print(sprintf("A cluster template has been generated %s. Please enter your cluster specification.", paste0(getwd(), "/", fileName)))
+    print(sprintf("A cluster settings has been generated %s. Please enter your cluster specification.", paste0(getwd(), "/", fileName)))
     print("Note: To maximize all CPU cores, set the maxTasksPerNode property up to 4x the number of cores for the VM size.")
   }
 }
