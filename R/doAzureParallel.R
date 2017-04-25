@@ -36,6 +36,14 @@ workers <- function(data){
 }
 .getSimpleErrorCall <- function(e) deparse(e$call)
 
+setChunkSize <- function(value = 1){
+  if(!is.numeric(value)) stop("setChunkSize requires a numeric argument")
+
+  value <- max(round(value), 1)
+
+  assign("chunkSize", value, envir=.doAzureBatchGlobals)
+}
+
 .doAzureParallel <- function(obj, expr, envir, data){
   stopifnot(inherits(obj, "foreach"))
 
@@ -209,6 +217,10 @@ workers <- function(data){
 
   if(!is.null(obj$options$azure$chunksize)){
     chunkSize <- obj$options$azure$chunksize
+  }
+
+  if(exists("chunkSize", envir=.doAzureBatchGlobals)){
+    chunkSize <- get("chunkSize", envir=.doAzureBatchGlobals)
   }
 
   inputs <- FALSE
