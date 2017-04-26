@@ -12,7 +12,7 @@
   }
 
   envFile <- paste0(taskId, ".rds")
-  saveRDS(.doAzureBatchGlobals, file = envFile)
+  saveRDS(argsList, file = envFile)
   uploadBlob(jobId, paste0(getwd(), "/", envFile))
   file.remove(envFile)
 
