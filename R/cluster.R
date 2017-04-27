@@ -86,7 +86,7 @@ generateClusterSettingsFile <- function(fileName, ...){
 #' @return The request to the Batch service was successful.
 #' @examples
 #' cluster <- makeCluster("cluster_config.json", fullName = TRUE, wait = TRUE)
-makeCluster <- function(clusterSetting = "cluster_settings.json", credFile = "az_config.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
+makeCluster <- function(credFile = "az_config.json", clusterSetting = "cluster_settings.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
   setPoolOption(credFile, fullName)
   config <- getOption("az_config")
 
