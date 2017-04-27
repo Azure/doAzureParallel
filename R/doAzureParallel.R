@@ -132,6 +132,16 @@ setVerbose <- function(value = FALSE){
     wait <- obj$options$azure$wait
   }
 
+  inputs <- FALSE
+  if(!is.null(obj$options$azure$inputs)){
+    storageCredentials <- getStorageCredentials()
+    sasToken <- constructSas("r", "c", inputs, storageCredentials$key)
+
+    assign("inputs", list(name = storageCredentials$name,
+                          sasToken = sasToken),
+           .doAzureBatchGlobals)
+  }
+
   retryCounter <- 0
   maxRetryCount <- 5
   startupFolderName <- "startup"
@@ -153,9 +163,14 @@ setVerbose <- function(value = FALSE){
         stop("Container already exists. Multiple jobs may possibly be running.")
       }
 
-      uploadBlob(id, system.file(startupFolderName, "splitter.R", package="rAzureBatch"))
-      uploadBlob(id, system.file(startupFolderName, "worker.R", package="rAzureBatch"))
-      uploadBlob(id, system.file(startupFolderName, "merger.R", package="rAzureBatch"))
+      uploadBlob(id, system.file(startupFolderName, "worker.R", package="doAzureParallel"))
+      uploadBlob(id, system.file(startupFolderName, "merger.R", package="doAzureParallel"))
+
+      # Setting up common job environment for all tasks
+      jobFileName <- paste0(id, ".rds")
+      saveRDS(.doAzureBatchGlobals, file = jobFileName)
+      uploadBlob(id, paste0(getwd(), "/", jobFileName))
+      file.remove(jobFileName)
 
       resourceFiles <- list()
       if(!is.null(obj$options$azure$resourceFiles)){
@@ -167,9 +182,10 @@ setVerbose <- function(value = FALSE){
       }
 
       sasToken <- constructSas("r", "c", id, storageCredentials$key)
-      requiredJobResourceFiles <- list(generateResourceFile(storageCredentials$name, id, "splitter.R", sasToken),
+      requiredJobResourceFiles <- list(
                             generateResourceFile(storageCredentials$name, id, "worker.R", sasToken),
-                            generateResourceFile(storageCredentials$name, id, "merger.R", sasToken))
+                            generateResourceFile(storageCredentials$name, id, "merger.R", sasToken),
+                            generateResourceFile(storageCredentials$name, id, jobFileName, sasToken))
 
       # We need to merge any files passed by the calling lib with the resource files specified here
       resourceFiles <- append(resourceFiles, requiredJobResourceFiles)
@@ -229,16 +245,6 @@ setVerbose <- function(value = FALSE){
     chunkSize <- get("chunkSize", envir=.doAzureBatchGlobals)
   }
 
-  inputs <- FALSE
-  if(!is.null(obj$options$azure$inputs)){
-    storageCredentials <- getStorageCredentials()
-    sasToken <- constructSas("r", "c", inputs, storageCredentials$key)
-
-    assign("inputs", list(name = storageCredentials$name,
-                          sasToken = sasToken),
-           .doAzureBatchGlobals)
-  }
-
   ntasks <- length(argsList)
   nout <- ceiling(ntasks / chunkSize)
   remainingtasks <- ntasks %% chunkSize
@@ -267,19 +273,25 @@ setVerbose <- function(value = FALSE){
 
     .addTask(id,
             taskId = taskId,
-            rCommand =  sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/%s %s %s > %s.txt", "worker.R", "$AZ_BATCH_TASK_WORKING_DIR", paste0(taskId, ".rds"), taskId),
+            rCommand =  sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %s %s %s %s > %s.txt", "$AZ_BATCH_JOB_PREP_WORKING_DIR", "$AZ_BATCH_TASK_WORKING_DIR", jobFileName, paste0(taskId, ".rds"), taskId),
             args = argsList[startIndex:endIndex],
             envir = .doAzureBatchGlobals,
             packages = obj$packages)
 
-    return(paste0(id, "-task", i))
+    return(taskId)
   })
 
   updateJob(id)
 
   r <- .addTask(id,
              taskId = paste0(id, "-merge"),
-             rCommand = sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/%s %s %s %s %s %s > %s.txt", "merger.R", "$AZ_BATCH_TASK_WORKING_DIR", paste0(id, "-merge.rds"), length(tasks), id, ntasks,  paste0(id, "-merge")),
+             rCommand = sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s %s %s > %s.txt",
+                                "$AZ_BATCH_JOB_PREP_WORKING_DIR",
+                                "$AZ_BATCH_TASK_WORKING_DIR",
+                                id,
+                                length(tasks),
+                                ntasks,
+                                paste0(id, "-merge")),
              envir = .doAzureBatchGlobals,
              packages = obj$packages,
              dependsOn = tasks)
