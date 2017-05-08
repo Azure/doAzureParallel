@@ -1,13 +1,16 @@
 # doAzureParallel
 
 ```R
-# setup my cluster with a simple config file
-cluster<- makeCluster("creds.json", "cluster.json")
+# set your credentials
+setCredentials("creds.json")
 
-# register the cluster as my parallel backend
+# setup your cluster with a simple config file
+cluster<- makeCluster("cluster.json")
+
+# register the cluster as your parallel backend
 registerDoAzureParallel(cluster)
 
-# run my foreach loop on a distributed cluster in Azure
+# run your foreach loop on a distributed cluster in Azure
 number_of_iterations <- 10
 results <- foreach(i = 1:number_of_iterations) %dopar% {
     myParallelAlgorithm()
@@ -93,8 +96,11 @@ generateCredentialConfig("credentials.json")
 # 2. Fill out your credential config and cluster config files.
 # Enter your Azure Batch Account & Azure Storage keys/account-info into your credential config ("credentials.json") and configure your cluster in your cluster config ("cluster.json")
 
+# 3. Set your credentials - you need to give the R session your credentials to interact with Azure
+setCredentials("credentials.json")
+
 # 3. Register the pool. This will create a new pool if your pool hasn't already been provisioned.
-cluster <- makeCluster("credentials.json", "cluster.json")
+cluster <- makeCluster("cluster.json")
 
 # 4. Register the pool as your parallel backend
 registerDoAzureParallel(cluster)
@@ -157,6 +163,8 @@ Use your pool configuration JSON file to define your pool in Azure.
   }
 }
 ```
+NOTE: If you do not want your cluster to autoscale, simply set the number of nodes you want for both *minNodes* and *maxNodes*.
+
 
 Learn more:
  - [Batch account / Storage account](./README.md#azure-requirements)
@@ -180,9 +188,19 @@ results <- foreach(i = 1:number_of_iterations) %do% { ... }
 results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
 ```
 
-### Long-running Jobs
+### Long-running Jobs + Job Management
 
-You can also run *long running jobs* with doAzureParallel. With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
+doAzureParallel also helps you manage your jobs so that you can run many jobs at once while managing it through a few simple methods.
+
+
+```R 
+# List your jobs:
+getJobList()
+```
+
+This will also let you run *long running jobs* easily.
+
+With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
 
 ```R
 # set the .options.azure option in the foreach loop 
@@ -193,6 +211,13 @@ job_id <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar % { .
 
 # get back your job results with your unique job id
 results <- getJobResult(job_id)
+```
+
+Finally, you may also want to track the status of jobs that you've name:
+
+```R
+# List specific jobs:
+getJobList(c('unique_job_id', 'another_job_id'))
 ```
 
 You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md). 
@@ -220,6 +245,24 @@ cs <- ceiling(number_of_iterations / getDoParWorkers())
 # run the foreach loop with chunkSize optimized
 opt <- list(chunkSize = cs)
 results <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar% { ... }
+```
+
+### Resizing Your Cluster
+
+At some point, you may also want to resize your cluster manually. You can do this simply with the command *resizeClsuter*.
+
+```R
+cluster <- makeCluster("cluster.json")
+
+# resize to a min of 10 and a max of 20 nodes
+resizeCluster(cluster, 10, 20)
+```
+
+If your cluster is using autoscale but you want to set it to a static size of 10, you can also use this method:
+
+```R
+# resize to a static cluster of 10
+resizeCluster(cluster, 10, 10)
 ```
 
 ### Setting Verbose Mode to Debug
