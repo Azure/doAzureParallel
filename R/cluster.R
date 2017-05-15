@@ -14,7 +14,7 @@
 #' generateClusterConfig("test_config.json")
 #' generateClusterConfig("test_config.json", batchAccount = "testbatchaccount", batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com", storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
 #' }
-generateBatchCredentialsFile <- function(fileName, ...){
+generateCredentialsConfig <- function(fileName, ...){
   args <- list(...)
 
   batchAccount <- ifelse(is.null(args$batchAccount), "batch_account_name", args$batchAccount)
@@ -46,7 +46,7 @@ generateBatchCredentialsFile <- function(fileName, ...){
   }
 }
 
-generateClusterSettingsFile <- function(fileName, ...){
+generateClusterConfig <- function(fileName, ...){
   args <- list(...)
 
   packages <- ifelse(is.null(args$packages), list(), args$packages)
@@ -58,8 +58,14 @@ generateClusterSettingsFile <- function(fileName, ...){
         vmSize = "Standard_D2_v2",
         maxTasksPerNode = 1,
         poolSize = list(
-          minNodes = 3,
-          maxNodes = 10,
+          dedicatedNodes = list(
+            min = 3,
+            max = 3
+          ),
+          lowPriorityNodes = list(
+            min = 3,
+            max = 3
+          ),
           autoscaleFormula = "QUEUE"
         )
       ),
@@ -86,15 +92,17 @@ generateClusterSettingsFile <- function(fileName, ...){
 #' @return The request to the Batch service was successful.
 #' @examples
 #' cluster <- makeCluster("cluster_config.json", fullName = TRUE, wait = TRUE)
-makeCluster <- function(credFile = "az_config.json", clusterSetting = "cluster_settings.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
-  setPoolOption(credFile, fullName)
-  config <- getOption("az_config")
-
+makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
   if(fullName){
     pool <- rjson::fromJSON(file=paste0(clusterSetting))
   }
   else{
     pool <- rjson::fromJSON(file=paste0(getwd(), "/", clusterSetting))
+  }
+
+  config <- getOption("az_config")
+  if(is.null(config)){
+    stop("Credentials were not set.")
   }
 
   config$poolId = pool$pool$name
@@ -130,12 +138,13 @@ makeCluster <- function(credFile = "az_config.json", clusterSetting = "cluster_s
   }
   else{
     if(wait){
-      waitForNodesToComplete(pool$id, 60000, targetDedicated = pool$targetDedicated)
+      waitForNodesToComplete(pool$id, 60000, targetDedicated = pool$targetDedicatedNodes)
     }
   }
 
   print("Your pool has been registered.")
-  print(sprintf("Node Count: %i", pool$targetDedicated))
+  print(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes))
+  print(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes))
   return(getOption("az_config"))
 }
 
@@ -151,7 +160,7 @@ stopCluster <- function(cluster){
   deletePool(cluster$poolId)
 }
 
-setPoolOption <- function(fileName = "az_config.json", fullName = FALSE){
+setCredentials <- function(fileName = "az_config.json", fullName = FALSE){
   if(fullName){
     config <- rjson::fromJSON(file=paste0(fileName))
   }
