@@ -87,6 +87,8 @@ waitForNodesToComplete <- function(clusterId, timeout = 86400){
 
   pool <- getPool(clusterId)
 
+  numOfNodes <- pool$targetDedicatedNodes + pool$targetLowPriorityNodes
+
   pb <- txtProgressBar(min = 0, max = pool$targetDedicatedNodes + pool$targetLowPriorityNodes, style = 3)
   prevCount <- 0
   timeToTimeout <- Sys.time() + timeout
