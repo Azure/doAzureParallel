@@ -105,7 +105,7 @@ generateClusterConfig <- function(fileName, ...){
 #' @examples
 #' cluster <- makeCluster("cluster_config.json", fullName = TRUE, wait = TRUE)
 #' @export
-makeCluster <- function(fileName = "cluster_settings.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
+makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
   config <- getOption("az_config")
   if(is.null(config)){
     stop("Credentials were not set.")
