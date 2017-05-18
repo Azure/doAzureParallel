@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster.R
 \name{generateCredentialsConfig}
 \alias{generateCredentialsConfig}
-\title{Creates a configuration file for the user's cluster setup.}
+\title{Creates a credentials file for rAzureBatch package authentication}
 \usage{
 generateCredentialsConfig(fileName, ...)
 }
@@ -22,7 +22,7 @@ generateCredentialsConfig(fileName, ...)
 The request to the Batch service was successful.
 }
 \description{
-Creates a configuration file for the user's cluster setup.
+Creates a credentials file for rAzureBatch package authentication
 }
 \examples{
 {

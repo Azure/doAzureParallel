@@ -9,9 +9,6 @@ stopCluster(cluster)
 \arguments{
 \item{cluster}{The cluster configuration that was created in \code{makeCluster}}
 }
-\value{
-The request to the Batch service was successful.
-}
 \description{
 Deletes the cluster from your Azure account.
 }
