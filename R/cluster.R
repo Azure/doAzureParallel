@@ -104,6 +104,7 @@ generateClusterConfig <- function(fileName, ...){
 #' @return The request to the Batch service was successful.
 #' @examples
 #' cluster <- makeCluster("cluster_config.json", fullName = TRUE, wait = TRUE)
+#' @export
 makeCluster <- function(fileName = "cluster_settings.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
   config <- getOption("az_config")
   if(is.null(config)){
