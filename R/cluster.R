@@ -106,16 +106,16 @@ generateClusterConfig <- function(fileName, ...){
 #' cluster <- makeCluster("cluster_config.json", fullName = TRUE, wait = TRUE)
 #' @export
 makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
-  config <- getOption("az_config")
-  if(is.null(config)){
-    stop("Credentials were not set.")
-  }
-
   if(fullName){
     pool <- rjson::fromJSON(file=paste0(clusterSetting))
   }
   else{
     pool <- rjson::fromJSON(file=paste0(getwd(), "/", clusterSetting))
+  }
+
+  config <- getOption("az_config")
+  if(is.null(config)){
+    stop("Credentials were not set.")
   }
 
   config$poolId = pool$pool$name

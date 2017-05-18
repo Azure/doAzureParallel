@@ -6,7 +6,7 @@
 #' registerDoAzureParallel(cluster)
 #' @export
 registerDoAzureParallel <- function(cluster){
-  setDoPar(fun = .doAzureParallel, data = list(config = list(config$batchAccount, config$storageAccount), poolId = config$poolId), info = .info)
+  setDoPar(fun = .doAzureParallel, data = list(config = list(cluster$batchAccount, cluster$storageAccount), poolId = cluster$poolId), info = .info)
 }
 
 .info <- function(data, item){
