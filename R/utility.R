@@ -92,7 +92,7 @@ waitForNodesToComplete <- function(clusterId, timeout = 86400){
   timeToTimeout <- Sys.time() + timeout
 
   while(Sys.time() < timeToTimeout){
-    nodes <- listPoolNodes(poolId)
+    nodes <- listPoolNodes(clusterId)
 
     startTaskFailed <- TRUE
 
