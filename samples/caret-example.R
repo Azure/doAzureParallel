@@ -2,8 +2,10 @@ library(doAzureParallel)
 library(caret)
 library(mlbench)
 
+setCredentials("credentials.json")
+
 # Creating an Azure parallel backend
-cluster <- makeCluster("credentials.json", "cluster_settings.json")
+cluster <- makeCluster("cluster_settings.json")
 
 # Register your Azure parallel backend to the foreach implementation
 registerDoAzureParallel(cluster)
@@ -30,5 +32,7 @@ rda_fit <- train(Class ~ ., data = training,
                  metric = "ROC",
                  tuneLength = 2,
                  trControl = fitControl)
+
+print(rda_fit)
 
 stopCluster(cluster)

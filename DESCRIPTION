@@ -12,7 +12,7 @@ Description: The project is for data experts who use R at scale. The project
     the cluster will be done by a middle layer that schedules each request.
 License: Microsoft Corporation
 LazyData: TRUE
-Imports:
+Depends:
     foreach (>= 1.4.3),
     iterators (>= 1.0.8),
     rAzureBatch (>= 0.2.4)

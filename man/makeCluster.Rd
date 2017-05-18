@@ -4,14 +4,17 @@
 \alias{makeCluster}
 \title{Creates an Azure cloud-enabled cluster.}
 \usage{
-makeCluster(fileName = "az_config.json", fullName = FALSE, wait = TRUE)
+makeCluster(fileName = "cluster_settings.json", fullName = FALSE,
+  wait = TRUE, resourceFiles = list())
 }
 \arguments{
-\item{fileName}{A string that uniquely identifies the job within the account.}
+\item{fileName}{Cluster configuration's file name}
 
 \item{fullName}{A boolean flag for checking the file full name}
 
 \item{wait}{A boolean flag to wait for all nodes to boot up}
+
+\item{resourceFiles}{A list of files that Batch will download to the compute node before running the command line}
 }
 \value{
 The request to the Batch service was successful.
@@ -20,6 +23,6 @@ The request to the Batch service was successful.
 Creates an Azure cloud-enabled cluster.
 }
 \examples{
-cluster <- makeCluster("", fullName = TRUE, wait = TRUE)
+cluster <- makeCluster("cluster_config.json", fullName = TRUE, wait = TRUE)
 }
 

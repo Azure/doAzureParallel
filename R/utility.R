@@ -32,6 +32,13 @@ linuxWrapCommands <- function(commands = c()){
                          paste0(paste(commands, sep = " ", collapse = "; "),"; "))
 }
 
+#' Get a list of job statuses from the given job ids
+#'
+#' @param jobIds A character vector of job ids
+#'
+#' @examples
+#' getJobList(c("job-001", "job-002"))
+#' @export
 getJobList <- function(jobIds = c()){
   filter <- ""
 
@@ -67,18 +74,20 @@ getJobList <- function(jobIds = c()){
   }
 }
 
-waitForNodesToComplete <- function(poolId, timeout, ...){
+#' Polling method to check status of cluster boot up
+#'
+#' @param clusterId The cluster name to poll for
+#' @param timeout Timeout in seconds, default timeout is one day
+#'
+#' @examples
+#' waitForNodesToComplete(clusterId = "testCluster", timeout = 3600)
+#' @export
+waitForNodesToComplete <- function(clusterId, timeout = 86400){
   print("Booting compute nodes. . . ")
 
-  args <- list(...)
+  pool <- getPool(clusterId)
 
-  if(!args$targetDedicated){
-    stop("Pool's current target dedicated not calculated. Please try again.")
-  }
-
-  numOfNodes <- args$targetDedicated
-
-  pb <- txtProgressBar(min = 0, max = numOfNodes, style = 3)
+  pb <- txtProgressBar(min = 0, max = pool$targetDedicatedNodes + pool$targetLowPriorityNodes, style = 3)
   prevCount <- 0
   timeToTimeout <- Sys.time() + timeout
 
@@ -103,7 +112,10 @@ waitForNodesToComplete <- function(poolId, timeout, ...){
         }
         else if(x$state == "starttaskfailed"){
           startTaskFailed <- FALSE
-          return(0)
+          return(1)
+        }
+        else if(x$state == "preempted"){
+          return(1)
         }
         else{
           return(0)
@@ -132,6 +144,15 @@ waitForNodesToComplete <- function(poolId, timeout, ...){
   stop("Timeout expired")
 }
 
+#' Download the results of the job
+#'
+#' @param jobId The jobId to download from
+#' @param container The container to download from
+#'
+#' @return The results from the job.
+#' @examples
+#' getJobResult(jobId = "job-001")
+#' @export
 getJobResult <- function(jobId = "", ...){
   args <- list(...)
 

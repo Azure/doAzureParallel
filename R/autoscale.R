@@ -50,6 +50,18 @@ getAutoscaleFormula <- function(formulaName, dedicatedMin, dedicatedMax, lowPrio
   }
 }
 
+#' Resize an Azure cloud-enabled cluster.
+#'
+#' @param cluster Cluster object that was referenced in \code{makeCluster}
+#' @param dedicatedMin The minimum number of dedicated nodes
+#' @param dedicatedMax The maximum number of dedicated nodes
+#' @param lowPriorityMin The minimum number of low priority nodes
+#' @param lowPriorityMax The maximum number of low priority nodes
+#' @param algorithm Current built-in autoscale formulas: QUEUE, MAX_CPU, WEEKEND, WEEKDAY
+#' @param timeInterval
+#'
+#' @examples
+#' resizeCluster(cluster, dedicatedMin = 2, dedicatedMax = 6, dedicatedMin = 2, dedicatedMax = 6, algorithm = "QUEUE", timeInterval = "PT10M")
 resizeCluster <- function(cluster,
                           dedicatedMin,
                           dedicatedMax,

@@ -1,3 +1,5 @@
+library(doAzureParallel)
+
 setCredentials("credentials.json")
 setVerbose(TRUE)
 

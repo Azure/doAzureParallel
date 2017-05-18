@@ -1,4 +1,11 @@
-registerDoAzureParallel <- function(config){
+#' The registerDoAzureParallel function is used to register the Azure cloud-enabled parallel backend with the foreach package.
+#'
+#' @param cluster The cluster object to use for parallelization
+#'
+#' @examples
+#' registerDoAzureParallel(cluster)
+#' @export
+registerDoAzureParallel <- function(cluster){
   setDoPar(fun = .doAzureParallel, data = list(config = list(config$batchAccount, config$storageAccount), poolId = config$poolId), info = .info)
 }
 
@@ -36,6 +43,13 @@ workers <- function(data){
 }
 .getSimpleErrorCall <- function(e) deparse(e$call)
 
+#' Groups iterations of the foreach loop together per task.
+#'
+#' @param value The number of iterations to group
+#'
+#' @examples
+#' setChunkSize(10)
+#' @export
 setChunkSize <- function(value = 1){
   if(!is.numeric(value)) stop("setChunkSize requires a numeric argument")
 
@@ -44,6 +58,13 @@ setChunkSize <- function(value = 1){
   assign("chunkSize", value, envir=.doAzureBatchGlobals)
 }
 
+#' Set the verbosity for calling httr rest api calls
+#'
+#' @param value Boolean value for turning on and off verbose mode
+#'
+#' @examples
+#' setVerbose(TRUE)
+#' @export
 setVerbose <- function(value = FALSE){
   if(!is.logical(value)) stop("setVerbose requires a logical argument")
 
