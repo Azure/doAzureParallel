@@ -46,7 +46,7 @@ getAutoscaleFormula <- function(formulaName, dedicatedMin, dedicatedMax, lowPrio
     return(sprintf(AUTOSCALE_QUEUE_FORMULA, dedicatedMin, dedicatedMax, lowPriorityMin, lowPriorityMax))
   }
   else{
-
+    stop("Incorrect autoscale formula: QUEUE, MAX_CPU, WEEKEND, WORKDAY")
   }
 }
 

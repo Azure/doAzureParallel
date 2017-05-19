@@ -4,17 +4,17 @@
 \alias{makeCluster}
 \title{Creates an Azure cloud-enabled cluster.}
 \usage{
-makeCluster(fileName = "cluster_settings.json", fullName = FALSE,
+makeCluster(clusterSetting = "cluster_settings.json", fullName = FALSE,
   wait = TRUE, resourceFiles = list())
 }
 \arguments{
-\item{fileName}{Cluster configuration's file name}
-
 \item{fullName}{A boolean flag for checking the file full name}
 
 \item{wait}{A boolean flag to wait for all nodes to boot up}
 
 \item{resourceFiles}{A list of files that Batch will download to the compute node before running the command line}
+
+\item{fileName}{Cluster configuration's file name}
 }
 \value{
 The request to the Batch service was successful.

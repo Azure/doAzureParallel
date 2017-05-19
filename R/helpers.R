@@ -16,10 +16,11 @@
   uploadBlob(jobId, paste0(getwd(), "/", envFile))
   file.remove(envFile)
 
-  sasToken <- constructSas("r", "c", jobId)
-  writeToken <- constructSas("w", "c", jobId)
+  sasToken <- createSasToken("r", "c", jobId)
+  writeToken <- createSasToken("w", "c", jobId)
 
-  resourceFiles <- list(generateResourceFile(storageCredentials$name, jobId, envFile, sasToken))
+  envFileUrl <- createBlobUrl(storageCredentials$name, jobId, envFile, sasToken)
+  resourceFiles <- list(createResourceFile(url = envFileUrl, fileName = envFile))
 
   if(!is.null(args$dependsOn)){
     dependsOn <- list(taskIds = dependsOn)
@@ -31,8 +32,9 @@
 
   downloadCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds", accountName, jobId, "$AZ_BATCH_TASK_WORKING_DIR")
 
-  containerUrl <- sprintf("https://%s.blob.core.windows.net/%s", storageCredentials$name, jobId)
-  containerUrl <- paste0(containerUrl, generateSasUrl(writeToken))
+  containerUrl <- createBlobUrl(storageAccount = storageCredentials$name,
+                                container = jobId,
+                                sasToken = writeToken)
 
   outputFiles <- list(
     list(
@@ -89,11 +91,17 @@
 
   commands <- linuxWrapCommands(commands)
 
-  sasToken <- constructSas("rwcl", "c", jobId)
-  sasQuery <- generateSasUrl(sasToken)
+  sasToken <- createSasToken("rwcl", "c", jobId)
+  queryParameterUrl <- "?"
+
+  for(query in names(sasToken)){
+    queryParameterUrl <- paste0(queryParameterUrl, query, "=", curlEscape(sasToken[[query]]), "&")
+  }
+
+  queryParameterUrl <- substr(queryParameterUrl, 1, nchar(queryParameterUrl) - 1)
 
   setting = list(name = "BLOBXFER_SASKEY",
-                 value = sasQuery)
+                 value = queryParameterUrl)
 
   containerEnv = list(name = "CONTAINER_NAME",
                  value = jobId)

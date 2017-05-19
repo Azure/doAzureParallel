@@ -156,7 +156,7 @@ setVerbose <- function(value = FALSE){
   inputs <- FALSE
   if(!is.null(obj$options$azure$inputs)){
     storageCredentials <- getStorageCredentials()
-    sasToken <- constructSas("r", "c", inputs)
+    sasToken <- createSasToken("r", "c", inputs)
 
     assign("inputs", list(name = storageCredentials$name,
                           sasToken = sasToken),
@@ -202,11 +202,14 @@ setVerbose <- function(value = FALSE){
         resourceFiles <- obj$options$azure$resourcefiles
       }
 
-      sasToken <- constructSas("r", "c", id)
+      sasToken <- createSasToken("r", "c", id)
+      workerScriptUrl <- createBlobUrl(storageCredentials$name, id, "worker.R", sasToken)
+      mergerScriptUrl <- createBlobUrl(storageCredentials$name, id, "merger.R", sasToken)
+      jobCommonFileUrl <- createBlobUrl(storageCredentials$name, id, jobFileName, sasToken)
       requiredJobResourceFiles <- list(
-                            generateResourceFile(storageCredentials$name, id, "worker.R", sasToken),
-                            generateResourceFile(storageCredentials$name, id, "merger.R", sasToken),
-                            generateResourceFile(storageCredentials$name, id, jobFileName, sasToken))
+                            createResourceFile(url = workerScriptUrl, fileName = "worker.R"),
+                            createResourceFile(url = mergerScriptUrl, fileName = "merger.R"),
+                            createResourceFile(url = jobCommonFileUrl, fileName = jobFileName))
 
       # We need to merge any files passed by the calling lib with the resource files specified here
       resourceFiles <- append(resourceFiles, requiredJobResourceFiles)
@@ -320,10 +323,10 @@ setVerbose <- function(value = FALSE){
   if(wait){
     waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
 
-    results <- downloadBlob(id, paste0("result/", id, "-merge-result.rds"))
-
+    response <- downloadBlob(id, paste0("result/", id, "-merge-result.rds"), sasToken = sasToken, accountName = storageCredentials$name)
     tempFile <- tempfile("doAzureParallel", fileext = ".rds")
-    writeBin(results, tempFile)
+    bin <- content(response, "raw")
+    writeBin(bin, tempFile)
     results <- readRDS(tempFile)
 
     failTasks <- sapply(results, .isError)
@@ -367,8 +370,7 @@ setVerbose <- function(value = FALSE){
 .createErrorViewerPane <- function(id, failTasks){
   storageCredentials <- getStorageCredentials()
 
-  sasToken <- constructSas("r", "c", id, storageCredentials$key)
-  query <- generateSasUrl(sasToken)
+  sasToken <- createSasToken("r", "c", id, storageCredentials$key)
 
   tempDir <- tempfile()
   dir.create(tempDir)
@@ -377,9 +379,9 @@ setVerbose <- function(value = FALSE){
   staticHtml <- "<h1>Errors:</h1>"
   for(i in 1:length(failTasks)){
     if(failTasks[i] == 1){
-      stdoutFile <- sprintf("https://%s.blob.core.windows.net/%s/%s", storageCredentials$name, id, "stdout")
-      stderrFile <- sprintf("https://%s.blob.core.windows.net/%s/%s", storageCredentials$name, id, "stderr")
-      RstderrFile <- sprintf("https://%s.blob.core.windows.net/%s/%s", storageCredentials$name, id, "logs")
+      stdoutFile <- createBlobUrl(storageCredentials$name, id, "stdout", sasToken)
+      stderrFile <- createBlobUrl(storageCredentials$name, id, "stderr", sasToken)
+      RstderrFile <- createBlobUrl(storageCredentials$name, id, "logs", sasToken)
 
       stdoutFile <- paste0(stdoutFile, "/", id, "-task", i, ".txt")
       stderrFile <- paste0(stderrFile, "/", id, "-task", i, ".txt")

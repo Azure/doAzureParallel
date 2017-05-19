@@ -171,6 +171,8 @@ makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FAL
 #' @export
 stopCluster <- function(cluster){
   deletePool(cluster$poolId)
+
+  print(sprintf("Your %s cluster has been destroyed.", cluster$poolId))
 }
 
 #' Deletes the cluster from your Azure account.

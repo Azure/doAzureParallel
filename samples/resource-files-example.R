@@ -3,45 +3,27 @@ library(doAzureParallel)
 setCredentials("credentials.json")
 setVerbose(TRUE)
 
-storageAccountName <- "STORAGE_ACCOUNT_NAME"
-inputsContainer <- "inputs"
-outputsContainer <- "outputs"
+storageAccountName <- "mystorageaccount"
 
-# Creating containers
-createContainer(inputsContainer)
+# Creating container for outputs
+outputsContainer <- "outputs"
 createContainer(outputsContainer)
 
 # Generating sas token for blob uploads and downloads
-inputSas <- constructSas("r", "c", inputsContainer)
-outputSas <- constructSas("w", "c", outputsContainer)
+outputSas <- createSasToken("w", "c", outputsContainer)
 
 # Using the NYC taxi datasets, http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml
-uploadChunk(inputsContainer, "yellow_tripdata_2016-01.csv", parallelThreads = 6)
-uploadChunk(inputsContainer, "yellow_tripdata_2016-02.csv", parallelThreads = 6)
-uploadChunk(inputsContainer, "yellow_tripdata_2016-03.csv", parallelThreads = 6)
-uploadChunk(inputsContainer, "yellow_tripdata_2016-04.csv", parallelThreads = 6)
-uploadChunk(inputsContainer, "yellow_tripdata_2016-05.csv", parallelThreads = 6)
-uploadChunk(inputsContainer, "yellow_tripdata_2016-06.csv", parallelThreads = 6)
-uploadChunk(inputsContainer, "yellow_tripdata_2016-07.csv", parallelThreads = 6)
-uploadChunk(inputsContainer, "yellow_tripdata_2016-08.csv", parallelThreads = 6)
-uploadChunk(inputsContainer, "yellow_tripdata_2016-09.csv", parallelThreads = 6)
-uploadChunk(inputsContainer, "yellow_tripdata_2016-10.csv", parallelThreads = 6)
-uploadChunk(inputsContainer, "yellow_tripdata_2016-11.csv", parallelThreads = 6)
-uploadChunk(inputsContainer, "yellow_tripdata_2016-12.csv", parallelThreads = 6)
-
+azureStorageUrl <- sprintf("https://%s.blob.core.windows.net/%s", storageAccount, containerName)
 azure_files <- list(
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-01.csv", inputSas),
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-02.csv", inputSas),
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-03.csv", inputSas),
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-04.csv", inputSas),
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-05.csv", inputSas),
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-06.csv", inputSas),
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-07.csv", inputSas),
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-08.csv", inputSas),
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-09.csv", inputSas),
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-10.csv", inputSas),
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-11.csv", inputSas),
-  generateResourceFile(storageAccountName, inputsContainer, "yellow_tripdata_2016-12.csv", inputSas)
+  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-01.csv"), fileName = "yellow_tripdata_2016-01.csv"),
+  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-02.csv"), fileName = "yellow_tripdata_2016-02.csv"),
+  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-03.csv"), fileName = "yellow_tripdata_2016-03.csv"),
+  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-04.csv"), fileName = "yellow_tripdata_2016-04.csv"),
+  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-05.csv"), fileName = "yellow_tripdata_2016-05.csv"),
+  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-06.csv"), fileName = "yellow_tripdata_2016-06.csv"),
+  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-07.csv"), fileName = "yellow_tripdata_2016-07.csv"),
+  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-08.csv"), fileName = "yellow_tripdata_2016-08.csv"),
+  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-09.csv"), fileName = "yellow_tripdata_2016-09.csv")
 )
 
 localSeqExecution <- function(months) {
@@ -52,12 +34,8 @@ localSeqExecution <- function(months) {
     fileDirectory <- getwd()
 
     colsToKeep <- c("pickup_longitude", "pickup_latitude", "dropoff_longitude", "dropoff_latitude", "tip_amount", "trip_distance")
-    if(i > 9){
-      file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-", i, ".csv"), select = colsToKeep)
-    }
-    else {
-      file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-0", i, ".csv"), select = colsToKeep)
-    }
+
+    file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-0", i, ".csv"), select = colsToKeep)
 
     min_lat <- 40.5774
     max_lat <- 40.9176
@@ -89,12 +67,8 @@ localParExecution <- function(months) {
     fileDirectory <- getwd()
 
     colsToKeep <- c("pickup_longitude", "pickup_latitude", "dropoff_longitude", "dropoff_latitude", "tip_amount", "trip_distance")
-    if(i > 9){
-      file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-", i, ".csv"), select = colsToKeep)
-    }
-    else {
-      file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-0", i, ".csv"), select = colsToKeep)
-    }
+
+    file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-0", i, ".csv"), select = colsToKeep)
 
     min_lat <- 40.5774
     max_lat <- 40.9176
@@ -143,12 +117,9 @@ azureExecution <- function(months) {
     fileDirectory <- paste0(Sys.getenv("AZ_BATCH_NODE_STARTUP_DIR"), "/wd")
 
     colsToKeep <- c("pickup_longitude", "pickup_latitude", "dropoff_longitude", "dropoff_latitude", "tip_amount", "trip_distance")
-    if(i > 9){
-      file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-", i, ".csv"), select = colsToKeep)
-    }
-    else {
-      file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-0", i, ".csv"), select = colsToKeep)
-    }
+
+    file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-0", i, ".csv"), select = colsToKeep)
+
     min_lat <- 40.5774
     max_lat <- 40.9176
     min_long <- -74.15
@@ -174,8 +145,8 @@ azureExecution <- function(months) {
 
 library(microbenchmark)
 op <- microbenchmark(
-  doAzureParallel=azureExecution(6),
-  doLocal = localSeqExecution(6),
-  doParallel = localParExecution(6),
+  doAzureParallel=azureExecution(9),
+  doLocal = localSeqExecution(9),
+  doParallel = localParExecution(9),
   times=2L)
 
