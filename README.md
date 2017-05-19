@@ -99,13 +99,13 @@ generateBatchCredentialsFile("credentials.json")
 # 3. Set your credentials - you need to give the R session your credentials to interact with Azure
 setCredentials("credentials.json")
 
-# 3. Register the pool. This will create a new pool if your pool hasn't already been provisioned.
+# 4. Register the pool. This will create a new pool if your pool hasn't already been provisioned.
 cluster <- makeCluster("cluster.json")
 
-# 4. Register the pool as your parallel backend
+# 5. Register the pool as your parallel backend
 registerDoAzureParallel(cluster)
 
-# 5. Check that your parallel backend has been registered
+# 6. Check that your parallel backend has been registered
 getDoParWorkers()
 ```
 
@@ -115,6 +115,7 @@ Run your parallel *foreach* loop with the *%dopar%* keyword. The *foreach* funct
 number_of_iterations <- 10
 results <- foreach(i = 1:number_of_iterations) %dopar% {
   # This code is executed, in parallel, across your cluster.
+  myAlgorithm()
 }
 ```
 
@@ -143,6 +144,9 @@ Use your credential config JSON file to enter your credentials.
   }
 }
 ```
+Learn more:
+ - [Batch account / Storage account](./README.md#azure-requirements)
+
 
 #### Cluster Settings
 Use your pool configuration JSON file to define your pool in Azure.
@@ -153,9 +157,15 @@ Use your pool configuration JSON file to define your pool in Azure.
   "vmSize": <your pool VM size name>, // example: "Standard_F2"
   "maxTasksPerNode": <num tasks to allocate to each node>, // example: "2"
   "poolSize": {
-    "minNodes": <min number of nodes in cluster>, // example: "1"
-    "maxNodes": <max number of nodes to scale cluster to>, // example: "10"
-    "autoscaleFormula": <your autoscale formula name> // recommended: "QUEUE"
+    "dedicatedNodes": {  // dedicated vms
+        "min": 2,
+        "max": 2
+    },
+    "lowPriorityNodes": { // low priority vms 
+        "min": 1,
+        "max": 10
+    },
+    "autoscaleFormula": "QUEUE"
   },
   "rPackages": {
     "cran": ["some_cran_package", "some_other_cran_package"],
@@ -165,14 +175,28 @@ Use your pool configuration JSON file to define your pool in Azure.
 ```
 NOTE: If you do not want your cluster to autoscale, simply set the number of nodes you want for both *minNodes* and *maxNodes*.
 
-
 Learn more:
- - [Batch account / Storage account](./README.md#azure-requirements)
  - [Choosing VM size](./docs/10-vm-sizes.md#vm-size-table)
  - [MaxTasksPerNode](./docs/22-parallelizing-cores.md)
+ - [LowPriorityNodes](#low-priority-vms)
  - [Autoscale](./docs/11-autoscale.md)
  - [PoolSize Limitations](./docs/12-quota-limitations.md)
  - [rPackages](./docs/20-package-management.md)
+
+### Low Priority VMs
+Low-priority VMs is a way to obtain and consume Azure compute at a much lower price using Azure Batch. Since doAzureParallel is built ontop of Azure Batch, this package is able to allocate compute resources from Azure's surplus capacity at an **80% discount**. 
+
+Low-priority VMs come with the understanding that when you request it, there is the possibility that we'll need to take some or all of it back. Hence the name *low-priority* - VMs may not be allocated or may be preempted due to higher priority allocations, which equate to full-priced VMs that have an SLA.
+
+And as the name suggests, this significant cost reduction is ideal for *low priority* workloads without a strict performance requirement. However, Azure Batch has first-class support for low-priority VMs. It allows you to use them in conjunction with normal on-demand VMs (*dedicated VMs*) and enables job cost to be balanced with job execution flexibility:
+
+ * Batch pools can contain both on-demand nodes and low-priority nodes. The two types can be independently scaled, either explicitly with the resize operation or automatically using auto-scale. Different configurations can be used, such as maximizing cost savings by always using low-priority nodes or spinning up on-demand nodes at full price, to maintain capacity by replacing any preempted low-priority nodes.
+ * If any low-priority nodes are preempted, then Batch will automatically attempt to replace the lost capacity, continually seeking to maintain the target amount of low-priority capacity in the pool.
+ * If tasks are interrupted when the node on which it is running is preempted, then the tasks are automatically re-queued to be re-run.
+
+For more information about low-priority VMs, please visit the [documentation]("https://docs.microsoft.com/en-us/azure/batch/batch-low-pri-vms").
+
+You can also check out information on low-priority pricing [here]("https://azure.microsoft.com/en-us/pricing/details/batch/").
 
 ### Distributing Data
 When developing at scale, you may also want to chunk up your data and distribute the data across your nodes. Learn more about that [here](./docs/21-distributing-data.md#chunking-data)
