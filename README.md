@@ -178,7 +178,7 @@ NOTE: If you do not want your cluster to autoscale, simply set the number of nod
 Learn more:
  - [Choosing VM size](./docs/10-vm-sizes.md#vm-size-table)
  - [MaxTasksPerNode](./docs/22-parallelizing-cores.md)
- - [LowPriorityNodes] (#low-priority-vms)
+ - [LowPriorityNodes](#low-priority-vms)
  - [Autoscale](./docs/11-autoscale.md)
  - [PoolSize Limitations](./docs/12-quota-limitations.md)
  - [rPackages](./docs/20-package-management.md)
