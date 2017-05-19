@@ -1,5 +1,12 @@
-registerDoAzureParallel <- function(config){
-  setDoPar(fun = .doAzureParallel, data = list(config = list(config$batchAccount, config$storageAccount), poolId = config$poolId), info = .info)
+#' The registerDoAzureParallel function is used to register the Azure cloud-enabled parallel backend with the foreach package.
+#'
+#' @param cluster The cluster object to use for parallelization
+#'
+#' @examples
+#' registerDoAzureParallel(cluster)
+#' @export
+registerDoAzureParallel <- function(cluster){
+  setDoPar(fun = .doAzureParallel, data = list(config = list(cluster$batchAccount, cluster$storageAccount), poolId = cluster$poolId), info = .info)
 }
 
 .info <- function(data, item){
@@ -23,7 +30,7 @@ workers <- function(data){
     getPoolWorkers(id)
   }
 
-  return(pool$currentDedicated)
+  (pool$currentDedicatedNodes * pool$maxTasksPerNode) + (pool$currentLowPriorityNodes * pool$maxTasksPerNode)
 }
 
 .isError <- function(x){
@@ -36,6 +43,13 @@ workers <- function(data){
 }
 .getSimpleErrorCall <- function(e) deparse(e$call)
 
+#' Groups iterations of the foreach loop together per task.
+#'
+#' @param value The number of iterations to group
+#'
+#' @examples
+#' setChunkSize(10)
+#' @export
 setChunkSize <- function(value = 1){
   if(!is.numeric(value)) stop("setChunkSize requires a numeric argument")
 
@@ -44,6 +58,13 @@ setChunkSize <- function(value = 1){
   assign("chunkSize", value, envir=.doAzureBatchGlobals)
 }
 
+#' Set the verbosity for calling httr rest api calls
+#'
+#' @param value Boolean value for turning on and off verbose mode
+#'
+#' @examples
+#' setVerbose(TRUE)
+#' @export
 setVerbose <- function(value = FALSE){
   if(!is.logical(value)) stop("setVerbose requires a logical argument")
 
@@ -135,7 +156,7 @@ setVerbose <- function(value = FALSE){
   inputs <- FALSE
   if(!is.null(obj$options$azure$inputs)){
     storageCredentials <- getStorageCredentials()
-    sasToken <- constructSas("r", "c", inputs, storageCredentials$key)
+    sasToken <- constructSas("r", "c", inputs)
 
     assign("inputs", list(name = storageCredentials$name,
                           sasToken = sasToken),
@@ -181,7 +202,7 @@ setVerbose <- function(value = FALSE){
         resourceFiles <- obj$options$azure$resourcefiles
       }
 
-      sasToken <- constructSas("r", "c", id, storageCredentials$key)
+      sasToken <- constructSas("r", "c", id)
       requiredJobResourceFiles <- list(
                             generateResourceFile(storageCredentials$name, id, "worker.R", sasToken),
                             generateResourceFile(storageCredentials$name, id, "merger.R", sasToken),
@@ -301,6 +322,10 @@ setVerbose <- function(value = FALSE){
 
     results <- downloadBlob(id, paste0("result/", id, "-merge-result.rds"))
 
+    tempFile <- tempfile("doAzureParallel", fileext = ".rds")
+    writeBin(results, tempFile)
+    results <- readRDS(tempFile)
+
     failTasks <- sapply(results, .isError)
 
     numberOfFailedTasks <- sum(unlist(failTasks))
@@ -356,8 +381,8 @@ setVerbose <- function(value = FALSE){
       stderrFile <- sprintf("https://%s.blob.core.windows.net/%s/%s", storageCredentials$name, id, "stderr")
       RstderrFile <- sprintf("https://%s.blob.core.windows.net/%s/%s", storageCredentials$name, id, "logs")
 
-      stdoutFile <- paste0(stdoutFile, "/", id, "-task", i, "-stdout.txt")
-      stderrFile <- paste0(stderrFile, "/", id, "-task", i, "-stderr.txt")
+      stdoutFile <- paste0(stdoutFile, "/", id, "-task", i, ".txt")
+      stderrFile <- paste0(stderrFile, "/", id, "-task", i, ".txt")
       RstderrFile <- paste0(RstderrFile, "/", id, "-task", i, ".txt")
 
       staticHtml <- paste0(staticHtml, 'Task ', i, ' | <a href="', paste0(stdoutFile, query),'">', "stdout.txt",'</a> |', ' <a href="', paste0(stderrFile, query),'">', "stderr.txt",'</a> | <a href="', paste0(RstderrFile, query),'">', "R output",'</a> <br/>')
@@ -370,21 +395,4 @@ setVerbose <- function(value = FALSE){
   if (!is.null(viewer)){
     viewer(htmlFile)
   }
-}
-
-getJobResult <- function(jobId = "", ...){
-  args <- list(...)
-
-  if(!is.null(args$container)){
-    results <- downloadBlob(container, paste0("result/", jobId, "-merge-result.rds"))
-  }
-  else{
-    results <- downloadBlob(jobId, paste0("result/", jobId, "-merge-result.rds"))
-  }
-
-  if(!is.null(args$pass) && args$pass){
-    failTasks <- sapply(results, .isError)
-  }
-
-  return(results)
 }

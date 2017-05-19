@@ -1,8 +1,10 @@
 library(doAzureParallel)
 library(plyr)
 
+setCredentials("credentials.json")
+
 # Creating an Azure parallel backend
-cluster <- makeCluster("credentials.json", "cluster_settings.json")
+cluster <- makeCluster("cluster_settings.json")
 
 # Register your Azure parallel backend to the foreach implementation
 registerDoAzureParallel(cluster)
