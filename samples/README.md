@@ -4,34 +4,32 @@ This list of samples in this section highlights various usecases for doAzurePara
 If you would like to see more samples, please reach out to [razurebatch@microsoft.com](mailto:razurebatch@microsoft.com).
 
 
-1. **Azure Introduction** [(link)](./00-azure-introduction.md)
+1. **Monte Carlo Pricing Simulation** [(link)](./montecarlo_pricing_simulation.R)
 
-   Using the *Data Science Virtual Machine (DSVM)* & *Azure Batch* 
+   The sample walks you through a monte carlo pricing simulation. It illustrates a simple way to use doAzureParallel to parallelize your simuluation-based workloads.
 
-2. **Virtual Machine Sizes** [(link)](./10-vm-sizes.md)
+2. **Grid Search with Cross Validation using Caret** [(link)](./caret-example.R)
 
-   How do you choose the best VM type/size for your workload?
+   The code walks through how to off-load computationally expensive parameter-tuning work to Azure. The parameter tuning is handle by a package called Caret, which uses doAzureParallel as a parallel backend to distibute work to.
 
-3. **Autoscale** [(link)](./11-autoscale.md)
+   This sample uses the built-in email dataset to evaluate whether or not an email is spam. Using Caret, the code runs through a 10-fold cross validation with 10 repeats and runs for each combination in the 'grid' of paramters. The classification algorithm is Gradient Boosted Machine, and each run is evaluated for accuracy. Using doAzureParallel to create the backend, caret is able to distribute work to Azure and significantly speed up the work.
 
-   Automatically scale up/down your cluster to save time and/or money.
+3. **Mandelbrot Simulation Benchmark** [(link)](./mandlebrot_performance_test.ipynb)
 
-4. **Azure Limitations** [(link)](./12-quota-limitations.md)
+   This sample uses doAzureParallel to compute the mandelbrot set. The code benchmarks the difference in performance for running local and running on a doAzureParallel cluster size of 10, 20, 40, and 80 cores. 
 
-   Learn about the limitations around the size of your cluster and the number of foreach jobs you can run in Azure.
+4. **Using Resource Files to Move Your Data** [(link)](./resource-files-example.R)
+
+   This sample illustrates how you can easily pull in data to your cluster directly from blob storage using *resource files*  and then how to write back to blob storage after the job is done. 
    
-4. **Package Management** [(link)](./20-package-management.md)
+   In this case, we use the 2016 NY Taxi Dataset where each node in Azure pulls data down from a different month of the dataset to work on, and then uploads the results back to another location in storage.
 
-   Best practices for managing your R packages across your Azure pool 
-   
-5. **Distributing your Data** [(link)](./21-distributing-data.md)
+   The sample also has code that runs through this process locally (both single core and multi-core) to do a benchmark against running the work with doAzureParallel.
 
-   Best practices and limitations for working with distributed data.
-   
-6. **Parallelizing on each VM Core** [(link)](./22-parallelizing-cores.md)
+5. **Using Sas Tokens for Private Blobs** [(link)](./resource-files-example.R)
 
-   Best practices and limitations for parallelizing your R code to each core in each VM in your pool 
+   This sample walks through using private blobs. The code shows your how to create a Sas token to use when uploading files to your private blob, and then how to use resource files to move your private dataset into your doAzureParallel cluster to execute on.
 
-7. **Persistent Storage** [(link)](./23-persistent-storage.md)
+6. **Distributed ETL with plyr** [(link)](./plyr_example.R)
 
-   Taking advantage of persistent storage for long-running jobs
+   This short sample shows you how you can perform distributed ETL jobs with plyr on top of doAzureParallel's parallel backend.
