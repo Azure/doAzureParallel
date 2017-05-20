@@ -1,3 +1,7 @@
+# =============
+# === Setup ===
+# =============
+
 # install packages
 library(devtools)
 install_github("azure/razurebatch", ref="release")
@@ -23,6 +27,10 @@ registerDoAzureParallel(cluster)
 
 # check that your workers are up
 getDoParWorkers()
+
+# ======================================
+# === Monte Carlo Pricing Simulation ===
+# ======================================
 
 # set the parameters for the monte carlo simulation
 mean_change = 1.001
