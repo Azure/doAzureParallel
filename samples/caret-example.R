@@ -29,7 +29,8 @@ registerDoAzureParallel(cluster)
 # === Grid Search w/ Cross Validation using Caret ===
 # ===================================================
 
-# For more details about using caret, https://topepo.github.io/caret/index.html
+# For more details about using caret:
+# https://topepo.github.io/caret/index.html
 library(caret)
 
 # Set your chunk size of your tasks to 8 
@@ -40,7 +41,11 @@ setChunkSize(8)
 install.packages("DAAG")
 library(DAAG)
 
-# 'spam7' is a data set that consists of 4601 email items, of which 1813 items were identified as spam. This sample has 7 features, one of which is titled 'yesno'. In this example, we will be classifying our data into 'yesno' to identify which rows are spam, and which are not
+# 'spam7' is a data set that consists of 4601 email items, 
+# of which 1813 items were identified as spam. This sample 
+# has 7 features, one of which is titled 'yesno'. In this 
+# example, we will be classifying our data into 'yesno' to 
+# identify which rows are spam, and which are not.
 
 # split the data into 
 set.seed(998)
@@ -48,14 +53,14 @@ inTraining <- createDataPartition(spam7$yesno, p = .75, list = FALSE)
 training <- spam7[ inTraining,]
 testing  <- spam7[-inTraining,]
 
-# Define the settings for the cv 
-# Because we have already registered our parallel backend, Caret will know to use it
+# Define the settings for the cv. Because we have already 
+# registered our parallel backend, Caret will know to use it
 fitControl <- trainControl(## 10-fold cross validation
                            method = "repeatedcv",
                            number = 10,
                            ## repeat 10 times
                            repeats = 10,
-                           ## toggle between sequential execution and parallel execution 
+                           ## toggle between sequential and parallel execution 
                            allowParallel = TRUE)
 
 # Define the grid of parameters to tune 
@@ -67,7 +72,9 @@ gbmGrid <- expand.grid(interaction.depth = c(1, 5, 9),
 # show the number of combinations with the tuning parameters to test
 nrow(gbmGrid)
 
-# Set up a grid of tuning parameters for the classification routine, fits each model and calculates a resampling base performance measure
+# Set up a grid of tuning parameters for the classification 
+# routine, fits each model and calculates a resampling base 
+# performance measure
 gbm_fit <- train(## classification column
                  yesno ~ ., 
                  ## dataframe to train on
