@@ -173,7 +173,7 @@ Use your pool configuration JSON file to define your pool in Azure.
   }
 }
 ```
-NOTE: If you do not want your cluster to autoscale, simply set the number of nodes you want for both *minNodes* and *maxNodes*.
+NOTE: If you do **not** want your cluster to autoscale, simply set the number of min nodes equal to max nodes for low-priority and dedicated.
 
 Learn more:
  - [Choosing VM size](./docs/10-vm-sizes.md#vm-size-table)
