@@ -194,7 +194,8 @@
                                                              pool$poolSize$dedicatedNodes$min,
                                                              pool$poolSize$dedicatedNodes$max,
                                                              pool$poolSize$lowPriorityNodes$min,
-                                                             pool$poolSize$lowPriorityNodes$max),
+                                                             pool$poolSize$lowPriorityNodes$max,
+                                                             maxTasksPerNode = pool$maxTasksPerNode),
                       autoScaleEvaluationInterval = "PT5M",
                       maxTasksPerNode = pool$maxTasksPerNode,
                       raw = TRUE)

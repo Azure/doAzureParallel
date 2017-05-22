@@ -19,7 +19,9 @@ AUTOSCALE_MAX_CPU_FORMULA <- "$totalNodes =
 AUTOSCALE_QUEUE_FORMULA <- paste0(
   "$samples = $ActiveTasks.GetSamplePercent(TimeInterval_Minute * 15);",
   "$tasks = $samples < 70 ? max(0,$ActiveTasks.GetSample(1)) : max( $ActiveTasks.GetSample(1), avg($ActiveTasks.GetSample(TimeInterval_Minute * 15)));",
-  "$targetVMs = $tasks > 0? $tasks : max(0, $TargetDedicated/2) + 0.5;",
+  "$maxTasksPerNode = %s;",
+  "$round = $maxTasksPerNode - 1;",
+  "$targetVMs = $tasks > 0? (($tasks + $round)/ $maxTasksPerNode) : max(0, $TargetDedicated/2) + 0.5;",
   "$TargetDedicatedNodes = max(%s, min($targetVMs, %s));",
   "$TargetLowPriorityNodes = max(%s, min($targetVMs, %s));",
   "$NodeDeallocationOption = taskcompletion;"
@@ -30,7 +32,7 @@ AUTOSCALE_FORMULA = list("WEEKEND" = AUTOSCALE_WEEKEND_FORMULA,
                          "MAX_CPU" = AUTOSCALE_MAX_CPU_FORMULA,
                          "QUEUE" = AUTOSCALE_QUEUE_FORMULA)
 
-getAutoscaleFormula <- function(formulaName, dedicatedMin, dedicatedMax, lowPriorityMin, lowPriorityMax){
+getAutoscaleFormula <- function(formulaName, dedicatedMin, dedicatedMax, lowPriorityMin, lowPriorityMax, maxTasksPerNode = 1){
   formulas <- names(AUTOSCALE_FORMULA)
 
   if(formulaName == formulas[1]){
@@ -43,7 +45,7 @@ getAutoscaleFormula <- function(formulaName, dedicatedMin, dedicatedMax, lowPrio
     return(sprintf(AUTOSCALE_MAX_CPU_FORMULA, dedicatedMin))
   }
   else if(formulaName == formulas[4]){
-    return(sprintf(AUTOSCALE_QUEUE_FORMULA, dedicatedMin, dedicatedMax, lowPriorityMin, lowPriorityMax))
+    return(sprintf(AUTOSCALE_QUEUE_FORMULA, maxTasksPerNode, dedicatedMin, dedicatedMax, lowPriorityMin, lowPriorityMax))
   }
   else{
     stop("Incorrect autoscale formula: QUEUE, MAX_CPU, WEEKEND, WORKDAY")
@@ -69,7 +71,9 @@ resizeCluster <- function(cluster,
                           lowPriorityMax,
                           algorithm = "QUEUE",
                           timeInterval = "PT5M"){
+  pool <- getPool(cluster$poolId)
+
   resizePool(cluster$poolId,
-             autoscaleFormula = getAutoscaleFormula(algorithm, dedicatedMin, dedicatedMax, lowPriorityMin, lowPriorityMax),
+             autoscaleFormula = getAutoscaleFormula(algorithm, dedicatedMin, dedicatedMax, lowPriorityMin, lowPriorityMax, maxTasksPerNode = pool$maxTasksPerNode),
              autoscaleInterval = timeInterval)
 }

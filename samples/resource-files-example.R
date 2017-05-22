@@ -1,7 +1,6 @@
 library(doAzureParallel)
 
 setCredentials("credentials.json")
-setVerbose(TRUE)
 
 # This step will upload the results within the foreach loop to azure storage
 # First, replace the "mystorageaccount" with your storage account.
