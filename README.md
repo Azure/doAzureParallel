@@ -91,7 +91,7 @@ Set up your parallel backend with Azure. This is your set of Azure VMs.
 ```R
 # 1. Generate your credential and cluster configuration files.  
 generateClusterConfig("cluster.json")
-generateBatchCredentialsFile("credentials.json")
+generateCredentialsFile("credentials.json")
 
 # 2. Fill out your credential config and cluster config files.
 # Enter your Azure Batch Account & Azure Storage keys/account-info into your credential config ("credentials.json") and configure your cluster in your cluster config ("cluster.json")
@@ -173,7 +173,7 @@ Use your pool configuration JSON file to define your pool in Azure.
   }
 }
 ```
-NOTE: If you do not want your cluster to autoscale, simply set the number of nodes you want for both *minNodes* and *maxNodes*.
+NOTE: If you do **not** want your cluster to autoscale, simply set the number of min nodes equal to max nodes for low-priority and dedicated.
 
 Learn more:
  - [Choosing VM size](./docs/10-vm-sizes.md#vm-size-table)
