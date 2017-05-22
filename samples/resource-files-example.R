@@ -3,17 +3,18 @@ library(doAzureParallel)
 setCredentials("credentials.json")
 setVerbose(TRUE)
 
+# This step will upload the results within the foreach loop to azure storage
+# First, replace the "mystorageaccount" with your storage account.
+# We will create an output container named "nyc-taxi-graphs", then
+# create an write-only permission SAS token to upload the graph from a VM in Azure
 storageAccountName <- "mystorageaccount"
-
-# Creating container for outputs
-outputsContainer <- "outputs"
+outputsContainer <- "nyc-taxi-graphs"
 createContainer(outputsContainer)
-
-# Generating sas token for blob uploads and downloads
 outputSas <- createSasToken("w", "c", outputsContainer)
 
 # Using the NYC taxi datasets, http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml
-azureStorageUrl <- sprintf("https://%s.blob.core.windows.net/%s", storageAccount, containerName)
+# We will upload the files to your pool of VMs, using resource files
+azureStorageUrl <- "http://playdatastore.blob.core.windows.net/nyc-taxi-dataset"
 azure_files <- list(
   createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-01.csv"), fileName = "yellow_tripdata_2016-01.csv"),
   createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-02.csv"), fileName = "yellow_tripdata_2016-02.csv"),
@@ -26,127 +27,38 @@ azure_files <- list(
   createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-09.csv"), fileName = "yellow_tripdata_2016-09.csv")
 )
 
-localSeqExecution <- function(months) {
-  print("local")
+# add the parameter 'resourceFiles'
+cluster <- makeCluster("cluster_settings.json", resourceFiles = azure_files)
 
-  results <- foreach(i = 1:months, .packages = c("data.table", "ggplot2", "rAzureBatch")) %do% {
-    # Will update the docs to illustrate our temporary way of reading files
-    fileDirectory <- getwd()
+# when the cluster is provisioned, register the cluster as your parallel backend
+registerDoAzureParallel(cluster)
 
-    colsToKeep <- c("pickup_longitude", "pickup_latitude", "dropoff_longitude", "dropoff_latitude", "tip_amount", "trip_distance")
+results <- foreach(i = 1:9, .packages = c("data.table", "ggplot2", "rAzureBatch")) %dopar% {
+  # Will update the docs to illustrate our temporary way of reading files
+  fileDirectory <- paste0(Sys.getenv("AZ_BATCH_NODE_STARTUP_DIR"), "/wd")
 
-    file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-0", i, ".csv"), select = colsToKeep)
+  colsToKeep <- c("pickup_longitude", "pickup_latitude", "dropoff_longitude", "dropoff_latitude", "tip_amount", "trip_distance")
 
-    min_lat <- 40.5774
-    max_lat <- 40.9176
-    min_long <- -74.15
-    max_long <- -73.7004
+  file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-0", i, ".csv"), select = colsToKeep)
 
-    plot <- ggplot(file, aes(x=pickup_longitude, y=pickup_latitude)) +
-      geom_point(size=0.06) +
-      scale_x_continuous(limits=c(min_long, max_long)) +
-      scale_y_continuous(limits=c(min_lat, max_lat)) +
-      scale_color_gradient(low="#CCCCCC", high="#8E44AD", trans="log") +
-      labs(title = paste0("Map of NYC, Plotted Using Locations Of All Yellow Taxi Pickups in ", i, " month"))
+  min_lat <- 40.5774
+  max_lat <- 40.9176
+  min_long <- -74.15
+  max_long <- -73.7004
 
-    image <- paste0("nyc-taxi-", i, ".png")
-    ggsave(image)
+  plot <- ggplot(file, aes(x=pickup_longitude, y=pickup_latitude)) +
+    geom_point(size=0.06) +
+    scale_x_continuous(limits=c(min_long, max_long)) +
+    scale_y_continuous(limits=c(min_lat, max_lat)) +
+    scale_color_gradient(low="#CCCCCC", high="#8E44AD", trans="log") +
+    labs(title = paste0("Map of NYC, Plotted Using Locations Of All Yellow Taxi Pickups in ", i, " month"))
 
-    NULL
-  }
+  image <- paste0("nyc-taxi-", i, ".png")
+  ggsave(image)
+
+  uploadBlob(containerName = outputsContainer,
+             image,
+             sasToken = outputSas,
+             accountName = storageAccountName)
+  NULL
 }
-
-localParExecution <- function(months) {
-  print("doParallel")
-  library(doParallel)
-  cl<-parallel::makeCluster(4, outfile = "log.txt")
-  registerDoParallel(cl)
-
-  results <- foreach(i = 1:months, .packages = c("data.table", "ggplot2", "rAzureBatch")) %dopar% {
-    # Will update the docs to illustrate our temporary way of reading files
-    fileDirectory <- getwd()
-
-    colsToKeep <- c("pickup_longitude", "pickup_latitude", "dropoff_longitude", "dropoff_latitude", "tip_amount", "trip_distance")
-
-    file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-0", i, ".csv"), select = colsToKeep)
-
-    min_lat <- 40.5774
-    max_lat <- 40.9176
-    min_long <- -74.15
-    max_long <- -73.7004
-
-    plot <- ggplot(file, aes(x=pickup_longitude, y=pickup_latitude)) +
-      geom_point(size=0.06) +
-      scale_x_continuous(limits=c(min_long, max_long)) +
-      scale_y_continuous(limits=c(min_lat, max_lat)) +
-      scale_color_gradient(low="#CCCCCC", high="#8E44AD", trans="log") +
-      labs(title = paste0("Map of NYC, Plotted Using Locations Of All Yellow Taxi Pickups in ", i, " month"))
-
-    image <- paste0("nyc-taxi-", i, ".png")
-    ggsave(image)
-
-    NULL
-  }
-}
-
-azureExecution <- function(months) {
-  print("azureExecution")
-  library(doAzureParallel)
-
-  setCredentials("credentials.json")
-  setVerbose(TRUE)
-
-  storageAccountName <- "doazureparalleltest"
-  inputsContainer <- "inputs"
-  outputsContainer <- "outputs"
-
-  # Generating sas token for blob uploads
-  inputSas <- constructSas("r", "c", inputsContainer)
-  outputSas <- constructSas("w", "c", outputsContainer)
-
-  # add the parameter 'resourceFiles'
-  startTime <- Sys.time()
-  cluster <- doAzureParallel::makeCluster("cluster_settings.json", resourceFiles = azure_files)
-  endTime <- Sys.time()
-
-  # when the cluster is provisioned, register the cluster as your parallel backend
-  registerDoAzureParallel(cluster)
-
-  results <- foreach(i = 1:months, .packages = c("data.table", "ggplot2", "rAzureBatch")) %dopar% {
-    # Will update the docs to illustrate our temporary way of reading files
-    fileDirectory <- paste0(Sys.getenv("AZ_BATCH_NODE_STARTUP_DIR"), "/wd")
-
-    colsToKeep <- c("pickup_longitude", "pickup_latitude", "dropoff_longitude", "dropoff_latitude", "tip_amount", "trip_distance")
-
-    file <- fread(paste0(fileDirectory, "/yellow_tripdata_2016-0", i, ".csv"), select = colsToKeep)
-
-    min_lat <- 40.5774
-    max_lat <- 40.9176
-    min_long <- -74.15
-    max_long <- -73.7004
-
-    plot <- ggplot(file, aes(x=pickup_longitude, y=pickup_latitude)) +
-      geom_point(size=0.06) +
-      scale_x_continuous(limits=c(min_long, max_long)) +
-      scale_y_continuous(limits=c(min_lat, max_lat)) +
-      scale_color_gradient(low="#CCCCCC", high="#8E44AD", trans="log") +
-      labs(title = paste0("Map of NYC, Plotted Using Locations Of All Yellow Taxi Pickups in ", i, " month"))
-
-    image <- paste0("nyc-taxi-", i, ".png")
-    ggsave(image)
-
-    uploadBlob(containerName = outputsContainer,
-               image,
-               sasToken = outputSas,
-               accountName = storageAccountName)
-    NULL
-  }
-}
-
-library(microbenchmark)
-op <- microbenchmark(
-  doAzureParallel=azureExecution(9),
-  doLocal = localSeqExecution(9),
-  doParallel = localParExecution(9),
-  times=2L)
-
