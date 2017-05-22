@@ -8,7 +8,7 @@ If you would like to see more samples, please reach out to [razurebatch@microsof
 
    The sample walks you through a monte carlo pricing simulation. It illustrates a simple way to use doAzureParallel to parallelize your simuluation-based workloads.
 
-2. **Grid Search with Cross Validation using Caret** [(link)](./caret-example.R)
+2. **Grid Search with Cross Validation using Caret** [(link)](./caret_example.R)
 
    The code walks through how to off-load computationally expensive parameter-tuning work to Azure. The parameter tuning is handle by a package called Caret, which uses doAzureParallel as a parallel backend to distibute work to.
 
@@ -18,7 +18,7 @@ If you would like to see more samples, please reach out to [razurebatch@microsof
 
    This sample uses doAzureParallel to compute the mandelbrot set. The code benchmarks the difference in performance for running local and running on a doAzureParallel cluster size of 10, 20, 40, and 80 cores. 
 
-4. **Using Resource Files to Move Your Data** [(link)](./resource-files-example.R)
+4. **Using Resource Files to Move Your Data** [(link)](./resource_files_example.R)
 
    This sample illustrates how you can easily pull in data to your cluster directly from blob storage using *resource files*  and then how to write back to blob storage after the job is done. 
    
@@ -26,7 +26,7 @@ If you would like to see more samples, please reach out to [razurebatch@microsof
 
    The sample also has code that runs through this process locally (both single core and multi-core) to do a benchmark against running the work with doAzureParallel.
 
-5. **Using Sas Tokens for Private Blobs** [(link)](./resource-files-example.R)
+5. **Using Sas Tokens for Private Blobs** [(link)](./sas_resource_files_example.R)
 
    This sample walks through using private blobs. The code shows your how to create a Sas token to use when uploading files to your private blob, and then how to use resource files to move your private dataset into your doAzureParallel cluster to execute on.
 
