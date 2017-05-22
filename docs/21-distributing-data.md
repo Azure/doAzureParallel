@@ -58,4 +58,4 @@ listFiles <- foreach(i = 2010:2011, .combine='c') %dopar% {
 
 # this will print out "2010.csv" and "2011.csv"
 ```
-For more information on using resource files, take a look at this [sample](https://github.com/Azure/doAzureParallel/blob/release/samples/resource-files-example.R).
+For more information on using resource files, take a look at this [sample](https://github.com/Azure/doAzureParallel/blob/release/samples/resource_files_example.R).
