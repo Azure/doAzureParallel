@@ -9,7 +9,7 @@ setCredentials("credentials.json")
 storageAccountName <- "mystorageaccount"
 outputsContainer <- "nyc-taxi-graphs"
 createContainer(outputsContainer)
-outputSas <- createSasToken("w", "c", outputsContainer)
+outputSas <- createSasToken(permission = "w", path = "c", outputsContainer)
 
 # Using the NYC taxi datasets, http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml
 # We will upload the files to your pool of VMs, using resource files
@@ -32,7 +32,7 @@ cluster <- makeCluster("cluster_settings.json", resourceFiles = azure_files)
 # when the cluster is provisioned, register the cluster as your parallel backend
 registerDoAzureParallel(cluster)
 
-results <- foreach(i = 1:9, .packages = c("data.table", "ggplot2", "rAzureBatch")) %dopar% {
+results <- foreach(i = 1:2, .packages = c("data.table", "ggplot2", "rAzureBatch")) %dopar% {
   # Will update the docs to illustrate our temporary way of reading files
   fileDirectory <- paste0(Sys.getenv("AZ_BATCH_NODE_STARTUP_DIR"), "/wd")
 
