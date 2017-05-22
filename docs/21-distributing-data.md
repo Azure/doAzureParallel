@@ -33,19 +33,19 @@ Here's an example that uses data stored in a public location on Azure Blob Stora
 
 ```R
 # define where to download data from
-azure_files = list(
+resource_files = list(
     list(
-        blobSource = "https://<accountname>.blob.core.windows.net/<container>/2010.csv",
+        url = "https://<accountname>.blob.core.windows.net/<container>/2010.csv",
         filePath = "2010.csv"
     ),
     list(
-        blobSource = "https://<accountname>.blob.core.windows.net/<container>/2011.csv",
+        url = "https://<accountname>.blob.core.windows.net/<container>/2011.csv",
         filePath = "2011.csv"
     )
 )
 
 # add the parameter 'resourceFiles'
-cluster <- makeCluster("creds.json", "cluster.json", resourceFiles = azure_files)
+cluster <- makeCluster("creds.json", "cluster.json", resourceFiles = resource_files)
 
 # when the cluster is provisioned, register the cluster as your parallel backend
 registerDoAzureParallel(cluster)
@@ -58,4 +58,4 @@ listFiles <- foreach(i = 2010:2011, .combine='c') %dopar% {
 
 # this will print out "2010.csv" and "2011.csv"
 ```
-
+For more information on using resource files, take a look at this [sample](https://github.com/Azure/doAzureParallel/blob/release/samples/resource-files-example.R).
