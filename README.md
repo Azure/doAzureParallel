@@ -91,7 +91,7 @@ Set up your parallel backend with Azure. This is your set of Azure VMs.
 ```R
 # 1. Generate your credential and cluster configuration files.  
 generateClusterConfig("cluster.json")
-generateBatchCredentialsFile("credentials.json")
+generateCredentialsFile("credentials.json")
 
 # 2. Fill out your credential config and cluster config files.
 # Enter your Azure Batch Account & Azure Storage keys/account-info into your credential config ("credentials.json") and configure your cluster in your cluster config ("cluster.json")
