@@ -7,16 +7,7 @@
 generateClusterConfig(fileName, ...)
 }
 \arguments{
-\item{fileName}{A string that uniquely identifies the job within the account.}
-
-\item{...}{Further named parameters
-\itemize{
- \item{"batchAccount"}: {A list of files that the Batch service will download to the compute node before running the command line.}
- \item{"batchKey"}: {Arguments in the foreach parameters that will be used for the task running.}
- \item{"batchUrl"}: {A list of packages that the Batch service will download to the compute node.}
- \item{"storageAccount"}: {The R environment that the task will run under.}
- \item{"storageKey"}: {The R environment that the task will run under.}
-}}
+\item{fileName}{Cluster settings file name}
 }
 \value{
 The request to the Batch service was successful.
@@ -27,7 +18,8 @@ Creates a configuration file for the user's cluster setup.
 \examples{
 {
 generateClusterConfig("test_config.json")
-generateClusterConfig("test_config.json", batchAccount = "testbatchaccount", batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com", storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
+generateClusterConfig("test_config.json")
 }
+
 }
 

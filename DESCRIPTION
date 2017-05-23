@@ -1,16 +1,21 @@
 Package: doAzureParallel
 Type: Package
 Title: doAzureParallel
-Version: 0.2.2
+Version: 0.3.0
 Author: Brian Hoang
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Maintainer: Brian Hoang <brhoan@microsoft.com>
+Description: The project is for data experts who use R at scale. The project
+    comes together as an R package that will allow users to run their R code in
+    parallel across a cluster hosted on Azure. The cluster will be created and
+    maintained by Azure Batch and, for the initial version, will be a public/
+    communal pool. The orchestration for each job that needs to be parallelized in
+    the cluster will be done by a middle layer that schedules each request.
+License: Microsoft Corporation
 LazyData: TRUE
 Depends:
     foreach (>= 1.4.3),
     iterators (>= 1.0.8),
-    rAzureBatch (>= 0.1.0)
+    rAzureBatch (>= 0.2.4)
 Suggests:
-    testthat
+    testthat, caret, plyr
 RoxygenNote: 5.0.1

@@ -12,39 +12,107 @@
   }
 
   envFile <- paste0(taskId, ".rds")
-  saveRDS(.doAzureBatchGlobals, file = envFile)
+  saveRDS(argsList, file = envFile)
   uploadBlob(jobId, paste0(getwd(), "/", envFile))
   file.remove(envFile)
 
-  sasToken <- constructSas("r", "c", jobId, storageCredentials$key)
+  sasToken <- createSasToken("r", "c", jobId)
+  writeToken <- createSasToken("w", "c", jobId)
+
+  envFileUrl <- createBlobUrl(storageCredentials$name, jobId, envFile, sasToken)
+  resourceFiles <- list(createResourceFile(url = envFileUrl, fileName = envFile))
 
   if(!is.null(args$dependsOn)){
     dependsOn <- list(taskIds = dependsOn)
   }
 
   resultFile <- paste0(taskId, "-result", ".rds")
-  logsCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --upload --saskey $BLOBXFER_SASKEY --remoteresource logs/%s", storageCredentials$name, jobId, paste0(taskId, ".txt"), paste0(taskId, ".txt"))
-  autoUploadCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --upload --saskey $BLOBXFER_SASKEY --remoteresource result/%s", storageCredentials$name, jobId, resultFile, resultFile)
-  downloadCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds", storageCredentials$name, jobId, "$AZ_BATCH_TASK_WORKING_DIR")
+  accountName <- storageCredentials$name
 
-  commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH", downloadCommand, rCommand, logsCommand, autoUploadCommand)
+
+  downloadCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds", accountName, jobId, "$AZ_BATCH_TASK_WORKING_DIR")
+
+  containerUrl <- createBlobUrl(storageAccount = storageCredentials$name,
+                                container = jobId,
+                                sasToken = writeToken)
+
+  outputFiles <- list(
+    list(
+      filePattern = resultFile,
+      destination = list(
+        container = list(
+          path = paste0("result/", resultFile),
+          containerUrl = containerUrl
+        )
+      ),
+      uploadOptions = list(
+        uploadCondition = "taskCompletion"
+      )
+    ),
+    list(
+      filePattern = paste0(taskId, ".txt"),
+      destination = list(
+        container = list(
+          path = paste0("logs/", taskId, ".txt"),
+          containerUrl = containerUrl
+        )
+      ),
+      uploadOptions = list(
+        uploadCondition = "taskCompletion"
+      )
+    ),
+    list(
+      filePattern = "../stdout.txt",
+      destination = list(
+        container = list(
+          path = paste0("stdout/", taskId, "-stdout.txt"),
+          containerUrl = containerUrl
+        )
+      ),
+      uploadOptions = list(
+        uploadCondition = "taskCompletion"
+      )
+    ),
+    list(
+      filePattern = "../stderr.txt",
+      destination = list(
+        container = list(
+          path = paste0("stderr/", taskId, "-stderr.txt"),
+          containerUrl = containerUrl
+        )
+      ),
+      uploadOptions = list(
+        uploadCondition = "taskCompletion"
+      )
+    )
+  )
+
+  commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH", downloadCommand, rCommand)# downloadCommand, , logsCommand, autoUploadCommand, stderrUploadCommand)
 
   commands <- linuxWrapCommands(commands)
 
-  sasToken <- constructSas("rwcl", "c", jobId, storageCredentials$key)
-  sasQuery <- generateSasUrl(sasToken)
+  sasToken <- createSasToken("rwcl", "c", jobId)
+  queryParameterUrl <- "?"
+
+  for(query in names(sasToken)){
+    queryParameterUrl <- paste0(queryParameterUrl, query, "=", curlEscape(sasToken[[query]]), "&")
+  }
+
+  queryParameterUrl <- substr(queryParameterUrl, 1, nchar(queryParameterUrl) - 1)
 
   setting = list(name = "BLOBXFER_SASKEY",
-                 value = sasQuery)
+                 value = queryParameterUrl)
 
-  resourceFiles <- list(generateResourceFile(storageCredentials$name, jobId, envFile, sasToken))
+  containerEnv = list(name = "CONTAINER_NAME",
+                 value = jobId)
 
   addTask(jobId,
           taskId,
-          environmentSettings = list(setting),
+          environmentSettings = list(setting, containerEnv),
           resourceFiles = resourceFiles,
           commandLine = commands,
-          dependsOn = dependsOn)
+          dependsOn = dependsOn,
+          outputFiles = outputFiles)
 }
 
 .addJob <- function(jobId,
@@ -122,7 +190,12 @@
                       startTask = startTask,
                       virtualMachineConfiguration = virtualMachineConfiguration,
                       enableAutoScale = TRUE,
-                      autoscaleFormula = getAutoscaleFormula(pool$poolSize$autoscaleFormula, pool$poolSize$minNodes, pool$poolSize$maxNodes),
+                      autoscaleFormula = getAutoscaleFormula(pool$poolSize$autoscaleFormula,
+                                                             pool$poolSize$dedicatedNodes$min,
+                                                             pool$poolSize$dedicatedNodes$max,
+                                                             pool$poolSize$lowPriorityNodes$min,
+                                                             pool$poolSize$lowPriorityNodes$max,
+                                                             maxTasksPerNode = pool$maxTasksPerNode),
                       autoScaleEvaluationInterval = "PT5M",
                       maxTasksPerNode = pool$maxTasksPerNode,
                       raw = TRUE)
