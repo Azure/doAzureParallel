@@ -4,8 +4,8 @@
 
 # install packages
 library(devtools)
-install_github("azure/razurebatch", ref="release")
-install_github("azure/doazureparallel", ref="release")
+install_github("azure/razurebatch")
+install_github("azure/doazureparallel")
 
 # import the doAzureParallel library and it's dependencies
 library(doAzureParallel)
