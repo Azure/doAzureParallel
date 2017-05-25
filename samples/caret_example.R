@@ -26,7 +26,7 @@ cluster <- makeCluster(clusterSetting = "cluster.json")
 registerDoAzureParallel(cluster)
 
 # ===================================================
-# === Grid Search w/ Cross Validation using Caret ===
+# === Random Search w/ Cross Validation using Caret ===
 # ===================================================
 
 # For more details about using caret:
@@ -47,7 +47,7 @@ library(DAAG)
 # example, we will be classifying our data into 'yesno' to 
 # identify which rows are spam, and which are not.
 
-# split the data into 
+# split the data into training and testing
 set.seed(998)
 inTraining <- createDataPartition(spam7$yesno, p = .75, list = FALSE)
 training <- spam7[ inTraining,]
@@ -60,39 +60,32 @@ fitControl <- trainControl(## 10-fold cross validation
                            number = 10,
                            ## repeat 10 times
                            repeats = 10,
-                           ## toggle between sequential and parallel execution 
+                           classProbs = TRUE,
+                           summaryFunction = twoClassSummary,
+                           search = "random",
+                           ## run on the parallel backend
                            allowParallel = TRUE)
 
-# Define the grid of parameters to tune 
-gbmGrid <- expand.grid(interaction.depth = c(1, 5, 9), 
-                       n.trees = (1:30)*50, 
-                       shrinkage = c(0.1, 0.3, 0.5),
-                       n.minobsinnode = 20)
 
-# show the number of combinations with the tuning parameters to test
-nrow(gbmGrid)
-
-# Set up a grid of tuning parameters for the classification 
-# routine, fits each model and calculates a resampling base 
-# performance measure
-gbm_fit <- train(## classification column
+rf_fit <- train(## classification column
                  yesno ~ ., 
                  ## dataframe to train on
-                 data = training,
-                 ## ML algorithm to use - other models are also available (see caret documentation)
-                 method = "gbm",
+                 data = training, 
+                 ## model to use - other models are also available (see caret documentation)
+                 method = "rf",
                  ## the metric to use for evaluation
-                 metric = "Accuracy",
-                 ## run cv across the following tuneGrid
-                 tuneGrid = gbmGrid,
-                 ## train control - defines settings of this functions
+                 metric = "ROC",
+                 ## # of random searches
+                 tuneLength = 30,
+                 ## tuning params
                  trControl = fitControl)
 
+
 # print results
-gbm_fit
+rf_fit
 
 # print best tuning parameters
-gbm_fit$bestTune
+rf_fit$bestTune
 
 # de-provision your cluster in Azure
 stopCluster(cluster)
