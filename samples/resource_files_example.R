@@ -70,13 +70,13 @@ registerDoAzureParallel(cluster)
 #   1. Replace the "mystorageaccount" with the name of the storage account you wish to write your results to.
 #   2. Create an output container named "nyc-taxi-graphs" to store your results in
 #   3. Create a SasToken that allows us to write ("w") to the container
-#   4. Notice the parameter 'path = "c"' in the createSasToken method, this
+#   4. Notice the parameter 'sr = "c"' in the createSasToken method, this
 #      simply means that the token is created for that entire container in storage
 #
 storageAccountName <- "mystorageaccount"
 outputsContainer <- "nyc-taxi-graphs"
 createContainer(outputsContainer)
-outputSas <- createSasToken(permission = "w", path = "c", outputsContainer)
+outputSas <- createSasToken(permission = "w", sr = "c", outputsContainer)
 
 # =======================================================
 # === Foreach with resourceFiles & writing to storage ===
