@@ -370,24 +370,34 @@ setVerbose <- function(value = FALSE){
 .createErrorViewerPane <- function(id, failTasks){
   storageCredentials <- getStorageCredentials()
 
-  sasToken <- createSasToken("r", "c", id, storageCredentials$key)
+  sasToken <- createSasToken("r", "c", id)
+
+  queryParameterUrl <- "?"
+
+  for(query in names(sasToken)){
+    queryParameterUrl <- paste0(queryParameterUrl, query, "=", curlEscape(sasToken[[query]]), "&")
+  }
+
+  queryParameterUrl <- substr(queryParameterUrl, 1, nchar(queryParameterUrl) - 1)
 
   tempDir <- tempfile()
   dir.create(tempDir)
   htmlFile <- file.path(tempDir, paste0(id, ".html"))
+  azureStorageUrl <- paste0("http://", storageCredentials$name,".blob.core.windows.net/", id)
 
   staticHtml <- "<h1>Errors:</h1>"
   for(i in 1:length(failTasks)){
     if(failTasks[i] == 1){
-      stdoutFile <- createBlobUrl(storageCredentials$name, id, "stdout", sasToken)
-      stderrFile <- createBlobUrl(storageCredentials$name, id, "stderr", sasToken)
-      RstderrFile <- createBlobUrl(storageCredentials$name, id, "logs", sasToken)
 
-      stdoutFile <- paste0(stdoutFile, "/", id, "-task", i, ".txt")
-      stderrFile <- paste0(stderrFile, "/", id, "-task", i, ".txt")
-      RstderrFile <- paste0(RstderrFile, "/", id, "-task", i, ".txt")
+      stdoutFile <- paste0(azureStorageUrl, "/stdout")
+      stderrFile <- paste0(azureStorageUrl, "/stderr")
+      RstderrFile <- paste0(azureStorageUrl, "/logs")
 
-      staticHtml <- paste0(staticHtml, 'Task ', i, ' | <a href="', paste0(stdoutFile, query),'">', "stdout.txt",'</a> |', ' <a href="', paste0(stderrFile, query),'">', "stderr.txt",'</a> | <a href="', paste0(RstderrFile, query),'">', "R output",'</a> <br/>')
+      stdoutFile <- paste0(stdoutFile, "/", id, "-task", i, "-stdout.txt", queryParameterUrl)
+      stderrFile <- paste0(stderrFile, "/", id, "-task", i, "-stderr.txt", queryParameterUrl)
+      RstderrFile <- paste0(RstderrFile, "/", id, "-task", i, ".txt", queryParameterUrl)
+
+      staticHtml <- paste0(staticHtml, 'Task ', i, ' | <a href="', stdoutFile,'">', "stdout.txt",'</a> |', ' <a href="', stderrFile,'">', "stderr.txt",'</a> | <a href="', RstderrFile,'">', "R output",'</a> <br/>')
     }
   }
 
