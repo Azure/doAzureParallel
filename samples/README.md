@@ -10,9 +10,9 @@ If you would like to see more samples, please reach out to [razurebatch@microsof
 
 2. **Grid Search with Cross Validation using Caret** [(link)](./caret_example.R)
 
-   The code walks through how to off-load computationally expensive parameter-tuning work to Azure. The parameter tuning is handle by a package called Caret, which uses doAzureParallel as a parallel backend to distibute work to.
+   The code walks through how to off-load computationally expensive parameter-tuning work to Azure. The parameter tuning is handled by a package called Caret, which uses doAzureParallel as a parallel backend to distibute work to.
 
-   This sample uses the built-in email dataset to evaluate whether or not an email is spam. Using Caret, the code runs through a 10-fold cross validation with 10 repeats and runs for each combination in the 'grid' of paramters. The classification algorithm is Gradient Boosted Machine, and each run is evaluated for accuracy. Using doAzureParallel to create the backend, caret is able to distribute work to Azure and significantly speed up the work.
+   This sample uses the built-in email dataset to evaluate whether or not an email is spam. Using Caret, the code runs through random search using a 10-fold cross validation with 10 repeats. The classification algorithm used in the sample if Random Forest ('rf'), and each run is evaluated for ROC. Using doAzureParallel to create the backend, caret is able to distribute work to Azure and significantly speed up the work.
 
 3. **Mandelbrot Simulation Benchmark** [(link)](./mandlebrot_performance_test.ipynb)
 
