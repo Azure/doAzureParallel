@@ -7,7 +7,7 @@ library(devtools)
 install_github("azure/razurebatch")
 install_github("azure/doazureparallel")
 
-# import the doAzureParallel library and it's dependencies
+# import the doAzureParallel library and its dependencies
 library(doAzureParallel)
 
 # generate a credentials json file
