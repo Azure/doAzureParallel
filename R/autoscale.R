@@ -60,10 +60,13 @@ getAutoscaleFormula <- function(formulaName, dedicatedMin, dedicatedMax, lowPrio
 #' @param lowPriorityMin The minimum number of low priority nodes
 #' @param lowPriorityMax The maximum number of low priority nodes
 #' @param algorithm Current built-in autoscale formulas: QUEUE, MAX_CPU, WEEKEND, WEEKDAY
-#' @param timeInterval
+#' @param timeInterval Time interval at which to automatically adjust the pool size according to the autoscale formula
 #'
 #' @examples
-#' resizeCluster(cluster, dedicatedMin = 2, dedicatedMax = 6, dedicatedMin = 2, dedicatedMax = 6, algorithm = "QUEUE", timeInterval = "PT10M")
+#' \dontrun{
+#' resizeCluster(cluster, dedicatedMin = 2, dedicatedMax = 6,
+#'              dedicatedMin = 2, dedicatedMax = 6, algorithm = "QUEUE", timeInterval = "PT10M")
+#' }
 #' @export
 resizeCluster <- function(cluster,
                           dedicatedMin,

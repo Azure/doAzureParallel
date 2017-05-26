@@ -12,7 +12,9 @@
 #' @return The request to the Batch service was successful.
 #' @examples {
 #' generateCredentialsConfig("test_config.json")
-#' generateCredentialsConfig("test_config.json", batchAccount = "testbatchaccount", batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com", storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
+#' generateCredentialsConfig("test_config.json", batchAccount = "testbatchaccount",
+#'    batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com",
+#'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
 #' }
 #' @export
 generateCredentialsConfig <- function(fileName, ...){
@@ -96,14 +98,16 @@ generateClusterConfig <- function(fileName, ...){
 
 #' Creates an Azure cloud-enabled cluster.
 #'
-#' @param fileName Cluster configuration's file name
+#' @param clusterSetting Cluster configuration's file name
 #' @param fullName A boolean flag for checking the file full name
 #' @param wait A boolean flag to wait for all nodes to boot up
 #' @param resourceFiles A list of files that Batch will download to the compute node before running the command line
 #'
 #' @return The request to the Batch service was successful.
 #' @examples
+#' \dontrun{
 #' cluster <- makeCluster("cluster_config.json", fullName = TRUE, wait = TRUE)
+#' }
 #' @export
 makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
   if(fullName){
@@ -166,8 +170,10 @@ makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FAL
 #' @param cluster The cluster configuration that was created in \code{makeCluster}
 #'
 #' @examples
+#' \dontrun{
 #' clusterConfiguration <- makeCluster("cluster_settings.json")
 #' stopCluster(clusterConfiguration)
+#' }
 #' @export
 stopCluster <- function(cluster){
   deletePool(cluster$poolId)
@@ -175,14 +181,10 @@ stopCluster <- function(cluster){
   print(sprintf("Your %s cluster has been destroyed.", cluster$poolId))
 }
 
-#' Deletes the cluster from your Azure account.
+#' Set azure credentials to R session.
 #'
 #' @param fileName The cluster configuration that was created in \code{makeCluster}
 #'
-#' @return The request to the Batch service was successful.
-#' @examples
-#' clusterConfiguration <- makeCluster("cluster_settings.json")
-#' stopCluster(clusterConfiguration)
 #' @export
 setCredentials <- function(fileName = "az_config.json"){
   if(file.exists(fileName)){

@@ -13,7 +13,9 @@ stopCluster(cluster)
 Deletes the cluster from your Azure account.
 }
 \examples{
+\dontrun{
 clusterConfiguration <- makeCluster("cluster_settings.json")
 stopCluster(clusterConfiguration)
+}
 }
 

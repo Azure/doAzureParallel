@@ -20,12 +20,15 @@ resizeCluster(cluster, dedicatedMin, dedicatedMax, lowPriorityMin,
 
 \item{algorithm}{Current built-in autoscale formulas: QUEUE, MAX_CPU, WEEKEND, WEEKDAY}
 
-\item{timeInterval}{}
+\item{timeInterval}{Time interval at which to automatically adjust the pool size according to the autoscale formula}
 }
 \description{
 Resize an Azure cloud-enabled cluster.
 }
 \examples{
-resizeCluster(cluster, dedicatedMin = 2, dedicatedMax = 6, dedicatedMin = 2, dedicatedMax = 6, algorithm = "QUEUE", timeInterval = "PT10M")
+\dontrun{
+resizeCluster(cluster, dedicatedMin = 2, dedicatedMax = 6,
+             dedicatedMin = 2, dedicatedMax = 6, algorithm = "QUEUE", timeInterval = "PT10M")
+}
 }
 
