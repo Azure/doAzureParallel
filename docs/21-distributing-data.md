@@ -25,3 +25,37 @@ results <- foreach(chunk = iter(chunks)) %dopar% {
 }
 ```
 
+## Pre-loading Data Into The Cluster
+
+Some workloads may require data pre-loaded into the cluster as soon as the cluster is provisioned. doAzureParallel supports this with the concept of a *resource file* - a file that is automatically downloaded to each node of the cluster after the cluster is created. 
+
+Here's an example that uses data stored in a public location on Azure Blob Storage:
+
+```R
+# define where to download data from
+resource_files = list(
+    list(
+        url = "https://<accountname>.blob.core.windows.net/<container>/2010.csv",
+        filePath = "2010.csv"
+    ),
+    list(
+        url = "https://<accountname>.blob.core.windows.net/<container>/2011.csv",
+        filePath = "2011.csv"
+    )
+)
+
+# add the parameter 'resourceFiles'
+cluster <- makeCluster("creds.json", "cluster.json", resourceFiles = resource_files)
+
+# when the cluster is provisioned, register the cluster as your parallel backend
+registerDoAzureParallel(cluster)
+
+# the preloaded files are located in the location: "$AZ_BATCH_NODE_STARTUP_DIR/wd"
+listFiles <- foreach(i = 2010:2011, .combine='c') %dopar% {
+    fileDirectory <- paste0(Sys.getenv("AZ_BATCH_NODE_STARTUP_DIR"), "/wd")
+    return(list.files(fileDirectory))
+}
+
+# this will print out "2010.csv" and "2011.csv"
+```
+For more information on using resource files, take a look at this [sample](https://github.com/Azure/doAzureParallel/blob/release/samples/resource_files_example.R).

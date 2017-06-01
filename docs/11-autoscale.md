@@ -12,7 +12,7 @@ The options are:
 
 *See more [below](./11-autoscale.md#autoscale-formulas) to learn how each of these settings work.*
 
-When configuring your autoscale formula, you also need to set the mininum number of nodes and the maximum number of nodes. Each autoscale formula will use these as parameters to set it's upper and lower bound limits for pool size. 
+When configuring your autoscale formula, you also need to set the mininum number of nodes and the maximum number of nodes for both low priority VMs and dedicated VMs. Each autoscale formula will use these as parameters to set it's upper and lower bound limits for pool size. 
 
 By default, doAzureParallel uses autoscale and uses the QUEUE autoscale formula. This can be easily configured:
 
@@ -20,10 +20,16 @@ By default, doAzureParallel uses autoscale and uses the QUEUE autoscale formula.
 {
   ...  
   "poolSize": {
-    "minNodes": 1,
-    "maxNodes": 20,
-    "autoscaleFormula": "QUEUE",
-  }
+    "dedicatedNodes": {
+        "min": 2,
+        "max": 2
+    },
+    "lowPriorityNodes": { 
+        "min": 1,
+        "max": 10
+    },
+    "autoscaleFormula": "QUEUE"
+  },
   ...
 }
 ```
@@ -57,7 +63,25 @@ To take advantage of this, you will also need to understand how to retreive the 
 
 ## Static Clusters
 
-If you do not want your cluster to autoscale, you can simply set the property minNode equal to maxNodes. For example, if you wanted a static cluster of 10 nodes, you can set *"minNodes" : 10* and *"maxNodes" : 10*
+If you do not want your cluster to autoscale, you can simply set the property min-nodes equal to max-nodes for both low priority and dedicated VMs. For example, if you wanted a static cluster of 10 nodes, 3 dedicated and 7 low priority, you can configure your cluster this way:
+
+```javascript
+{
+  ...  
+  "poolSize": {
+    "dedicatedNodes": {
+        "min": 3,
+        "max": 3
+    },
+    "lowPriorityNodes": { 
+        "min": 7,
+        "max": 7
+    },
+    "autoscaleFormula": "QUEUE"
+  },
+  ...
+}
+```
 
 ---
 
