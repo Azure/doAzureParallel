@@ -179,3 +179,28 @@ getJobResult <- function(jobId = "", ...){
 
   return(results)
 }
+
+validateClusterConfig <- function(clusterFilePath){
+  if(file.exists(clusterFilePath)){
+    clusterConfig <- rjson::fromJSON(file=clusterFilePath)
+  }
+  else{
+    clusterConfig <- rjson::fromJSON(file=file.path(getwd(), clusterFilePath))
+  }
+
+  stopifnot(!is.null(clusterConfig$pool$poolSize))
+  stopifnot(!is.null(clusterConfig$pool$poolSize$dedicatedNodes))
+  stopifnot(!is.null(clusterConfig$pool$poolSize$lowPriorityNodes))
+  
+  stopifnot(is.character(clusterConfig$pool$name))
+  stopifnot(is.character(clusterConfig$pool$vmSize))
+  stopifnot(is.character(clusterConfig$pool$poolSize$autoscaleFormula))
+  
+  stopifnot(is.double(clusterConfig$pool$poolSize$dedicatedNodes$min))
+  stopifnot(is.double(clusterConfig$pool$poolSize$dedicatedNodes$max))
+  stopifnot(is.double(clusterConfig$pool$poolSize$lowPriorityNodes$min))
+  stopifnot(is.double(clusterConfig$pool$poolSize$lowPriorityNodes$max))
+  stopifnot(is.double(clusterConfig$pool$maxTasksPerNode))
+  
+  TRUE
+}

@@ -1,0 +1,47 @@
+context("validating cluster config")
+
+test_that("validating a cluster config file with incorrect data types", {
+  clusterConfig <- "badcluster.json"
+  
+  generateClusterConfig(clusterConfig)
+  config <- jsonlite::fromJSON(clusterConfig)
+  
+  config$pool$maxTasksPerNode <- "2"
+  
+  configJson <- jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
+  write(configJson, file=paste0(getwd(), "/", clusterConfig))
+  
+  expect_error(validateClusterConfig(clusterConfig))
+  
+  on.exit(file.remove(clusterConfig))
+})
+
+test_that("validating a cluster config file with default values", {
+  clusterConfig <- "default.json"
+  
+  generateClusterConfig(clusterConfig)
+  config <- jsonlite::fromJSON(clusterConfig)
+
+  configJson <- jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
+  write(configJson, file=paste0(getwd(), "/", clusterConfig))
+  
+  expect_equal(validateClusterConfig(clusterConfig), TRUE)
+  
+  on.exit(file.remove(clusterConfig))
+})
+
+test_that("validating a cluster config file with null values", {
+  clusterConfig <- "nullcluster.json"
+  
+  generateClusterConfig(clusterConfig)
+  config <- jsonlite::fromJSON(clusterConfig)
+  
+  config$pool$poolSize <- NULL
+  
+  configJson <- jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
+  write(configJson, file=paste0(getwd(), "/", clusterConfig))
+  
+  expect_error(validateClusterConfig(clusterConfig))
+  
+  on.exit(file.remove(clusterConfig))
+})

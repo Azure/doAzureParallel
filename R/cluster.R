@@ -110,6 +110,8 @@ generateClusterConfig <- function(fileName, ...){
 #' }
 #' @export
 makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
+  validateClusterConfig(clusterSetting)
+  
   if(fullName){
     pool <- rjson::fromJSON(file=paste0(clusterSetting))
   }
