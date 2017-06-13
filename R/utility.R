@@ -1,30 +1,39 @@
-getInstallationCommand <- function(packages){
-  installation <- ""
-
-  for(package in packages){
-    installation <- paste0(installation,
-                         sprintf("Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1], dependencies=TRUE)\' %s", package),
-                         ";")
+getJobPackageInstallationCommand <- function(type, packages){
+  script <- ""
+  if(type == "cran"){
+    script <- "Rscript $AZ_BATCH_JOB_PREP_WORKING_DIR/install_cran.R "
+  }
+  else if(type == "github"){
+    script <- "Rscript $AZ_BATCH_JOB_PREP_WORKING_DIR/install_github.R "
+  }
+  else {
+    stop("Using an incorrect package source")
   }
 
-  installation <- substr(installation, 1, nchar(installation) - 1)
+  if(!is.null(packages) && length(packages) > 0){
+    packageCommands <- paste0(packages, collapse = " ")
+    script <- paste0(script, " ", packageCommands, ";")
+  }
 }
 
-getGithubInstallationCommand <- function(packages){
+getPoolPackageInstallationCommand <- function(type, packages){
   installation <- ""
-  installation <- paste0(installation,
-                         sprintf("Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1], dependencies=TRUE)\' %s", "devtools"),
-                         ";")
 
-  if(length(packages) != 0){
-    for(package in packages){
-      installation <- paste0(installation,
-                             sprintf("Rscript -e \'args <- commandArgs(TRUE)\' -e \'devtools::install_github(args[1])\' %s", package),
-                             ";")
-    }
+  if(type == "cran"){
+    script <- "Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1])\' %s;"
+  }
+  else if(type == "github"){
+    script <- "Rscript -e \'args <- commandArgs(TRUE)\' -e \'devtools::install_github(args[1])\' %s;"
+  }
+  else {
+    stop("Using an incorrect package source")
   }
 
-  installation <- substr(installation, 1, nchar(installation) - 1)
+  for(package in packages){
+    installation <- paste0(installation, sprintf(script, package))
+  }
+
+  installation
 }
 
 linuxWrapCommands <- function(commands = c()){

@@ -125,19 +125,30 @@ makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FAL
   config$poolId = pool$pool$name
   options("az_config" = config)
 
-  packages <- NULL
+  installCranCommand <- NULL
+  installGithubCommand <- NULL
+
   if(!is.null(pool$rPackages) && !is.null(pool$rPackages$cran) && length(pool$rPackages$cran) > 0){
-    packages <- getInstallationCommand(pool$rPackages$cran)
+    installCranCommand <- getPoolPackageInstallationCommand("cran", pool$rPackages$cran)
   }
 
   if(!is.null(pool$rPackages) && !is.null(pool$rPackages$github) && length(pool$rPackages$github) > 0){
-    if(is.null(packages)){
-      packages <- getGithubInstallationCommand(pool$rPackages$github)
-    }
-    else{
-      packages <- paste0(packages, ";", getGithubInstallationCommand(pool$rPackages$github))
-    }
+    installGithubCommand <- getPoolPackageInstallationCommand("github", pool$rPackages$github)
   }
+
+  packages <- NULL
+  if(!is.null(installCranCommand)){
+    packages <- installCranCommand
+  }
+
+  if(!is.null(installGithubCommand) && is.null(packages)){
+    packages <- installGithubCommand
+  }
+  else if(!is.null(installGithubCommand) && !is.null(packages)){
+    packages <- paste0(packages, installGithubCommand)
+  }
+
+  packages <- substr(packages, 1, nchar(packages) - 1)
 
   response <- .addPool(
     pool = pool$pool,

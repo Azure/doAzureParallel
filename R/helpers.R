@@ -126,7 +126,7 @@
 
   commands <- c("ls")
   if(!is.null(packages)){
-    commands <- c(commands, getInstallationCommand(packages))
+    commands <- c(commands, getJobPackageInstallationCommand("cran", packages))
   }
 
   jobPreparationTask <- list(

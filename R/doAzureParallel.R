@@ -186,6 +186,8 @@ setVerbose <- function(value = FALSE){
 
       uploadBlob(id, system.file(startupFolderName, "worker.R", package="doAzureParallel"))
       uploadBlob(id, system.file(startupFolderName, "merger.R", package="doAzureParallel"))
+      uploadBlob(id, system.file(startupFolderName, "install_github.R", package="doAzureParallel"))
+      uploadBlob(id, system.file(startupFolderName, "install_cran.R", package="doAzureParallel"))
 
       # Setting up common job environment for all tasks
       jobFileName <- paste0(id, ".rds")
@@ -205,10 +207,15 @@ setVerbose <- function(value = FALSE){
       sasToken <- createSasToken("r", "c", id)
       workerScriptUrl <- createBlobUrl(storageCredentials$name, id, "worker.R", sasToken)
       mergerScriptUrl <- createBlobUrl(storageCredentials$name, id, "merger.R", sasToken)
+      installGithubScriptUrl <- createBlobUrl(storageCredentials$name, id, "install_github.R", sasToken)
+      installCranScriptUrl <- createBlobUrl(storageCredentials$name, id, "install_cran.R", sasToken)
       jobCommonFileUrl <- createBlobUrl(storageCredentials$name, id, jobFileName, sasToken)
+
       requiredJobResourceFiles <- list(
                             createResourceFile(url = workerScriptUrl, fileName = "worker.R"),
                             createResourceFile(url = mergerScriptUrl, fileName = "merger.R"),
+                            createResourceFile(url = installGithubScriptUrl, fileName = "install_github.R"),
+                            createResourceFile(url = installCranScriptUrl, fileName = "install_cran.R"),
                             createResourceFile(url = jobCommonFileUrl, fileName = jobFileName))
 
       # We need to merge any files passed by the calling lib with the resource files specified here
