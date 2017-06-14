@@ -13,6 +13,8 @@ getJobList(jobIds = c())
 Get a list of job statuses from the given job ids
 }
 \examples{
+\dontrun{
 getJobList(c("job-001", "job-002"))
+}
 }
 

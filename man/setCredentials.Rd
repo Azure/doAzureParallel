@@ -2,21 +2,14 @@
 % Please edit documentation in R/cluster.R
 \name{setCredentials}
 \alias{setCredentials}
-\title{Deletes the cluster from your Azure account.}
+\title{Set azure credentials to R session.}
 \usage{
 setCredentials(fileName = "az_config.json")
 }
 \arguments{
 \item{fileName}{The cluster configuration that was created in \code{makeCluster}}
 }
-\value{
-The request to the Batch service was successful.
-}
 \description{
-Deletes the cluster from your Azure account.
-}
-\examples{
-clusterConfiguration <- makeCluster("cluster_settings.json")
-stopCluster(clusterConfiguration)
+Set azure credentials to R session.
 }
 

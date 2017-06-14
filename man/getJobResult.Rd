@@ -9,7 +9,10 @@ getJobResult(jobId = "", ...)
 \arguments{
 \item{jobId}{The jobId to download from}
 
-\item{container}{The container to download from}
+\item{...}{Further named parameters
+\itemize{
+ \item{"container"}: {The container to download from.}
+}}
 }
 \value{
 The results from the job.
@@ -18,6 +21,8 @@ The results from the job.
 Download the results of the job
 }
 \examples{
+\dontrun{
 getJobResult(jobId = "job-001")
+}
 }
 
