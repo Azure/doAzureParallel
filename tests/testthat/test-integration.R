@@ -1,6 +1,23 @@
 context("generate cluster config")
 
-test_that("creating a cluster config file", {
+test_that("creating a credentials file", {
+  skip_on_travis()
+
+  configFileName <- "testthat.json"
+
+  generateCredentialsConfig(configFileName)
+  config <- jsonlite::fromJSON(configFileName)
+
+  expect_false(is.null(config$batchAccount$name))
+  expect_false(is.null(config$batchAccount$key))
+  expect_false(is.null(config$batchAccount$url))
+
+  file.remove(configFileName)
+})
+
+test_that("creating a cluster file", {
+  skip_on_travis()
+
   configFileName <- "testthat.json"
 
   generateClusterConfig(configFileName)
@@ -15,6 +32,8 @@ test_that("creating a cluster config file", {
 })
 
 test_that("End to end integration simple sum foreach", {
+  skip_on_travis()
+
   configFileName <- "testthat.json"
 
   batchAccountName <- Sys.getenv("AZ_BATCH_ACCOUNT_NAME")
@@ -24,7 +43,7 @@ test_that("End to end integration simple sum foreach", {
   storageAccountName <- Sys.getenv("AZ_STORAGE_ACCOUNT_NAME")
   storageAccountKey <- Sys.getenv("AZ_STORAGE_ACCOUNT_KEY")
 
-  generateClusterConfig(configFileName,
+  generateCredentialsConfig(configFileName,
                         batchAccount = batchAccountName,
                         batchKey = batchAccountKey,
                         batchUrl = batchAccountUrl,
@@ -48,6 +67,8 @@ test_that("End to end integration simple sum foreach", {
 })
 
 test_that("End to end integration job with wait", {
+  skip_on_travis()
+
   configFileName <- "testthat.json"
 
   batchAccountName <- Sys.getenv("AZ_BATCH_ACCOUNT_NAME")
@@ -57,7 +78,7 @@ test_that("End to end integration job with wait", {
   storageAccountName <- Sys.getenv("AZ_STORAGE_ACCOUNT_NAME")
   storageAccountKey <- Sys.getenv("AZ_STORAGE_ACCOUNT_KEY")
 
-  generateClusterConfig(configFileName,
+  generateCredentialsConfig(configFileName,
                         batchAccount = batchAccountName,
                         batchKey = batchAccountKey,
                         batchUrl = batchAccountUrl,
@@ -96,6 +117,8 @@ test_that("End to end integration job with wait", {
 })
 
 test_that("End to end integration job with chunks", {
+  skip_on_travis()
+
   configFileName <- "testthat.json"
 
   batchAccountName <- Sys.getenv("AZ_BATCH_ACCOUNT_NAME")
@@ -105,14 +128,16 @@ test_that("End to end integration job with chunks", {
   storageAccountName <- Sys.getenv("AZ_STORAGE_ACCOUNT_NAME")
   storageAccountKey <- Sys.getenv("AZ_STORAGE_ACCOUNT_KEY")
 
-  generateClusterConfig(configFileName,
+  generateCredentialsConfig(configFileName,
                         batchAccount = batchAccountName,
                         batchKey = batchAccountKey,
                         batchUrl = batchAccountUrl,
                         storageAccount = storageAccountName,
                         storageKey = storageAccountKey)
 
-  cluster <- makeCluster(configFileName)
+  setCredentials("testthat.json")
+
+  cluster <- makeCluster("cluster.json")
 
   registerDoAzureParallel(cluster)
 

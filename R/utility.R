@@ -37,7 +37,9 @@ linuxWrapCommands <- function(commands = c()){
 #' @param jobIds A character vector of job ids
 #'
 #' @examples
+#' \dontrun{
 #' getJobList(c("job-001", "job-002"))
+#' }
 #' @export
 getJobList <- function(jobIds = c()){
   filter <- ""
@@ -80,7 +82,9 @@ getJobList <- function(jobIds = c()){
 #' @param timeout Timeout in seconds, default timeout is one day
 #'
 #' @examples
+#' \dontrun{
 #' waitForNodesToComplete(clusterId = "testCluster", timeout = 3600)
+#' }
 #' @export
 waitForNodesToComplete <- function(clusterId, timeout = 86400){
   print("Booting compute nodes. . . ")
@@ -147,13 +151,17 @@ waitForNodesToComplete <- function(clusterId, timeout = 86400){
 }
 
 #' Download the results of the job
-#'
+#' @param ... Further named parameters
+#' \itemize{
+#'  \item{"container"}: {The container to download from.}
+#' }
 #' @param jobId The jobId to download from
-#' @param container The container to download from
 #'
 #' @return The results from the job.
 #' @examples
+#' \dontrun{
 #' getJobResult(jobId = "job-001")
+#' }
 #' @export
 getJobResult <- function(jobId = "", ...){
   args <- list(...)

@@ -15,6 +15,8 @@ waitForNodesToComplete(clusterId, timeout = 86400)
 Polling method to check status of cluster boot up
 }
 \examples{
+\dontrun{
 waitForNodesToComplete(clusterId = "testCluster", timeout = 3600)
+}
 }
 
