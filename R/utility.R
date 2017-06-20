@@ -1,44 +1,46 @@
 getJobPackageInstallationCommand <- function(type, packages){
   script <- ""
-  if(type == "cran"){
-    script <- "Rscript $AZ_BATCH_JOB_PREP_WORKING_DIR/install_cran.R "
+  if (type == "cran") {
+    script <- "Rscript $AZ_BATCH_JOB_PREP_WORKING_DIR/install_cran.R"
   }
-  else if(type == "github"){
-    script <- "Rscript $AZ_BATCH_JOB_PREP_WORKING_DIR/install_github.R "
+  else if (type == "github") {
+    script <- "Rscript $AZ_BATCH_JOB_PREP_WORKING_DIR/install_github.R"
   }
   else {
     stop("Using an incorrect package source")
   }
 
-  if(!is.null(packages) && length(packages) > 0){
+  if (!is.null(packages) && length(packages) > 0) {
     packageCommands <- paste0(packages, collapse = " ")
-    script <- paste0(script, " ", packageCommands, ";")
+    script <- paste0(script, " ", packageCommands)
   }
 }
 
 getPoolPackageInstallationCommand <- function(type, packages){
-  installation <- ""
+  poolInstallationCommand <- character(length(packages))
 
-  if(type == "cran"){
-    script <- "Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1])\' %s;"
+  if (type == "cran") {
+    script <- "Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1])\' %s"
   }
-  else if(type == "github"){
-    script <- "Rscript -e \'args <- commandArgs(TRUE)\' -e \'devtools::install_github(args[1])\' %s;"
+  else if (type == "github") {
+    script <- "Rscript -e \'args <- commandArgs(TRUE)\' -e \'devtools::install_github(args[1])\' %s"
   }
   else {
     stop("Using an incorrect package source")
   }
 
-  for(package in packages){
-    installation <- paste0(installation, sprintf(script, package))
+  for (i in 1:length(packages)) {
+    poolInstallationCommand[i] <- sprintf(script, packages[i])
   }
 
-  installation
+  poolInstallationCommand
 }
 
 linuxWrapCommands <- function(commands = c()){
   commandLine <- sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
                          paste0(paste(commands, sep = " ", collapse = "; "),"; "))
+
+  commandLine
 }
 
 #' Get a list of job statuses from the given job ids

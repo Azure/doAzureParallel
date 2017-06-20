@@ -125,8 +125,9 @@
   poolInfo <- list("poolId" = poolId)
 
   commands <- c("ls")
-  if(!is.null(packages)){
-    commands <- c(commands, getJobPackageInstallationCommand("cran", packages))
+  if (!is.null(packages)) {
+    jobPackages <- getJobPackageInstallationCommand("cran", packages)
+    commands <- c(commands, jobPackages)
   }
 
   jobPreparationTask <- list(

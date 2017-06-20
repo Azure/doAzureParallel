@@ -110,15 +110,15 @@ generateClusterConfig <- function(fileName, ...){
 #' }
 #' @export
 makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
-  if(fullName){
-    pool <- rjson::fromJSON(file=paste0(clusterSetting))
+  if (fullName) {
+    pool <- rjson::fromJSON(file = paste0(clusterSetting))
   }
   else{
-    pool <- rjson::fromJSON(file=paste0(getwd(), "/", clusterSetting))
+    pool <- rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
   }
 
   config <- getOption("az_config")
-  if(is.null(config)){
+  if (is.null(config)) {
     stop("Credentials were not set.")
   }
 
@@ -128,44 +128,42 @@ makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FAL
   installCranCommand <- NULL
   installGithubCommand <- NULL
 
-  if(!is.null(pool$rPackages) && !is.null(pool$rPackages$cran) && length(pool$rPackages$cran) > 0){
+  if (!is.null(pool$rPackages) && !is.null(pool$rPackages$cran) && length(pool$rPackages$cran) > 0) {
     installCranCommand <- getPoolPackageInstallationCommand("cran", pool$rPackages$cran)
   }
 
-  if(!is.null(pool$rPackages) && !is.null(pool$rPackages$github) && length(pool$rPackages$github) > 0){
+  if (!is.null(pool$rPackages) && !is.null(pool$rPackages$github) && length(pool$rPackages$github) > 0) {
     installGithubCommand <- getPoolPackageInstallationCommand("github", pool$rPackages$github)
   }
 
   packages <- NULL
-  if(!is.null(installCranCommand)){
+  if (!is.null(installCranCommand)) {
     packages <- installCranCommand
   }
 
-  if(!is.null(installGithubCommand) && is.null(packages)){
+  if (!is.null(installGithubCommand) && is.null(packages)) {
     packages <- installGithubCommand
   }
-  else if(!is.null(installGithubCommand) && !is.null(packages)){
-    packages <- paste0(packages, installGithubCommand)
+  else if (!is.null(installGithubCommand) && !is.null(packages)) {
+    packages <- c(installCranCommand, installGithubCommand)
   }
-
-  packages <- substr(packages, 1, nchar(packages) - 1)
 
   response <- .addPool(
     pool = pool$pool,
     packages = packages,
     resourceFiles = resourceFiles)
 
-  pool <- getPool(pool$pool$name)
+  pool <- rAzureBatch::getPool(pool$pool$name)
 
-  if(grepl("AuthenticationFailed", response)){
+  if (grepl("AuthenticationFailed", response)) {
     stop("Check your credentials and try again.");
   }
 
-  if(grepl("PoolExists", response)){
+  if (grepl("PoolExists", response)) {
     print("The specified pool already exists. Will use existing pool.")
   }
   else{
-    if(wait){
+    if (wait) {
       waitForNodesToComplete(pool$id, 60000)
     }
   }
