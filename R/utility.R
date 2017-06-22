@@ -181,26 +181,26 @@ getJobResult <- function(jobId = "", ...){
 }
 
 validateClusterConfig <- function(clusterFilePath){
-  if(file.exists(clusterFilePath)){
-    clusterConfig <- rjson::fromJSON(file=clusterFilePath)
+  if (file.exists(clusterFilePath)) {
+    pool <- rjson::fromJSON(file = clusterFilePath)
   }
   else{
-    clusterConfig <- rjson::fromJSON(file=file.path(getwd(), clusterFilePath))
+    pool <- rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
   }
 
-  stopifnot(!is.null(clusterConfig$pool$poolSize))
-  stopifnot(!is.null(clusterConfig$pool$poolSize$dedicatedNodes))
-  stopifnot(!is.null(clusterConfig$pool$poolSize$lowPriorityNodes))
-  
-  stopifnot(is.character(clusterConfig$pool$name))
-  stopifnot(is.character(clusterConfig$pool$vmSize))
-  stopifnot(is.character(clusterConfig$pool$poolSize$autoscaleFormula))
-  
-  stopifnot(is.double(clusterConfig$pool$poolSize$dedicatedNodes$min))
-  stopifnot(is.double(clusterConfig$pool$poolSize$dedicatedNodes$max))
-  stopifnot(is.double(clusterConfig$pool$poolSize$lowPriorityNodes$min))
-  stopifnot(is.double(clusterConfig$pool$poolSize$lowPriorityNodes$max))
-  stopifnot(is.double(clusterConfig$pool$maxTasksPerNode))
-  
+  stopifnot(!is.null(pool$poolSize))
+  stopifnot(!is.null(pool$poolSize$dedicatedNodes))
+  stopifnot(!is.null(pool$poolSize$lowPriorityNodes))
+
+  stopifnot(is.character(pool$name))
+  stopifnot(is.character(pool$vmSize))
+  stopifnot(is.character(pool$poolSize$autoscaleFormula))
+
+  stopifnot(is.double(pool$poolSize$dedicatedNodes$min))
+  stopifnot(is.double(pool$poolSize$dedicatedNodes$max))
+  stopifnot(is.double(pool$poolSize$lowPriorityNodes$min))
+  stopifnot(is.double(pool$poolSize$lowPriorityNodes$max))
+  stopifnot(is.double(pool$maxTasksPerNode))
+
   TRUE
 }
