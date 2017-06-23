@@ -18,4 +18,3 @@ clusterConfiguration <- makeCluster("cluster_settings.json")
 stopCluster(clusterConfiguration)
 }
 }
-

@@ -179,3 +179,61 @@ getJobResult <- function(jobId = "", ...){
 
   return(results)
 }
+
+validateClusterConfig <- function(clusterFilePath){
+  if (file.exists(clusterFilePath)) {
+    pool <- rjson::fromJSON(file = clusterFilePath)
+  }
+  else{
+    pool <- rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
+  }
+
+  if (is.null(pool$poolSize)) {
+    stop("Missing poolSize entry")
+  }
+
+  if (is.null(pool$poolSize$dedicatedNodes)) {
+    stop("Missing dedicatedNodes entry")
+  }
+
+  if (is.null(pool$poolSize$lowPriorityNodes)) {
+    stop("Missing lowPriorityNodes entry")
+  }
+
+  if (is.null(pool$poolSize$autoscaleFormula)) {
+    stop("Missing autoscaleFormula entry")
+  }
+
+  if (is.null(pool$poolSize$dedicatedNodes$min)) {
+    stop("Missing dedicatedNodes$min entry")
+  }
+
+  if (is.null(pool$poolSize$dedicatedNodes$max)) {
+    stop("Missing dedicatedNodes$max entry")
+  }
+
+  if (is.null(pool$poolSize$lowPriorityNodes$min)) {
+    stop("Missing lowPriorityNodes$min entry")
+  }
+
+  if (is.null(pool$poolSize$lowPriorityNodes$max)) {
+    stop("Missing lowPriorityNodes$max entry")
+  }
+
+  stopifnot(is.character(pool$name))
+  stopifnot(is.character(pool$vmSize))
+  stopifnot(is.character(pool$poolSize$autoscaleFormula))
+  stopifnot(pool$poolSize$autoscaleFormula %in% names(AUTOSCALE_FORMULA))
+
+  stopifnot(pool$poolSize$dedicatedNodes$min <= pool$poolSize$dedicatedNodes$max)
+  stopifnot(pool$poolSize$lowPriorityNodes$min <= pool$poolSize$lowPriorityNodes$max)
+  stopifnot(pool$maxTasksPerNode >= 1)
+
+  stopifnot(is.double(pool$poolSize$dedicatedNodes$min))
+  stopifnot(is.double(pool$poolSize$dedicatedNodes$max))
+  stopifnot(is.double(pool$poolSize$lowPriorityNodes$min))
+  stopifnot(is.double(pool$poolSize$lowPriorityNodes$max))
+  stopifnot(is.double(pool$maxTasksPerNode))
+
+  TRUE
+}
