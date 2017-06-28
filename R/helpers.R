@@ -162,9 +162,15 @@
   return(response)
 }
 
-.addPool <- function(pool, packages, resourceFiles){
+.addPool <- function(pool, packages, resourceFiles, ...){
+  args <- list(...)
+
   commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH",
                 "env PATH=$PATH pip install --no-dependencies blobxfer")
+
+  if (!is.null(args$commandLine)) {
+    commands <- c(commands, args$commandLine)
+  }
 
   if (!is.null(packages)) {
     commands <- c(commands, packages)
