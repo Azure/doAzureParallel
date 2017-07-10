@@ -7,7 +7,7 @@
   dependsOn <- args$dependsOn
   cloudCombine <- args$cloudCombine
   userOutputFiles <- args$outputFiles
-  
+
   if (!is.null(argsList)) {
     assign('argsList', argsList, .doAzureBatchGlobals)
   }
@@ -15,7 +15,7 @@
   if (!is.null(cloudCombine)) {
     assign('cloudCombine', cloudCombine, .doAzureBatchGlobals)
   }
-  
+
   envFile <- paste0(taskId, ".rds")
   saveRDS(argsList, file = envFile)
   rAzureBatch::uploadBlob(jobId, paste0(getwd(), "/", envFile))
@@ -93,6 +93,7 @@
   )
 
   outputFiles <- append(outputFiles, userOutputFiles)
+
   commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH", downloadCommand, rCommand)
 
   commands <- linuxWrapCommands(commands)

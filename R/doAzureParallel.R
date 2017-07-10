@@ -24,9 +24,9 @@ registerDoAzureParallel <- function(cluster){
 
 workers <- function(data){
   id <- data$poolId
-  pool <- getPool(id)
+  pool <- rAzureBatch::getPool(id)
 
-  if(getOption("verbose")){
+  if (getOption("verbose")) {
     getPoolWorkers(id)
   }
 
@@ -51,11 +51,11 @@ workers <- function(data){
 #' setChunkSize(10)
 #' @export
 setChunkSize <- function(value = 1){
-  if(!is.numeric(value)) stop("setChunkSize requires a numeric argument")
+  if (!is.numeric(value)) stop("setChunkSize requires a numeric argument")
 
   value <- max(round(value), 1)
 
-  assign("chunkSize", value, envir=.doAzureBatchGlobals)
+  assign("chunkSize", value, envir = .doAzureBatchGlobals)
 }
 
 #' Set the verbosity for calling httr rest api calls
