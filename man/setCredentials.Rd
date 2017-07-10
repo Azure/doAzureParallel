@@ -12,4 +12,3 @@ setCredentials(fileName = "az_config.json")
 \description{
 Set azure credentials to R session.
 }
-

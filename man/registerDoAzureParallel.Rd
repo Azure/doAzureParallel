@@ -15,4 +15,3 @@ The registerDoAzureParallel function is used to register the Azure cloud-enabled
 \examples{
 registerDoAzureParallel(cluster)
 }
-

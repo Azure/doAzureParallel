@@ -66,21 +66,19 @@ generateClusterConfig <- function(fileName, ...){
 
   if(!file.exists(fileName) || !file.exists(paste0(getwd(), "/", fileName))){
     config <- list(
-      pool = list(
-        name = "myPoolName",
-        vmSize = "Standard_D2_v2",
-        maxTasksPerNode = 1,
-        poolSize = list(
-          dedicatedNodes = list(
-            min = 3,
-            max = 3
-          ),
-          lowPriorityNodes = list(
-            min = 3,
-            max = 3
-          ),
-          autoscaleFormula = "QUEUE"
-        )
+      name = "myPoolName",
+      vmSize = "Standard_D2_v2",
+      maxTasksPerNode = 1,
+      poolSize = list(
+        dedicatedNodes = list(
+          min = 3,
+          max = 3
+        ),
+        lowPriorityNodes = list(
+          min = 3,
+          max = 3
+        ),
+        autoscaleFormula = "QUEUE"
       ),
       rPackages = list(
         cran = vector(),
@@ -110,8 +108,10 @@ generateClusterConfig <- function(fileName, ...){
 #' }
 #' @export
 makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FALSE, wait = TRUE, resourceFiles = list()){
-  if (fullName) {
-    pool <- rjson::fromJSON(file = paste0(clusterSetting))
+  validateClusterConfig(clusterSetting)
+
+  if(fullName){
+    pool <- rjson::fromJSON(file=paste0(clusterSetting))
   }
   else{
     pool <- rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
@@ -122,7 +122,7 @@ makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FAL
     stop("Credentials were not set.")
   }
 
-  config$poolId = pool$pool$name
+  config$poolId = pool$name
   options("az_config" = config)
 
   installCranCommand <- NULL
@@ -149,11 +149,11 @@ makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FAL
   }
 
   response <- .addPool(
-    pool = pool$pool,
+    pool = pool,
     packages = packages,
     resourceFiles = resourceFiles)
 
-  pool <- rAzureBatch::getPool(pool$pool$name)
+  pool <- getPool(pool$name)
 
   if (grepl("AuthenticationFailed", response)) {
     stop("Check your credentials and try again.");

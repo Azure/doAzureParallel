@@ -1,28 +1,27 @@
 .addTask <- function(jobId, taskId, rCommand, ...){
-  storageCredentials <- getStorageCredentials()
+  storageCredentials <- rAzureBatch::getStorageCredentials()
 
   args <- list(...)
   .doAzureBatchGlobals <- args$envir
   argsList <- args$args
-  packages <- args$packages
   dependsOn <- args$dependsOn
 
-  if(!is.null(argsList)){
+  if (!is.null(argsList)) {
     assign('argsList', argsList, .doAzureBatchGlobals)
   }
 
   envFile <- paste0(taskId, ".rds")
   saveRDS(argsList, file = envFile)
-  uploadBlob(jobId, paste0(getwd(), "/", envFile))
+  rAzureBatch::uploadBlob(jobId, paste0(getwd(), "/", envFile))
   file.remove(envFile)
 
-  sasToken <- createSasToken("r", "c", jobId)
-  writeToken <- createSasToken("w", "c", jobId)
+  sasToken <- rAzureBatch::createSasToken("r", "c", jobId)
+  writeToken <- rAzureBatch::createSasToken("w", "c", jobId)
 
-  envFileUrl <- createBlobUrl(storageCredentials$name, jobId, envFile, sasToken)
-  resourceFiles <- list(createResourceFile(url = envFileUrl, fileName = envFile))
+  envFileUrl <- rAzureBatch::createBlobUrl(storageCredentials$name, jobId, envFile, sasToken)
+  resourceFiles <- list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
 
-  if(!is.null(args$dependsOn)){
+  if (!is.null(args$dependsOn)) {
     dependsOn <- list(taskIds = dependsOn)
   }
 
@@ -32,8 +31,8 @@
 
   downloadCommand <- sprintf("env PATH=$PATH blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds", accountName, jobId, "$AZ_BATCH_TASK_WORKING_DIR")
 
-  containerUrl <- createBlobUrl(storageAccount = storageCredentials$name,
-                                container = jobId,
+  containerUrl <- rAzureBatch::createBlobUrl(storageAccount = storageCredentials$name,
+                                containerName = jobId,
                                 sasToken = writeToken)
 
   outputFiles <- list(
@@ -91,11 +90,11 @@
 
   commands <- linuxWrapCommands(commands)
 
-  sasToken <- createSasToken("rwcl", "c", jobId)
+  sasToken <- rAzureBatch::createSasToken("rwcl", "c", jobId)
   queryParameterUrl <- "?"
 
-  for(query in names(sasToken)){
-    queryParameterUrl <- paste0(queryParameterUrl, query, "=", curlEscape(sasToken[[query]]), "&")
+  for (query in names(sasToken)) {
+    queryParameterUrl <- paste0(queryParameterUrl, query, "=", RCurl::curlEscape(sasToken[[query]]), "&")
   }
 
   queryParameterUrl <- substr(queryParameterUrl, 1, nchar(queryParameterUrl) - 1)
@@ -106,7 +105,7 @@
   containerEnv = list(name = "CONTAINER_NAME",
                  value = jobId)
 
-  addTask(jobId,
+  rAzureBatch::addTask(jobId,
           taskId,
           environmentSettings = list(setting, containerEnv),
           resourceFiles = resourceFiles,
@@ -147,7 +146,7 @@
 
   usesTaskDependencies <- TRUE
 
-  response <- addJob(jobId,
+  response <- rAzureBatch::addJob(jobId,
          poolInfo = poolInfo,
          jobPreparationTask = jobPreparationTask,
          usesTaskDependencies = usesTaskDependencies,
@@ -160,7 +159,7 @@
   commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH",
                 "env PATH=$PATH pip install --no-dependencies blobxfer")
 
-  if(!is.null(packages)){
+  if (!is.null(packages)) {
     commands <- c(commands, packages)
   }
 
@@ -175,7 +174,7 @@
     waitForSuccess = TRUE
   )
 
-  if(length(resourceFiles) > 0){
+  if (length(resourceFiles) > 0) {
     startTask$resourceFiles = resourceFiles
   }
 
@@ -184,9 +183,9 @@
                           offer = "linux-data-science-vm",
                           sku = "linuxdsvm",
                           version = "latest"),
-    nodeAgentSKUId ="batch.node.centos 7")
+    nodeAgentSKUId = "batch.node.centos 7")
 
-  response <- addPool(pool$name,
+  response <- rAzureBatch::addPool(pool$name,
                       pool$vmSize,
                       startTask = startTask,
                       virtualMachineConfiguration = virtualMachineConfiguration,
