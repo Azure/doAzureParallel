@@ -114,29 +114,38 @@ makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FAL
     pool <- rjson::fromJSON(file=paste0(clusterSetting))
   }
   else{
-    pool <- rjson::fromJSON(file=paste0(getwd(), "/", clusterSetting))
+    pool <- rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
   }
 
   config <- getOption("az_config")
-  if(is.null(config)){
+  if (is.null(config)) {
     stop("Credentials were not set.")
   }
 
   config$poolId = pool$name
   options("az_config" = config)
 
-  packages <- NULL
-  if(!is.null(pool$rPackages) && !is.null(pool$rPackages$cran) && length(pool$rPackages$cran) > 0){
-    packages <- getInstallationCommand(pool$rPackages$cran)
+  installCranCommand <- NULL
+  installGithubCommand <- NULL
+
+  if (!is.null(pool$rPackages) && !is.null(pool$rPackages$cran) && length(pool$rPackages$cran) > 0) {
+    installCranCommand <- getPoolPackageInstallationCommand("cran", pool$rPackages$cran)
   }
 
-  if(!is.null(pool$rPackages) && !is.null(pool$rPackages$github) && length(pool$rPackages$github) > 0){
-    if(is.null(packages)){
-      packages <- getGithubInstallationCommand(pool$rPackages$github)
-    }
-    else{
-      packages <- paste0(packages, ";", getGithubInstallationCommand(pool$rPackages$github))
-    }
+  if (!is.null(pool$rPackages) && !is.null(pool$rPackages$github) && length(pool$rPackages$github) > 0) {
+    installGithubCommand <- getPoolPackageInstallationCommand("github", pool$rPackages$github)
+  }
+
+  packages <- NULL
+  if (!is.null(installCranCommand)) {
+    packages <- installCranCommand
+  }
+
+  if (!is.null(installGithubCommand) && is.null(packages)) {
+    packages <- installGithubCommand
+  }
+  else if (!is.null(installGithubCommand) && !is.null(packages)) {
+    packages <- c(installCranCommand, installGithubCommand)
   }
 
   response <- .addPool(
@@ -146,15 +155,15 @@ makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FAL
 
   pool <- getPool(pool$name)
 
-  if(grepl("AuthenticationFailed", response)){
+  if (grepl("AuthenticationFailed", response)) {
     stop("Check your credentials and try again.");
   }
 
-  if(grepl("PoolExists", response)){
+  if (grepl("PoolExists", response)) {
     print("The specified pool already exists. Will use existing pool.")
   }
   else{
-    if(wait){
+    if (wait) {
       waitForNodesToComplete(pool$id, 60000)
     }
   }
