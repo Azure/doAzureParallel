@@ -209,7 +209,16 @@ setVerbose <- function(value = FALSE){
       # Setting up common job environment for all tasks
       jobFileName <- paste0(id, ".rds")
       saveRDS(.doAzureBatchGlobals, file = jobFileName)
-      uploadBlob(id, paste0(getwd(), "/", jobFileName))
+
+      parallelThreads <- 1
+      if(!is.null(obj$options$azure$parallelThreads)){
+        parallelThreads <- obj$options$azure$parallelThreads
+      }
+
+      storageCredentials <- getStorageCredentials()
+      sasToken <- createSasToken("w", "c", id)
+
+      uploadBlob(id, paste0(getwd(), "/", jobFileName), sasToken = sasToken, parallelThreads = parallelThreads, accountName = storageCredentials$name)
       file.remove(jobFileName)
 
       resourceFiles <- list()
