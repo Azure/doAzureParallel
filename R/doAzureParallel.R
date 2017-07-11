@@ -169,14 +169,15 @@ setVerbose <- function(value = FALSE){
     enableMerge <- obj$options$azure$enableMerge
   }
   
-  if(enableMerge && !is.null(obj$options$azure$merge)){
+  if(!is.null(obj$options$azure$merge)){
     mergeFunc <- obj$options$azure$merge
   }
   
   if(!enableMerge){
     mergeFunc <- NULL
   }
-  
+
+  assign("enableMerge", enableMerge, envir=.doAzureBatchGlobals)
   assign("mergeFunc", mergeFunc, envir=.doAzureBatchGlobals)
   
   retryCounter <- 0
@@ -347,7 +348,7 @@ setVerbose <- function(value = FALSE){
   if(wait){
     waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
 
-    if(typeof(mergeFunc) == "list" || enableMerge){
+    if(typeof(mergeFunc) == "list" && enableMerge){
       response <- downloadBlob(id, paste0("result/", id, "-merge-result.rds"), sasToken = sasToken, accountName = storageCredentials$name)
       tempFile <- tempfile("doAzureParallel", fileext = ".rds")
       bin <- content(response, "raw")

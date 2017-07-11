@@ -23,9 +23,10 @@ for(package in azbatchenv$packages){
 }
 parent.env(azbatchenv$exportenv) <- globalenv()
 
+enableMerge <- azbatchenv$enableMerge
 mergeFunc <- azbatchenv$mergeFunc
 
-if(typeof(mergeFunc) == "list" || mergeFunc){
+if(typeof(mergeFunc) == "list" && enableMerge){
   results <- vector("list", numOfTasks)
   count <- 1
   tryCatch({
@@ -44,7 +45,7 @@ if(typeof(mergeFunc) == "list" || mergeFunc){
     print(e)
   })
 } else {
-
+  # Work needs to be done for utilizing custom merge functions
 }
 
 quit(save = "yes", status = 0, runLast = FALSE)
