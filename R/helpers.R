@@ -5,11 +5,16 @@
   .doAzureBatchGlobals <- args$envir
   argsList <- args$args
   dependsOn <- args$dependsOn
-
+  mergeFunc <- args$mergeFunc
+  
   if (!is.null(argsList)) {
     assign('argsList', argsList, .doAzureBatchGlobals)
   }
 
+  if (!is.null(mergeFunc)) {
+    assign('mergeFunc', mergeFunc, .doAzureBatchGlobals)
+  }
+  
   envFile <- paste0(taskId, ".rds")
   saveRDS(argsList, file = envFile)
   rAzureBatch::uploadBlob(jobId, paste0(getwd(), "/", envFile))
