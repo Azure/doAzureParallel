@@ -269,21 +269,28 @@ createOutputFile <- function(filePattern, url){
   )
   
   # Parsing url to obtain container's virtual directory path
-  storageUrl <- strsplit(url, "blob.core.windows.net")[[1]][2]
-  storageUrl <- strsplit(storageUrl, "?", fixed = TRUE)[[1]][1]
-  outputPath <- strsplit(substring(storageUrl, 2, nchar(storageUrl)), "/", fixed = TRUE)
+  azureDomain <- "blob.core.windows.net"
+  parsedStorageUrl <- strsplit(url, azureDomain)[[1]]
   
-  if(length(outputPath[[1]]) > 1){
+  baseUrl <- paste0(parsedStorageUrl[1], azureDomain)
+  params <- strsplit(parsedStorageUrl[2], "?", fixed = TRUE)[[1]]
+  virtualDirectory <- strsplit(substring(params[1], 2, nchar(params[1])), "/", fixed = TRUE)
+  
+  containerUrl <- paste0(baseUrl, "/", virtualDirectory[[1]][1], "?", params[2])
+  
+  # Verify directory has multiple directories
+  if(length(virtualDirectory[[1]]) > 1){
     # Rebuilding output path for the file upload
     path <- ""
-    for(i in 2:length(outputPath[[1]])){
-      path <- paste0(path, outputPath[[1]][i], "/")  
+    for(i in 2:length(virtualDirectory[[1]])){
+      path <- paste0(path, virtualDirectory[[1]][i], "/")  
     }
     
     path <- substring(path, 1, nchar(path) - 1)
     output$destination$container$path <- path
   }
   
+  output$destination$container$containerUrl <- containerUrl
   output
 }
 
