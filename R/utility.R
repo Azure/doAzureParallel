@@ -248,3 +248,42 @@ validateClusterConfig <- function(clusterFilePath){
 
   TRUE
 }
+
+#' Utility function for creating an output file
+#'
+#' @param filePattern a pattern indicating which file(s) to upload
+#' @param url the destination blob or virtual directory within the Azure Storage container
+#'
+#' @export
+createOutputFile <- function(filePattern, url){
+  output <- list(
+    filePattern = filePattern,
+    destination = list(
+      container = list(
+        containerUrl = url
+      )
+    ),
+    uploadOptions = list(
+      uploadCondition = "taskCompletion"
+    )
+  )
+  
+  # Parsing url to obtain container's virtual directory path
+  storageUrl <- strsplit(url, "blob.core.windows.net")[[1]][2]
+  storageUrl <- strsplit(storageUrl, "?", fixed = TRUE)[[1]][1]
+  outputPath <- strsplit(substring(storageUrl, 2, nchar(storageUrl)), "/", fixed = TRUE)
+  
+  if(length(outputPath[[1]]) > 1){
+    # Rebuilding output path for the file upload
+    path <- ""
+    for(i in 2:length(outputPath[[1]])){
+      path <- paste0(path, outputPath[[1]][i], "/")  
+    }
+    
+    path <- substring(path, 1, nchar(path) - 1)
+    output$destination$container$path <- path
+  }
+  
+  output
+}
+
