@@ -317,7 +317,7 @@ setVerbose(False)
 ```
 ### Bypassing merge task 
 
-Skipping the merge task is useful when the tasks results don't need to be merge into a list. To bypass the merge task, you can pass the *enableMerge* flag to the foreach object:
+Skipping the merge task is useful when the tasks results don't need to be merged into a list. To bypass the merge task, you can pass the *enableMerge* flag to the foreach object:
 
 ```R
 # Enable merge task
