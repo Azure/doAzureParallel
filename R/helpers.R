@@ -5,15 +5,15 @@
   .doAzureBatchGlobals <- args$envir
   argsList <- args$args
   dependsOn <- args$dependsOn
-  mergeFunc <- args$mergeFunc
+  cloudCombine <- args$cloudCombine
   userOutputFiles <- args$outputFiles
   
   if (!is.null(argsList)) {
     assign('argsList', argsList, .doAzureBatchGlobals)
   }
 
-  if (!is.null(mergeFunc)) {
-    assign('mergeFunc', mergeFunc, .doAzureBatchGlobals)
+  if (!is.null(cloudCombine)) {
+    assign('cloudCombine', cloudCombine, .doAzureBatchGlobals)
   }
   
   envFile <- paste0(taskId, ".rds")
@@ -93,7 +93,7 @@
   )
 
   outputFiles <- append(outputFiles, userOutputFiles)
-  commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH", downloadCommand, rCommand)# downloadCommand, , logsCommand, autoUploadCommand, stderrUploadCommand)
+  commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH", downloadCommand, rCommand)
 
   commands <- linuxWrapCommands(commands)
 

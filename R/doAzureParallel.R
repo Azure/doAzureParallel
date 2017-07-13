@@ -163,22 +163,22 @@ setVerbose <- function(value = FALSE){
            .doAzureBatchGlobals)
   }
 
-  mergeFunc <- list()
-  enableMerge <- TRUE
-  if(!is.null(obj$options$azure$enableMerge) && is.logical(obj$options$azure$enableMerge)){
-    enableMerge <- obj$options$azure$enableMerge
+  cloudCombine <- list()
+  enableCloudCombine <- TRUE
+  if(!is.null(obj$options$azure$enableCloudCombine) && is.logical(obj$options$azure$enableCloudCombine)){
+    enableCloudCombine <- obj$options$azure$enableCloudCombine
   }
   
-  if(!is.null(obj$options$azure$merge)){
-    mergeFunc <- obj$options$azure$merge
+  if(!is.null(obj$options$azure$cloudCombine)){
+    # cloudCombine <- obj$options$azure$cloudCombine
   }
   
-  if(!enableMerge){
-    mergeFunc <- NULL
+  if(!enableCloudCombine){
+    cloudCombine <- NULL
   }
 
-  assign("enableMerge", enableMerge, envir=.doAzureBatchGlobals)
-  assign("mergeFunc", mergeFunc, envir=.doAzureBatchGlobals)
+  assign("enableCloudCombine", enableCloudCombine, envir=.doAzureBatchGlobals)
+  assign("cloudCombine", cloudCombine, envir=.doAzureBatchGlobals)
   
   retryCounter <- 0
   maxRetryCount <- 5
@@ -344,13 +344,13 @@ setVerbose <- function(value = FALSE){
              envir = .doAzureBatchGlobals,
              packages = obj$packages,
              dependsOn = tasks,
-             mergeFunc = mergeFunc,
+             cloudCombine = cloudCombine,
              outputFiles = obj$options$azure$outputFiles)
 
   if(wait){
     waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
 
-    if(typeof(mergeFunc) == "list" && enableMerge){
+    if(typeof(cloudCombine) == "list" && enableCloudCombine){
       response <- downloadBlob(id, paste0("result/", id, "-merge-result.rds"), sasToken = sasToken, accountName = storageCredentials$name)
       tempFile <- tempfile("doAzureParallel", fileext = ".rds")
       bin <- content(response, "raw")

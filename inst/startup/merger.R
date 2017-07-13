@@ -23,10 +23,10 @@ for(package in azbatchenv$packages){
 }
 parent.env(azbatchenv$exportenv) <- globalenv()
 
-enableMerge <- azbatchenv$enableMerge
-mergeFunc <- azbatchenv$mergeFunc
+enableCloudCombine <- azbatchenv$enableCloudCombine
+cloudCombine <- azbatchenv$cloudCombine
 
-if(typeof(mergeFunc) == "list" && enableMerge){
+if(typeof(cloudCombine) == "list" && enableCloudCombine){
   results <- vector("list", numOfTasks)
   count <- 1
   tryCatch({
