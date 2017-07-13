@@ -344,7 +344,7 @@ setVerbose <- function(value = FALSE){
              envir = .doAzureBatchGlobals,
              packages = obj$packages,
              dependsOn = tasks,
-             mergeFunc = mergeFunc
+             mergeFunc = mergeFunc,
              outputFiles = obj$options$azure$outputFiles)
 
   if(wait){
