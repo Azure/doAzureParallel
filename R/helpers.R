@@ -6,6 +6,7 @@
   argsList <- args$args
   dependsOn <- args$dependsOn
   mergeFunc <- args$mergeFunc
+  userOutputFiles <- args$outputFiles
   
   if (!is.null(argsList)) {
     assign('argsList', argsList, .doAzureBatchGlobals)
@@ -91,6 +92,7 @@
     )
   )
 
+  outputFiles <- append(outputFiles, userOutputFiles)
   commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH", downloadCommand, rCommand)# downloadCommand, , logsCommand, autoUploadCommand, stderrUploadCommand)
 
   commands <- linuxWrapCommands(commands)
