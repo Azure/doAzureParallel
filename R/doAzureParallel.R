@@ -307,7 +307,8 @@ setVerbose <- function(value = FALSE){
             rCommand =  sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %s %s %s %s > %s.txt", "$AZ_BATCH_JOB_PREP_WORKING_DIR", "$AZ_BATCH_TASK_WORKING_DIR", jobFileName, paste0(taskId, ".rds"), taskId),
             args = argsList[startIndex:endIndex],
             envir = .doAzureBatchGlobals,
-            packages = obj$packages)
+            packages = obj$packages,
+            outputFiles = obj$options$azure$outputFiles)
 
     return(taskId)
   })
@@ -325,7 +326,8 @@ setVerbose <- function(value = FALSE){
                                 paste0(id, "-merge")),
              envir = .doAzureBatchGlobals,
              packages = obj$packages,
-             dependsOn = tasks)
+             dependsOn = tasks,
+             outputFiles = obj$options$azure$outputFiles)
 
   if(wait){
     waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
