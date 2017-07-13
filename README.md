@@ -318,7 +318,7 @@ setVerbose(False)
 
 
 ### Output Files
-Batch will automatically handle your output files when the user assigns a file pattern and container url. 
+Batch will automatically handle your output files when the user assigns a file pattern and storage container url. 
 
 ```R
 # Pushing output files
