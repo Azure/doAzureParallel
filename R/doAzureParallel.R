@@ -163,6 +163,23 @@ setVerbose <- function(value = FALSE){
            .doAzureBatchGlobals)
   }
 
+  cloudCombine <- list()
+  enableCloudCombine <- TRUE
+  if(!is.null(obj$options$azure$enableCloudCombine) && is.logical(obj$options$azure$enableCloudCombine)){
+    enableCloudCombine <- obj$options$azure$enableCloudCombine
+  }
+  
+  if(!is.null(obj$options$azure$cloudCombine)){
+    # cloudCombine <- obj$options$azure$cloudCombine
+  }
+  
+  if(!enableCloudCombine){
+    cloudCombine <- NULL
+  }
+
+  assign("enableCloudCombine", enableCloudCombine, envir=.doAzureBatchGlobals)
+  assign("cloudCombine", cloudCombine, envir=.doAzureBatchGlobals)
+  
   retryCounter <- 0
   maxRetryCount <- 5
   startupFolderName <- "startup"
@@ -327,47 +344,50 @@ setVerbose <- function(value = FALSE){
              envir = .doAzureBatchGlobals,
              packages = obj$packages,
              dependsOn = tasks,
+             cloudCombine = cloudCombine,
              outputFiles = obj$options$azure$outputFiles)
 
   if(wait){
     waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
 
-    response <- downloadBlob(id, paste0("result/", id, "-merge-result.rds"), sasToken = sasToken, accountName = storageCredentials$name)
-    tempFile <- tempfile("doAzureParallel", fileext = ".rds")
-    bin <- content(response, "raw")
-    writeBin(bin, tempFile)
-    results <- readRDS(tempFile)
-
-    failTasks <- sapply(results, .isError)
-
-    numberOfFailedTasks <- sum(unlist(failTasks))
-
-    if(numberOfFailedTasks > 0){
-      .createErrorViewerPane(id, failTasks)
-    }
-
-    accumulator <- makeAccum(it)
-
-    tryCatch(accumulator(results, seq(along = results)), error = function(e){
-      cat('error calling combine function:\n')
-      print(e)
-    })
-
-    # check for errors
-    errorValue <- getErrorValue(it)
-    errorIndex <- getErrorIndex(it)
-
-    print(sprintf("Number of errors: %i", numberOfFailedTasks))
-
-    deleteJob(id)
-
-    if (identical(obj$errorHandling, 'stop') && !is.null(errorValue)) {
-      msg <- sprintf('task %d failed - "%s"', errorIndex,
-                     conditionMessage(errorValue))
-      stop(simpleError(msg, call=expr))
-    }
-    else {
-      getResult(it)
+    if(typeof(cloudCombine) == "list" && enableCloudCombine){
+      response <- downloadBlob(id, paste0("result/", id, "-merge-result.rds"), sasToken = sasToken, accountName = storageCredentials$name)
+      tempFile <- tempfile("doAzureParallel", fileext = ".rds")
+      bin <- content(response, "raw")
+      writeBin(bin, tempFile)
+      results <- readRDS(tempFile)
+      
+      failTasks <- sapply(results, .isError)
+      
+      numberOfFailedTasks <- sum(unlist(failTasks))
+      
+      if(numberOfFailedTasks > 0){
+        .createErrorViewerPane(id, failTasks)
+      }
+      
+      accumulator <- makeAccum(it)
+      
+      tryCatch(accumulator(results, seq(along = results)), error = function(e){
+        cat('error calling combine function:\n')
+        print(e)
+      })
+      
+      # check for errors
+      errorValue <- getErrorValue(it)
+      errorIndex <- getErrorIndex(it)
+      
+      print(sprintf("Number of errors: %i", numberOfFailedTasks))
+      
+      deleteJob(id)
+      
+      if (identical(obj$errorHandling, 'stop') && !is.null(errorValue)) {
+        msg <- sprintf('task %d failed - "%s"', errorIndex,
+                       conditionMessage(errorValue))
+        stop(simpleError(msg, call=expr))
+      }
+      else {
+        getResult(it)
+      }  
     }
   }
   else{
