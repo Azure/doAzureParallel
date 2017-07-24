@@ -6,7 +6,7 @@
 #' registerDoAzureParallel(cluster)
 #' @export
 registerDoAzureParallel <- function(cluster){
-  setDoPar(fun = .doAzureParallel, data = list(config = list(cluster$batchAccount, cluster$storageAccount), poolId = cluster$poolId), info = .info)
+  foreach::setDoPar(fun = .doAzureParallel, data = list(config = list(cluster$batchAccount, cluster$storageAccount), poolId = cluster$poolId), info = .info)
 }
 
 .info <- function(data, item){
@@ -58,6 +58,30 @@ setChunkSize <- function(value = 1){
   assign("chunkSize", value, envir = .doAzureBatchGlobals)
 }
 
+#' Groups iterations of the foreach loop together per task.
+#'
+#' @param fun The number of iterations to group
+#'
+#' @examples
+#' setReduce(list)
+#' @export
+setReduce <- function(fun = NULL){
+  args <- list(...)
+
+  if (missing(fun))
+  {
+    # Special case: defer assignment of the function until foreach is called,
+    # then set it equal to the .combine function.
+    return(assign("gather", TRUE, envir = .doAzureBatchGlobals))
+  }
+
+  # Otherwise explicitly set or clear the function
+  if (!(is.function(fun) || is.null(fun))) stop("setGather requires a function or NULL")
+
+  assign("gather", fun, envir = .doAzureBatchGlobals)
+  assign("gatherArgs", args, envir = .doAzureBatchGlobals)
+}
+
 #' Set the verbosity for calling httr rest api calls
 #'
 #' @param value Boolean value for turning on and off verbose mode
@@ -66,7 +90,7 @@ setChunkSize <- function(value = 1){
 #' setVerbose(TRUE)
 #' @export
 setVerbose <- function(value = FALSE){
-  if(!is.logical(value)) stop("setVerbose requires a logical argument")
+  if (!is.logical(value)) stop("setVerbose requires a logical argument")
 
   options(verbose = value)
 }
@@ -74,16 +98,15 @@ setVerbose <- function(value = FALSE){
 .doAzureParallel <- function(obj, expr, envir, data){
   stopifnot(inherits(obj, "foreach"))
 
-  batchCredentials <- getBatchCredentials()
-  storageCredentials <- getStorageCredentials()
+  storageCredentials <- rAzureBatch::getStorageCredentials()
 
-  it <- iter(obj)
+  it <- iterators::iter(obj)
   argsList <- as.list(it)
 
   chunkSize <- 1
   jobTimeout <- 60 * 60 * 24
 
-  if(!is.null(obj$options$azure$timeout)){
+  if (!is.null(obj$options$azure$timeout)) {
     jobTimeout <- obj$options$azure$timeout
   }
 
@@ -92,16 +115,16 @@ setVerbose <- function(value = FALSE){
     args <- eval(qargs, envir)
     environment(do.call(.makeDotsEnv, args))
   },
-  error=function(e) {
-    new.env(parent=emptyenv())
+  error = function(e) {
+    new.env(parent = emptyenv())
   })
   noexport <- union(obj$noexport, obj$argnames)
-  getexports(expr, exportenv, envir, bad = noexport)
+  foreach::getexports(expr, exportenv, envir, bad = noexport)
   vars <- ls(exportenv)
 
   export <- unique(obj$export)
   ignore <- intersect(export, vars)
-  if(length(ignore) > 0){
+  if (length(ignore) > 0) {
     export <- setdiff(export, ignore)
   }
 
@@ -109,12 +132,12 @@ setVerbose <- function(value = FALSE){
   if (length(export) > 0) {
     if (obj$verbose)
       cat(sprintf('explicitly exporting variables(s): %s\n',
-                  paste(export, collapse=', ')))
+                  paste(export, collapse = ', ')))
 
     for (sym in export) {
-      if (!exists(sym, envir, inherits=TRUE))
+      if (!exists(sym, envir, inherits = TRUE))
         stop(sprintf('unable to find variable "%s"', sym))
-      val <- get(sym, envir, inherits=TRUE)
+      val <- get(sym, envir, inherits = TRUE)
       if (is.function(val) &&
           (identical(environment(val), .GlobalEnv) ||
            identical(environment(val), envir))) {
@@ -125,11 +148,11 @@ setVerbose <- function(value = FALSE){
         # functions defined in exportenv that can't call each other.
         environment(val) <- exportenv
       }
-      assign(sym, val, pos=exportenv, inherits=FALSE)
+      assign(sym, val, pos = exportenv, inherits = FALSE)
     }
   }
 
-  pkgName <- if (exists('packageName', mode='function'))
+  pkgName <- if (exists('packageName', mode = 'function'))
     packageName(envir)
   else
     NULL
@@ -144,19 +167,19 @@ setVerbose <- function(value = FALSE){
                  "job",
                  time)
 
-  if(!is.null(obj$options$azure$job)){
+  if (!is.null(obj$options$azure$job)) {
     id <- obj$options$azure$job
   }
 
   wait <- TRUE
-  if(!is.null(obj$options$azure$wait)){
+  if (!is.null(obj$options$azure$wait)) {
     wait <- obj$options$azure$wait
   }
 
   inputs <- FALSE
-  if(!is.null(obj$options$azure$inputs)){
-    storageCredentials <- getStorageCredentials()
-    sasToken <- createSasToken("r", "c", inputs)
+  if (!is.null(obj$options$azure$inputs)) {
+    storageCredentials <- rAzureBatch::getStorageCredentials()
+    sasToken <- rAzureBatch::createSasToken("r", "c", inputs)
 
     assign("inputs", list(name = storageCredentials$name,
                           sasToken = sasToken),
@@ -165,35 +188,39 @@ setVerbose <- function(value = FALSE){
 
   cloudCombine <- list()
   enableCloudCombine <- TRUE
-  if(!is.null(obj$options$azure$enableCloudCombine) && is.logical(obj$options$azure$enableCloudCombine)){
+  if (!is.null(obj$options$azure$enableCloudCombine) && is.logical(obj$options$azure$enableCloudCombine)) {
     enableCloudCombine <- obj$options$azure$enableCloudCombine
   }
-  
-  if(!is.null(obj$options$azure$cloudCombine)){
+
+  if (!is.null(obj$options$azure$cloudCombine)) {
     # cloudCombine <- obj$options$azure$cloudCombine
   }
-  
-  if(!enableCloudCombine){
+
+  if (!enableCloudCombine) {
     cloudCombine <- NULL
   }
 
-  assign("enableCloudCombine", enableCloudCombine, envir=.doAzureBatchGlobals)
-  assign("cloudCombine", cloudCombine, envir=.doAzureBatchGlobals)
-  
+  if (!is.null(obj$options$azure$reduce) && is.function(obj$options$azure$reduce)) {
+    assign("gather", obj$options$azure$reduce, envir = .doAzureBatchGlobals)
+  }
+
+  assign("enableCloudCombine", enableCloudCombine, envir = .doAzureBatchGlobals)
+  assign("cloudCombine", cloudCombine, envir = .doAzureBatchGlobals)
+
   retryCounter <- 0
   maxRetryCount <- 5
   startupFolderName <- "startup"
   containerResponse <- NULL
   jobquotaReachedResponse <- NULL
-  while(retryCounter < maxRetryCount){
+  while (retryCounter < maxRetryCount) {
     sprintf("job id is: %s", id)
     # try to submit the job. We may run into naming conflicts. If so, try again
     tryCatch({
       retryCounter <- retryCounter + 1
 
-      response <- createContainer(id, raw = TRUE)
-      if(grepl("ContainerAlreadyExists", response)){
-        if(!is.null(obj$options$azure$job)){
+      response <- rAzureBatch::createContainer(id, raw = TRUE)
+      if (grepl("ContainerAlreadyExists", response)) {
+        if (!is.null(obj$options$azure$job)) {
           containerResponse <- grepl("ContainerAlreadyExists", response)
           break;
         }
@@ -201,48 +228,48 @@ setVerbose <- function(value = FALSE){
         stop("Container already exists. Multiple jobs may possibly be running.")
       }
 
-      uploadBlob(id, system.file(startupFolderName, "worker.R", package="doAzureParallel"))
-      uploadBlob(id, system.file(startupFolderName, "merger.R", package="doAzureParallel"))
-      uploadBlob(id, system.file(startupFolderName, "install_github.R", package="doAzureParallel"))
-      uploadBlob(id, system.file(startupFolderName, "install_cran.R", package="doAzureParallel"))
+      rAzureBatch::uploadBlob(id, system.file(startupFolderName, "worker.R", package = "doAzureParallel"))
+      rAzureBatch::uploadBlob(id, system.file(startupFolderName, "merger.R", package = "doAzureParallel"))
+      rAzureBatch::uploadBlob(id, system.file(startupFolderName, "install_github.R", package = "doAzureParallel"))
+      rAzureBatch::uploadBlob(id, system.file(startupFolderName, "install_cran.R", package = "doAzureParallel"))
 
       # Setting up common job environment for all tasks
       jobFileName <- paste0(id, ".rds")
       saveRDS(.doAzureBatchGlobals, file = jobFileName)
 
       parallelThreads <- 1
-      if(!is.null(obj$options$azure$parallelThreads)){
+      if (!is.null(obj$options$azure$parallelThreads)) {
         parallelThreads <- obj$options$azure$parallelThreads
       }
 
-      storageCredentials <- getStorageCredentials()
-      sasToken <- createSasToken("w", "c", id)
+      storageCredentials <- rAzureBatch::getStorageCredentials()
+      sasToken <- rAzureBatch::createSasToken("w", "c", id)
 
-      uploadBlob(id, paste0(getwd(), "/", jobFileName), sasToken = sasToken, parallelThreads = parallelThreads, accountName = storageCredentials$name)
+      rAzureBatch::uploadBlob(id, paste0(getwd(), "/", jobFileName), sasToken = sasToken, parallelThreads = parallelThreads, accountName = storageCredentials$name)
       file.remove(jobFileName)
 
       resourceFiles <- list()
-      if(!is.null(obj$options$azure$resourceFiles)){
+      if (!is.null(obj$options$azure$resourceFiles)) {
         resourceFiles <- obj$options$azure$resourceFiles
       }
 
-      if(!is.null(obj$options$azure$resourcefiles)){
+      if (!is.null(obj$options$azure$resourcefiles)) {
         resourceFiles <- obj$options$azure$resourcefiles
       }
 
-      sasToken <- createSasToken("r", "c", id)
-      workerScriptUrl <- createBlobUrl(storageCredentials$name, id, "worker.R", sasToken)
-      mergerScriptUrl <- createBlobUrl(storageCredentials$name, id, "merger.R", sasToken)
-      installGithubScriptUrl <- createBlobUrl(storageCredentials$name, id, "install_github.R", sasToken)
-      installCranScriptUrl <- createBlobUrl(storageCredentials$name, id, "install_cran.R", sasToken)
-      jobCommonFileUrl <- createBlobUrl(storageCredentials$name, id, jobFileName, sasToken)
+      sasToken <- rAzureBatch::createSasToken("r", "c", id)
+      workerScriptUrl <- rAzureBatch::createBlobUrl(storageCredentials$name, id, "worker.R", sasToken)
+      mergerScriptUrl <- rAzureBatch::createBlobUrl(storageCredentials$name, id, "merger.R", sasToken)
+      installGithubScriptUrl <- rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_github.R", sasToken)
+      installCranScriptUrl <- rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_cran.R", sasToken)
+      jobCommonFileUrl <- rAzureBatch::createBlobUrl(storageCredentials$name, id, jobFileName, sasToken)
 
       requiredJobResourceFiles <- list(
-                            createResourceFile(url = workerScriptUrl, fileName = "worker.R"),
-                            createResourceFile(url = mergerScriptUrl, fileName = "merger.R"),
-                            createResourceFile(url = installGithubScriptUrl, fileName = "install_github.R"),
-                            createResourceFile(url = installCranScriptUrl, fileName = "install_cran.R"),
-                            createResourceFile(url = jobCommonFileUrl, fileName = jobFileName))
+        rAzureBatch::createResourceFile(url = workerScriptUrl, fileName = "worker.R"),
+        rAzureBatch::createResourceFile(url = mergerScriptUrl, fileName = "merger.R"),
+        rAzureBatch::createResourceFile(url = installGithubScriptUrl, fileName = "install_github.R"),
+        rAzureBatch::createResourceFile(url = installCranScriptUrl, fileName = "install_cran.R"),
+        rAzureBatch::createResourceFile(url = jobCommonFileUrl, fileName = jobFileName))
 
       # We need to merge any files passed by the calling lib with the resource files specified here
       resourceFiles <- append(resourceFiles, requiredJobResourceFiles)
@@ -252,17 +279,17 @@ setVerbose <- function(value = FALSE){
                           resourceFiles = resourceFiles,
                           packages = obj$packages)
 
-      if(grepl("ActiveJobAndScheduleQuotaReached", response)){
+      if (grepl("ActiveJobAndScheduleQuotaReached", response)) {
         jobquotaReachedResponse <- grepl("ActiveJobAndScheduleQuotaReached", response)
       }
 
-      if(grepl("JobExists", response)){
+      if (grepl("JobExists", response)) {
         stop("The specified job already exists.")
       }
 
       break;
     },
-    error=function(e) {
+    error = function(e) {
       if (retryCounter == maxRetryCount) {
         cat(sprintf('Error creating job: %s\n',
                   conditionMessage(e)))
@@ -276,30 +303,30 @@ setVerbose <- function(value = FALSE){
     })
   }
 
-  if(!is.null(containerResponse)){
+  if (!is.null(containerResponse)) {
     stop("Aborted mission. The container has already exist with user's specific job id. Please use a different job id.")
   }
 
-  if(!is.null(jobquotaReachedResponse)){
+  if (!is.null(jobquotaReachedResponse)) {
     stop("Aborted mission. Your active job quota has been reached. To increase your active job quota, go to https://docs.microsoft.com/en-us/azure/batch/batch-quota-limit")
   }
 
   print("Job Summary: ")
-  job <- getJob(id)
+  job <- rAzureBatch::getJob(id)
   print(sprintf("Id: %s", job$id))
 
   chunkSize <- 1
 
-  if(!is.null(obj$options$azure$chunkSize)){
+  if (!is.null(obj$options$azure$chunkSize)) {
     chunkSize <- obj$options$azure$chunkSize
   }
 
-  if(!is.null(obj$options$azure$chunksize)){
+  if (!is.null(obj$options$azure$chunksize)) {
     chunkSize <- obj$options$azure$chunksize
   }
 
-  if(exists("chunkSize", envir=.doAzureBatchGlobals)){
-    chunkSize <- get("chunkSize", envir=.doAzureBatchGlobals)
+  if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
+    chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
   }
 
   ntasks <- length(argsList)
@@ -309,7 +336,7 @@ setVerbose <- function(value = FALSE){
   startIndices <- seq(1, length(argsList), chunkSize)
 
   endIndices <-
-    if(chunkSize >= length(argsList))
+    if (chunkSize >= length(argsList))
     {
       c(length(argsList))
     }
@@ -319,7 +346,7 @@ setVerbose <- function(value = FALSE){
 
   minLength <- min(length(startIndices), length(endIndices))
 
-  if(length(startIndices) > length(endIndices)){
+  if (length(startIndices) > length(endIndices)) {
     endIndices[length(startIndices)] <- ntasks
   }
 
@@ -339,65 +366,72 @@ setVerbose <- function(value = FALSE){
     return(taskId)
   })
 
-  updateJob(id)
+  rAzureBatch::updateJob(id)
 
-  r <- .addTask(id,
-             taskId = paste0(id, "-merge"),
-             rCommand = sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s %s %s > %s.txt",
-                                "$AZ_BATCH_JOB_PREP_WORKING_DIR",
-                                "$AZ_BATCH_TASK_WORKING_DIR",
-                                id,
-                                length(tasks),
-                                ntasks,
-                                paste0(id, "-merge")),
-             envir = .doAzureBatchGlobals,
-             packages = obj$packages,
-             dependsOn = tasks,
-             cloudCombine = cloudCombine,
-             outputFiles = obj$options$azure$outputFiles)
+  if (enableCloudCombine) {
+    r <- .addTask(id,
+                  taskId = paste0(id, "-merge"),
+                  rCommand = sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s %s %s > %s.txt",
+                                     "$AZ_BATCH_JOB_PREP_WORKING_DIR",
+                                     "$AZ_BATCH_TASK_WORKING_DIR",
+                                     id,
+                                     length(tasks),
+                                     ntasks,
+                                     paste0(id, "-merge")),
+                  envir = .doAzureBatchGlobals,
+                  packages = obj$packages,
+                  dependsOn = tasks,
+                  cloudCombine = cloudCombine,
+                  outputFiles = obj$options$azure$outputFiles)
+  }
 
-  if(wait){
-    waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
+  if (wait) {
+    if (enableCloudCombine) {
+      rAzureBatch::waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
+    }
+    else {
+      rAzureBatch::waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout)
+    }
 
-    if(typeof(cloudCombine) == "list" && enableCloudCombine){
-      response <- downloadBlob(id, paste0("result/", id, "-merge-result.rds"), sasToken = sasToken, accountName = storageCredentials$name)
+    if (typeof(cloudCombine) == "list" && enableCloudCombine) {
+      response <- rAzureBatch::downloadBlob(id, paste0("result/", id, "-merge-result.rds"), sasToken = sasToken, accountName = storageCredentials$name)
       tempFile <- tempfile("doAzureParallel", fileext = ".rds")
-      bin <- content(response, "raw")
+      bin <- httr::content(response, "raw")
       writeBin(bin, tempFile)
       results <- readRDS(tempFile)
-      
+
       failTasks <- sapply(results, .isError)
-      
+
       numberOfFailedTasks <- sum(unlist(failTasks))
-      
-      if(numberOfFailedTasks > 0){
+
+      if (numberOfFailedTasks > 0) {
         .createErrorViewerPane(id, failTasks)
       }
-      
-      accumulator <- makeAccum(it)
-      
+
+      accumulator <- foreach::makeAccum(it)
+
       tryCatch(accumulator(results, seq(along = results)), error = function(e){
         cat('error calling combine function:\n')
         print(e)
       })
-      
+
       # check for errors
-      errorValue <- getErrorValue(it)
-      errorIndex <- getErrorIndex(it)
-      
+      errorValue <- foreach::getErrorValue(it)
+      errorIndex <- foreach::getErrorIndex(it)
+
       print(sprintf("Number of errors: %i", numberOfFailedTasks))
-      
-      deleteJob(id)
-      
+
       if (identical(obj$errorHandling, 'stop') && !is.null(errorValue)) {
         msg <- sprintf('task %d failed - "%s"', errorIndex,
                        conditionMessage(errorValue))
-        stop(simpleError(msg, call=expr))
+        stop(simpleError(msg, call = expr))
       }
       else {
-        getResult(it)
-      }  
+        foreach::getResult(it)
+      }
     }
+
+    rAzureBatch::deleteJob(id)
   }
   else{
     print("Because the 'wait' parameter is set to FALSE, the returned value is the job ID associated with the foreach loop. Use this returned value with getJobResults(job_id) to get the results when the foreach loop is completed in Azure")
@@ -406,14 +440,14 @@ setVerbose <- function(value = FALSE){
 }
 
 .createErrorViewerPane <- function(id, failTasks){
-  storageCredentials <- getStorageCredentials()
+  storageCredentials <- rAzureBatch::getStorageCredentials()
 
-  sasToken <- createSasToken("r", "c", id)
+  sasToken <- rAzureBatch::createSasToken("r", "c", id)
 
   queryParameterUrl <- "?"
 
-  for(query in names(sasToken)){
-    queryParameterUrl <- paste0(queryParameterUrl, query, "=", curlEscape(sasToken[[query]]), "&")
+  for (query in names(sasToken)) {
+    queryParameterUrl <- paste0(queryParameterUrl, query, "=", RCurl::curlEscape(sasToken[[query]]), "&")
   }
 
   queryParameterUrl <- substr(queryParameterUrl, 1, nchar(queryParameterUrl) - 1)
@@ -424,8 +458,8 @@ setVerbose <- function(value = FALSE){
   azureStorageUrl <- paste0("http://", storageCredentials$name,".blob.core.windows.net/", id)
 
   staticHtml <- "<h1>Errors:</h1>"
-  for(i in 1:length(failTasks)){
-    if(failTasks[i] == 1){
+  for (i in 1:length(failTasks)) {
+    if (failTasks[i] == 1) {
 
       stdoutFile <- paste0(azureStorageUrl, "/stdout")
       stderrFile <- paste0(azureStorageUrl, "/stderr")
@@ -442,7 +476,7 @@ setVerbose <- function(value = FALSE){
   write(staticHtml, htmlFile)
 
   viewer <- getOption("viewer")
-  if (!is.null(viewer)){
+  if (!is.null(viewer)) {
     viewer(htmlFile)
   }
 }
