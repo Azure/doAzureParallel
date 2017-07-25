@@ -29,8 +29,10 @@ getPoolPackageInstallationCommand <- function(type, packages){
     stop("Using an incorrect package source")
   }
 
-  for (i in 1:length(packages)) {
-    poolInstallationCommand[i] <- sprintf(script, packages[i])
+  if(length(packages) > 0){
+    for (i in 1:length(packages)) {
+      poolInstallationCommand[i] <- sprintf(script, packages[i])
+    }
   }
 
   poolInstallationCommand
@@ -66,23 +68,27 @@ getJobList <- function(jobIds = c()){
   jobs <- listJobs(query = list("$filter" = filter, "$select" = "id,state"))
   print("Job List: ")
 
-  for(j in 1:length(jobs$value)){
-    tasks <- listTask(jobs$value[[j]]$id)
-    count <- 0
-    if(length(tasks$value) > 0){
-      taskStates <- lapply(tasks$value, function(x) x$state == "completed")
+  if(length(jobs$value) > 0){
+    for(j in 1:length(jobs$value)){
+      tasks <- listTask(jobs$value[[j]]$id)
+      count <- 0
+      if(length(tasks$value) > 0){
+        taskStates <- lapply(tasks$value, function(x) x$state == "completed")
 
-      for(i in 1:length(taskStates)){
-        if(taskStates[[i]] == TRUE){
-          count <- count + 1
+        if(length(taskStates) > 0){
+          for(i in 1:length(taskStates)){
+            if(taskStates[[i]] == TRUE){
+              count <- count + 1
+            }
+          }
         }
-      }
 
-      summary <- sprintf("[ id: %s, state: %s, status: %d", jobs$value[[j]]$id, jobs$value[[j]]$state, ceiling((count/length(tasks$value) * 100)))
-      print(paste0(summary,  "% ]"))
-    }
-    else {
-      print(sprintf("[ id: %s, state: %s, status: %s ]", jobs$value[[j]]$id, jobs$value[[j]]$state, "No tasks were run."))
+        summary <- sprintf("[ id: %s, state: %s, status: %d", jobs$value[[j]]$id, jobs$value[[j]]$state, ceiling((count/length(tasks$value) * 100)))
+        print(paste0(summary,  "% ]"))
+      }
+      else {
+        print(sprintf("[ id: %s, state: %s, status: %s ]", jobs$value[[j]]$id, jobs$value[[j]]$state, "No tasks were run."))
+      }
     }
   }
 }

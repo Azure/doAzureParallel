@@ -314,12 +314,13 @@ setVerbose <- function(value = FALSE){
     endIndices[length(startIndices)] <- ntasks
   }
 
-  tasks <- lapply(1:length(endIndices), function(i){
-    startIndex <- startIndices[i]
-    endIndex <- endIndices[i]
-    taskId <- paste0(id, "-task", i)
+  if(length(endIndices) > 0){
+    tasks <- lapply(1:length(endIndices), function(i){
+      startIndex <- startIndices[i]
+      endIndex <- endIndices[i]
+      taskId <- paste0(id, "-task", i)
 
-    .addTask(id,
+      .addTask(id,
             taskId = taskId,
             rCommand =  sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %s %s %s %s > %s.txt", "$AZ_BATCH_JOB_PREP_WORKING_DIR", "$AZ_BATCH_TASK_WORKING_DIR", jobFileName, paste0(taskId, ".rds"), taskId),
             args = argsList[startIndex:endIndex],
@@ -327,9 +328,9 @@ setVerbose <- function(value = FALSE){
             packages = obj$packages,
             outputFiles = obj$options$azure$outputFiles)
 
-    return(taskId)
-  })
-
+      return(taskId)
+    })
+  }
   updateJob(id)
 
   r <- .addTask(id,
@@ -415,21 +416,22 @@ setVerbose <- function(value = FALSE){
   azureStorageUrl <- paste0("http://", storageCredentials$name,".blob.core.windows.net/", id)
 
   staticHtml <- "<h1>Errors:</h1>"
-  for(i in 1:length(failTasks)){
-    if(failTasks[i] == 1){
+  if(length(failTasks) > 0){
+    for(i in 1:length(failTasks)){
+      if(failTasks[i] == 1){
 
-      stdoutFile <- paste0(azureStorageUrl, "/stdout")
-      stderrFile <- paste0(azureStorageUrl, "/stderr")
-      RstderrFile <- paste0(azureStorageUrl, "/logs")
+        stdoutFile <- paste0(azureStorageUrl, "/stdout")
+        stderrFile <- paste0(azureStorageUrl, "/stderr")
+        RstderrFile <- paste0(azureStorageUrl, "/logs")
 
-      stdoutFile <- paste0(stdoutFile, "/", id, "-task", i, "-stdout.txt", queryParameterUrl)
-      stderrFile <- paste0(stderrFile, "/", id, "-task", i, "-stderr.txt", queryParameterUrl)
-      RstderrFile <- paste0(RstderrFile, "/", id, "-task", i, ".txt", queryParameterUrl)
+        stdoutFile <- paste0(stdoutFile, "/", id, "-task", i, "-stdout.txt", queryParameterUrl)
+        stderrFile <- paste0(stderrFile, "/", id, "-task", i, "-stderr.txt", queryParameterUrl)
+        RstderrFile <- paste0(RstderrFile, "/", id, "-task", i, ".txt", queryParameterUrl)
 
-      staticHtml <- paste0(staticHtml, 'Task ', i, ' | <a href="', stdoutFile,'">', "stdout.txt",'</a> |', ' <a href="', stderrFile,'">', "stderr.txt",'</a> | <a href="', RstderrFile,'">', "R output",'</a> <br/>')
+        staticHtml <- paste0(staticHtml, 'Task ', i, ' | <a href="', stdoutFile,'">', "stdout.txt",'</a> |', ' <a href="', stderrFile,'">', "stderr.txt",'</a> | <a href="', RstderrFile,'">', "R output",'</a> <br/>')
+      }
     }
   }
-
   write(staticHtml, htmlFile)
 
   viewer <- getOption("viewer")
