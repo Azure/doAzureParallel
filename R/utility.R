@@ -1,35 +1,48 @@
-getInstallationCommand <- function(packages){
-  installation <- ""
-
-  for(package in packages){
-    installation <- paste0(installation,
-                         sprintf("Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1], dependencies=TRUE)\' %s", package),
-                         ";")
+getJobPackageInstallationCommand <- function(type, packages){
+  script <- ""
+  if (type == "cran") {
+    script <- "Rscript $AZ_BATCH_JOB_PREP_WORKING_DIR/install_cran.R"
+  }
+  else if (type == "github") {
+    script <- "Rscript $AZ_BATCH_JOB_PREP_WORKING_DIR/install_github.R"
+  }
+  else {
+    stop("Using an incorrect package source")
   }
 
-  installation <- substr(installation, 1, nchar(installation) - 1)
+  if (!is.null(packages) && length(packages) > 0) {
+    packageCommands <- paste0(packages, collapse = " ")
+    script <- paste0(script, " ", packageCommands)
+  }
 }
 
-getGithubInstallationCommand <- function(packages){
-  installation <- ""
-  installation <- paste0(installation,
-                         sprintf("Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1], dependencies=TRUE)\' %s", "devtools"),
-                         ";")
+getPoolPackageInstallationCommand <- function(type, packages){
+  poolInstallationCommand <- character(length(packages))
 
-  if(length(packages) != 0){
-    for(package in packages){
-      installation <- paste0(installation,
-                             sprintf("Rscript -e \'args <- commandArgs(TRUE)\' -e \'devtools::install_github(args[1])\' %s", package),
-                             ";")
+  if (type == "cran") {
+    script <- "Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1])\' %s"
+  }
+  else if (type == "github") {
+    script <- "Rscript -e \'args <- commandArgs(TRUE)\' -e \'devtools::install_github(args[1])\' %s"
+  }
+  else {
+    stop("Using an incorrect package source")
+  }
+
+  if(length(packages) > 0){
+    for (i in 1:length(packages)) {
+      poolInstallationCommand[i] <- sprintf(script, packages[i])
     }
   }
 
-  installation <- substr(installation, 1, nchar(installation) - 1)
+  poolInstallationCommand
 }
 
 linuxWrapCommands <- function(commands = c()){
   commandLine <- sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
                          paste0(paste(commands, sep = " ", collapse = "; "),"; "))
+
+  commandLine
 }
 
 #' Get a list of job statuses from the given job ids
@@ -55,23 +68,27 @@ getJobList <- function(jobIds = c()){
   jobs <- listJobs(query = list("$filter" = filter, "$select" = "id,state"))
   print("Job List: ")
 
-  for(j in 1:length(jobs$value)){
-    tasks <- listTask(jobs$value[[j]]$id)
-    count <- 0
-    if(length(tasks$value) > 0){
-      taskStates <- lapply(tasks$value, function(x) x$state == "completed")
+  if(length(jobs$value) > 0){
+    for(j in 1:length(jobs$value)){
+      tasks <- listTask(jobs$value[[j]]$id)
+      count <- 0
+      if(length(tasks$value) > 0){
+        taskStates <- lapply(tasks$value, function(x) x$state == "completed")
 
-      for(i in 1:length(taskStates)){
-        if(taskStates[[i]] == TRUE){
-          count <- count + 1
+        if(length(taskStates) > 0){
+          for(i in 1:length(taskStates)){
+            if(taskStates[[i]] == TRUE){
+              count <- count + 1
+            }
+          }
         }
-      }
 
-      summary <- sprintf("[ id: %s, state: %s, status: %d", jobs$value[[j]]$id, jobs$value[[j]]$state, ceiling((count/length(tasks$value) * 100)))
-      print(paste0(summary,  "% ]"))
-    }
-    else {
-      print(sprintf("[ id: %s, state: %s, status: %s ]", jobs$value[[j]]$id, jobs$value[[j]]$state, "No tasks were run."))
+        summary <- sprintf("[ id: %s, state: %s, status: %d", jobs$value[[j]]$id, jobs$value[[j]]$state, ceiling((count/length(tasks$value) * 100)))
+        print(paste0(summary,  "% ]"))
+      }
+      else {
+        print(sprintf("[ id: %s, state: %s, status: %s ]", jobs$value[[j]]$id, jobs$value[[j]]$state, "No tasks were run."))
+      }
     }
   }
 }
@@ -179,3 +196,114 @@ getJobResult <- function(jobId = "", ...){
 
   return(results)
 }
+
+validateClusterConfig <- function(clusterFilePath){
+  if (file.exists(clusterFilePath)) {
+    pool <- rjson::fromJSON(file = clusterFilePath)
+  }
+  else{
+    pool <- rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
+  }
+
+  if (is.null(pool$poolSize)) {
+    stop("Missing poolSize entry")
+  }
+
+  if (is.null(pool$poolSize$dedicatedNodes)) {
+    stop("Missing dedicatedNodes entry")
+  }
+
+  if (is.null(pool$poolSize$lowPriorityNodes)) {
+    stop("Missing lowPriorityNodes entry")
+  }
+
+  if (is.null(pool$poolSize$autoscaleFormula)) {
+    stop("Missing autoscaleFormula entry")
+  }
+
+  if (is.null(pool$poolSize$dedicatedNodes$min)) {
+    stop("Missing dedicatedNodes$min entry")
+  }
+
+  if (is.null(pool$poolSize$dedicatedNodes$max)) {
+    stop("Missing dedicatedNodes$max entry")
+  }
+
+  if (is.null(pool$poolSize$lowPriorityNodes$min)) {
+    stop("Missing lowPriorityNodes$min entry")
+  }
+
+  if (is.null(pool$poolSize$lowPriorityNodes$max)) {
+    stop("Missing lowPriorityNodes$max entry")
+  }
+
+  stopifnot(is.character(pool$name))
+  stopifnot(is.character(pool$vmSize))
+  stopifnot(is.character(pool$poolSize$autoscaleFormula))
+  stopifnot(pool$poolSize$autoscaleFormula %in% names(AUTOSCALE_FORMULA))
+
+  stopifnot(pool$poolSize$dedicatedNodes$min <= pool$poolSize$dedicatedNodes$max)
+  stopifnot(pool$poolSize$lowPriorityNodes$min <= pool$poolSize$lowPriorityNodes$max)
+  stopifnot(pool$maxTasksPerNode >= 1)
+
+  stopifnot(is.double(pool$poolSize$dedicatedNodes$min))
+  stopifnot(is.double(pool$poolSize$dedicatedNodes$max))
+  stopifnot(is.double(pool$poolSize$lowPriorityNodes$min))
+  stopifnot(is.double(pool$poolSize$lowPriorityNodes$max))
+  stopifnot(is.double(pool$maxTasksPerNode))
+
+  TRUE
+}
+
+#' Utility function for creating an output file
+#'
+#' @param filePattern a pattern indicating which file(s) to upload
+#' @param url the destination blob or virtual directory within the Azure Storage container
+#'
+#' @export
+createOutputFile <- function(filePattern, url){
+  output <- list(
+    filePattern = filePattern,
+    destination = list(
+      container = list(
+        containerUrl = url
+      )
+    ),
+    uploadOptions = list(
+      uploadCondition = "taskCompletion"
+    )
+  )
+  
+  # Parsing url to obtain container's virtual directory path
+  azureDomain <- "blob.core.windows.net"
+  parsedValue <- strsplit(url, azureDomain)[[1]]
+  
+  accountName <- parsedValue[1]
+  urlPath <- parsedValue[2]
+  
+  baseUrl <- paste0(accountName, azureDomain)
+  parsedUrlPath <- strsplit(urlPath, "?", fixed = TRUE)[[1]]
+  
+  storageContainerPath <- parsedUrlPath[1]
+  queryParameters <- parsedUrlPath[2]
+  virtualDirectory <- strsplit(substring(storageContainerPath, 2, nchar(storageContainerPath)), "/", fixed = TRUE)
+  
+  containerName <- virtualDirectory[[1]][1]
+  containerUrl <- paste0(baseUrl, "/", containerName, "?", queryParameters)
+  
+  # Verify directory has multiple directories
+  if(length(virtualDirectory[[1]]) > 1){
+    # Rebuilding output path for the file upload
+    path <- ""
+    for(i in 2:length(virtualDirectory[[1]])){
+      path <- paste0(path, virtualDirectory[[1]][i], "/")  
+    }
+    
+    path <- substring(path, 1, nchar(path) - 1)
+    output$destination$container$path <- path
+  }
+  
+  output$destination$container$containerUrl <- containerUrl
+  output
+}
+

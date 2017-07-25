@@ -17,4 +17,3 @@ Get a list of job statuses from the given job ids
 getJobList(c("job-001", "job-002"))
 }
 }
-

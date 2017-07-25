@@ -32,4 +32,3 @@ generateCredentialsConfig("test_config.json", batchAccount = "testbatchaccount",
    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
 }
 }
-

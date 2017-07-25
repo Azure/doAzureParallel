@@ -22,4 +22,3 @@ generateClusterConfig("test_config.json")
 }
 
 }
-
