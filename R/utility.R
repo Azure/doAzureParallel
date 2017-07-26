@@ -173,6 +173,10 @@ getJobResult <- function(jobId = "", ...){
     results <- downloadBlob(jobId, paste0("result/", jobId, "-merge-result.rds"))
   }
 
+  tempFile <- tempfile("getJobResult", fileext = ".rds")
+  writeBin(results, tempFile)
+  results <- readRDS(tempFile)
+  
   if(!is.null(args$pass) && args$pass){
     failTasks <- sapply(results, .isError)
   }
