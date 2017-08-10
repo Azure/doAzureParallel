@@ -415,3 +415,63 @@ createOutputFile <- function(filePattern, url){
   output$destination$container$containerUrl <- containerUrl
   output
 }
+
+#' Wait for current tasks to complete
+#'
+#' @export
+waitForTasksToComplete <- function(jobId, timeout, ...){
+  print("Waiting for tasks to complete. . .")
+
+  args <- list(...)
+  progress <- args$progress
+
+  if(is.null(args$tasks)){
+    stop("The number of tasks was not initialized.")
+  }
+
+  numOfTasks <- args$tasks
+  pb <- txtProgressBar(min = 0, max = numOfTasks, style = 3)
+
+  timeToTimeout <- Sys.time() + timeout
+
+  while(Sys.time() < timeToTimeout){
+    count <- 0
+    currentTasks <- listTask(jobId)
+
+    taskStates <- lapply(currentTasks$value, function(x) x$state != "completed")
+    for(i in 1:length(taskStates)){
+      if(taskStates[[i]] == FALSE){
+        count <- count + 1
+      }
+    }
+
+    repeat{
+      if(is.null(currentTasks$odata.nextLink)){
+        break
+      }
+
+      skiptokenParameter <- strsplit(currentTasks$odata.nextLink, "&")[[1]][2]
+      skiptokenValue <- substr(skiptokenParameter, nchar("$skiptoken=") + 1, nchar(skiptokenParameter))
+
+      #print(skiptokenValue)
+      currentTasks <- listTask(jobId, skiptoken = URLdecode(skiptokenValue))
+
+      taskStates <- lapply(currentTasks$value, function(x) x$state != "completed")
+      for(i in 1:length(taskStates)){
+        if(taskStates[[i]] == FALSE){
+          count <- count + 1
+        }
+      }
+    }
+
+    setTxtProgressBar(pb, count)
+
+    if(all(taskStates == FALSE)){
+      return(0);
+    }
+
+    Sys.sleep(10)
+  }
+
+  stop("A timeout has occurred when waiting for tasks to complete.")
+}

@@ -385,10 +385,25 @@ setVerbose <- function(value = FALSE){
 
   if (wait) {
     if (enableCloudCombine) {
-      rAzureBatch::waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
+      waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
     }
     else {
-      rAzureBatch::waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout)
+      waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout)
+    }
+
+    tasks <- rAzureBatch::listTask(id)$value
+
+    cat("\n")
+    jobSummary <- rAzureBatch::getJob(id)
+
+    cat(sprintf("Start Time: %s\n", jobSummary$executionInfo$startTime))
+    cat("\n")
+    cat(sprintf("End Time: %s\n", jobSummary$executionInfo$endTime))
+
+    for (i in 1:length(tasks)) {
+      if (tasks[[i]]$executionInfo$exitCode != 0) {
+        cat(sprintf("Task: %s - Exit Code: %s\n", tasks[[i]]$id, tasks[[i]]$executionInfo$exitCode))
+      }
     }
 
     if (typeof(cloudCombine) == "list" && enableCloudCombine) {
