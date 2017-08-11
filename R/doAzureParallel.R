@@ -213,10 +213,34 @@ setVerbose <- function(value = FALSE){
 
       # We need to merge any files passed by the calling lib with the resource files specified here
       resourceFiles <- append(resourceFiles, requiredJobResourceFiles)
+      cloudMergeEnabled <- list(name = "cloudMergeEnabled", value = "TRUE")
+
+      chunkSize <- 1
+      
+      if(!is.null(obj$options$azure$chunkSize)){
+        chunkSize <- obj$options$azure$chunkSize
+      }
+      
+      if(!is.null(obj$options$azure$chunksize)){
+        chunkSize <- obj$options$azure$chunksize
+      }
+      
+      if(exists("chunkSize", envir=.doAzureBatchGlobals)){
+        chunkSize <- get("chunkSize", envir=.doAzureBatchGlobals)
+      }
+      
+      chunkSizeValue <- list(name = "chunkSize", value = as.character(chunkSize))
+      
+      if (is.null(obj$packages)) {
+        metadata <- list(cloudMergeEnabled, chunkSizeValue)
+      } else {
+        metadata <- list(cloudMergeEnabled, chunkSizeValue, obj$packages)
+      }
 
       response <- .addJob(jobId = id,
                           poolId = data$poolId,
                           resourceFiles = resourceFiles,
+                          metadata = metadata,
                           packages = obj$packages)
 
       if(grepl("ActiveJobAndScheduleQuotaReached", response)){
@@ -254,20 +278,6 @@ setVerbose <- function(value = FALSE){
   print("Job Summary: ")
   job <- getJob(id)
   print(sprintf("Id: %s", job$id))
-
-  chunkSize <- 1
-
-  if(!is.null(obj$options$azure$chunkSize)){
-    chunkSize <- obj$options$azure$chunkSize
-  }
-
-  if(!is.null(obj$options$azure$chunksize)){
-    chunkSize <- obj$options$azure$chunksize
-  }
-
-  if(exists("chunkSize", envir=.doAzureBatchGlobals)){
-    chunkSize <- get("chunkSize", envir=.doAzureBatchGlobals)
-  }
 
   ntasks <- length(argsList)
   nout <- ceiling(ntasks / chunkSize)
