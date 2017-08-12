@@ -155,7 +155,8 @@
   return(response)
 }
 
-.addPool <- function(pool, packages, resourceFiles){
+.addPool <- function(pool, packages, environmentSettings, resourceFiles){
+  
   commands <- c("export PATH=/anaconda/envs/py35/bin:$PATH",
                 "env PATH=$PATH pip install --no-dependencies blobxfer")
 
@@ -174,6 +175,10 @@
     waitForSuccess = TRUE
   )
 
+  if(!is.null(environmentSettings)){
+    startTask$environmentSettings = environmentSettings
+  }
+  
   if(length(resourceFiles) > 0){
     startTask$resourceFiles = resourceFiles
   }
