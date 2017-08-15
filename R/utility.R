@@ -419,46 +419,77 @@ createOutputFile <- function(filePattern, url){
 #' Wait for current tasks to complete
 #'
 #' @export
-waitForTasksToComplete <- function(jobId, timeout, ...){
-  print("Waiting for tasks to complete. . .")
+waitForTasksToComplete <- function(jobId, timeout) {
+  cat("Waiting for tasks to complete. . .", fill = TRUE)
 
-  args <- list(...)
-  progress <- args$progress
+  numOfTasks <- 0
+  currentTasks <- rAzureBatch::listTask(jobId)
 
-  if(is.null(args$tasks)){
-    stop("The number of tasks was not initialized.")
+  if (is.null(currentTasks$value)) {
+    stop(paste0("Error: ", currentTasks$message$value))
+    return()
   }
 
-  numOfTasks <- args$tasks
+  numOfTasks <- numOfTasks + length(currentTasks$value)
+
+  # Getting the total count of tasks for progress bar
+  repeat {
+    if (is.null(currentTasks$odata.nextLink)) {
+      break
+    }
+
+    skiptokenParameter <-
+      strsplit(currentTasks$odata.nextLink, "&")[[1]][2]
+
+    skiptokenValue <-
+      substr(skiptokenParameter,
+             nchar("$skiptoken=") + 1,
+             nchar(skiptokenParameter))
+
+    currentTasks <-
+      rAzureBatch::listTask(jobId, skiptoken = URLdecode(skiptokenValue))
+    numOfTasks <- numOfTasks + length(currentTasks$value)
+  }
+
   pb <- txtProgressBar(min = 0, max = numOfTasks, style = 3)
 
   timeToTimeout <- Sys.time() + timeout
 
-  while(Sys.time() < timeToTimeout){
+  while (Sys.time() < timeToTimeout) {
     count <- 0
-    currentTasks <- listTask(jobId)
+    currentTasks <- rAzureBatch::listTask(jobId)
 
-    taskStates <- lapply(currentTasks$value, function(x) x$state != "completed")
-    for(i in 1:length(taskStates)){
-      if(taskStates[[i]] == FALSE){
+    taskStates <-
+      lapply(currentTasks$value, function(x)
+        x$state != "completed")
+    for (i in 1:length(taskStates)) {
+      if (taskStates[[i]] == FALSE) {
         count <- count + 1
       }
     }
 
-    repeat{
-      if(is.null(currentTasks$odata.nextLink)){
+    repeat {
+      if (is.null(currentTasks$odata.nextLink)) {
         break
       }
 
-      skiptokenParameter <- strsplit(currentTasks$odata.nextLink, "&")[[1]][2]
-      skiptokenValue <- substr(skiptokenParameter, nchar("$skiptoken=") + 1, nchar(skiptokenParameter))
+      skiptokenParameter <-
+        strsplit(currentTasks$odata.nextLink, "&")[[1]][2]
 
-      #print(skiptokenValue)
-      currentTasks <- listTask(jobId, skiptoken = URLdecode(skiptokenValue))
+      skiptokenValue <-
+        substr(skiptokenParameter,
+               nchar("$skiptoken=") + 1,
+               nchar(skiptokenParameter))
 
-      taskStates <- lapply(currentTasks$value, function(x) x$state != "completed")
-      for(i in 1:length(taskStates)){
-        if(taskStates[[i]] == FALSE){
+      currentTasks <-
+        rAzureBatch::listTask(jobId, skiptoken = URLdecode(skiptokenValue))
+
+      taskStates <-
+        lapply(currentTasks$value, function(x)
+          x$state != "completed")
+
+      for (i in 1:length(taskStates)) {
+        if (taskStates[[i]] == FALSE) {
           count <- count + 1
         }
       }
@@ -466,8 +497,9 @@ waitForTasksToComplete <- function(jobId, timeout, ...){
 
     setTxtProgressBar(pb, count)
 
-    if(all(taskStates == FALSE)){
-      return(0);
+    if (all(taskStates == FALSE)) {
+      cat("\n")
+      return(0)
     }
 
     Sys.sleep(10)
