@@ -98,9 +98,18 @@ getJobList <- function(jobIds = c()){
 #' }
 #' @export
 waitForNodesToComplete <- function(clusterId, timeout = 86400){
-  print("Booting compute nodes. . . ")
+  cat("Booting compute nodes. . . ", fill = TRUE)
 
-  pool <- getPool(clusterId)
+  pool <- rAzureBatch::getPool(clusterId)
+
+  # Validate the getPool request first, before setting the progress bar
+  if (!is.null(pool$code) && !is.null(pool$message)) {
+    stop(sprintf("Code: %s - Message: %s", pool$code, pool$message))
+  }
+
+  if (pool$targetDedicatedNodes + pool$targetLowPriorityNodes <= 0) {
+    stop("Pool count needs to be greater than 0.")
+  }
 
   numOfNodes <- pool$targetDedicatedNodes + pool$targetLowPriorityNodes
 
@@ -108,47 +117,60 @@ waitForNodesToComplete <- function(clusterId, timeout = 86400){
   prevCount <- 0
   timeToTimeout <- Sys.time() + timeout
 
-  while(Sys.time() < timeToTimeout){
-    nodes <- listPoolNodes(clusterId)
+  while (Sys.time() < timeToTimeout) {
+    pool <- rAzureBatch::getPool(clusterId)
+
+    if (!is.null(pool$resizeErrors)) {
+      cat("\n")
+
+      resizeErrors <- ""
+      for (i in 1:length(pool$resizeErrors)) {
+        resizeErrors <- paste0(resizeErrors, sprintf("Code: %s - Message: %s \n", pool$resizeErrors[[i]]$code, pool$resizeErrors[[i]]$message))
+      }
+
+      stop(resizeErrors)
+    }
+
+    nodes <- rAzureBatch::listPoolNodes(clusterId)
 
     startTaskFailed <- TRUE
 
-    if(!is.null(nodes$value) && length(nodes$value) > 0){
+    if (!is.null(nodes$value) && length(nodes$value) > 0) {
       nodeStates <- lapply(nodes$value, function(x){
-        if(x$state == "idle"){
+        if (x$state == "idle") {
           return(1)
         }
-        else if(x$state == "creating"){
+        else if (x$state == "creating") {
           return(0.25)
         }
-        else if(x$state == "starting"){
+        else if (x$state == "starting") {
           return(0.50)
         }
-        else if(x$state == "waitingforstarttask"){
+        else if (x$state == "waitingforstarttask") {
           return(0.75)
         }
-        else if(x$state == "starttaskfailed"){
+        else if (x$state == "starttaskfailed") {
           startTaskFailed <- FALSE
           return(1)
         }
-        else if(x$state == "preempted"){
+        else if (x$state == "preempted") {
           return(1)
         }
-        else{
+        else {
           return(0)
         }
       })
 
       count <- sum(unlist(nodeStates))
 
-      if(count > prevCount){
+      if (count > prevCount) {
         setTxtProgressBar(pb, count)
         prevCount <- count
       }
 
       stopifnot(startTaskFailed)
 
-      if(count == numOfNodes){
+      if (count == numOfNodes) {
         return(0);
       }
     }
@@ -157,7 +179,7 @@ waitForNodesToComplete <- function(clusterId, timeout = 86400){
     Sys.sleep(30)
   }
 
-  deletePool(poolId)
+  rAzureBatch::deletePool(clusterId)
   stop("Timeout expired")
 }
 
@@ -267,36 +289,36 @@ createOutputFile <- function(filePattern, url){
       uploadCondition = "taskCompletion"
     )
   )
-  
+
   # Parsing url to obtain container's virtual directory path
   azureDomain <- "blob.core.windows.net"
   parsedValue <- strsplit(url, azureDomain)[[1]]
-  
+
   accountName <- parsedValue[1]
   urlPath <- parsedValue[2]
-  
+
   baseUrl <- paste0(accountName, azureDomain)
   parsedUrlPath <- strsplit(urlPath, "?", fixed = TRUE)[[1]]
-  
+
   storageContainerPath <- parsedUrlPath[1]
   queryParameters <- parsedUrlPath[2]
   virtualDirectory <- strsplit(substring(storageContainerPath, 2, nchar(storageContainerPath)), "/", fixed = TRUE)
-  
+
   containerName <- virtualDirectory[[1]][1]
   containerUrl <- paste0(baseUrl, "/", containerName, "?", queryParameters)
-  
+
   # Verify directory has multiple directories
   if(length(virtualDirectory[[1]]) > 1){
     # Rebuilding output path for the file upload
     path <- ""
     for(i in 2:length(virtualDirectory[[1]])){
-      path <- paste0(path, virtualDirectory[[1]][i], "/")  
+      path <- paste0(path, virtualDirectory[[1]][i], "/")
     }
-    
+
     path <- substring(path, 1, nchar(path) - 1)
     output$destination$container$path <- path
   }
-  
+
   output$destination$container$containerUrl <- containerUrl
   output
 }
