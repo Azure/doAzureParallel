@@ -249,6 +249,65 @@ validateClusterConfig <- function(clusterFilePath){
   TRUE
 }
 
+#' Validating cluster configuration files below doAzureParallel version 0.3.2
+validateDeprecatedClusterConfig <- function(clusterFilePath){
+  if (file.exists(clusterFilePath)) {
+    poolConfig <- rjson::fromJSON(file = clusterFilePath)
+  }
+  else{
+    poolConfig <- rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
+  }
+
+  if (is.null(poolConfig$pool$poolSize)) {
+    stop("Missing poolSize entry")
+  }
+
+  if (is.null(poolConfig$pool$poolSize$dedicatedNodes)) {
+    stop("Missing dedicatedNodes entry")
+  }
+
+  if (is.null(poolConfig$pool$poolSize$lowPriorityNodes)) {
+    stop("Missing lowPriorityNodes entry")
+  }
+
+  if (is.null(poolConfig$pool$poolSize$autoscaleFormula)) {
+    stop("Missing autoscaleFormula entry")
+  }
+
+  if (is.null(poolConfig$pool$poolSize$dedicatedNodes$min)) {
+    stop("Missing dedicatedNodes$min entry")
+  }
+
+  if (is.null(poolConfig$pool$poolSize$dedicatedNodes$max)) {
+    stop("Missing dedicatedNodes$max entry")
+  }
+
+  if (is.null(poolConfig$pool$poolSize$lowPriorityNodes$min)) {
+    stop("Missing lowPriorityNodes$min entry")
+  }
+
+  if (is.null(poolConfig$pool$poolSize$lowPriorityNodes$max)) {
+    stop("Missing lowPriorityNodes$max entry")
+  }
+
+  stopifnot(is.character(poolConfig$pool$name))
+  stopifnot(is.character(poolConfig$pool$vmSize))
+  stopifnot(is.character(poolConfig$pool$poolSize$autoscaleFormula))
+  stopifnot(poolConfig$pool$poolSize$autoscaleFormula %in% names(AUTOSCALE_FORMULA))
+
+  stopifnot(poolConfig$pool$poolSize$dedicatedNodes$min <= poolConfig$pool$poolSize$dedicatedNodes$max)
+  stopifnot(poolConfig$pool$poolSize$lowPriorityNodes$min <= poolConfig$pool$poolSize$lowPriorityNodes$max)
+  stopifnot(poolConfig$pool$maxTasksPerNode >= 1)
+
+  stopifnot(is.double(poolConfig$pool$poolSize$dedicatedNodes$min))
+  stopifnot(is.double(poolConfig$pool$poolSize$dedicatedNodes$max))
+  stopifnot(is.double(poolConfig$pool$poolSize$lowPriorityNodes$min))
+  stopifnot(is.double(poolConfig$pool$poolSize$lowPriorityNodes$max))
+  stopifnot(is.double(poolConfig$pool$maxTasksPerNode))
+
+  TRUE
+}
+
 #' Utility function for creating an output file
 #'
 #' @param filePattern a pattern indicating which file(s) to upload
@@ -267,36 +326,36 @@ createOutputFile <- function(filePattern, url){
       uploadCondition = "taskCompletion"
     )
   )
-  
+
   # Parsing url to obtain container's virtual directory path
   azureDomain <- "blob.core.windows.net"
   parsedValue <- strsplit(url, azureDomain)[[1]]
-  
+
   accountName <- parsedValue[1]
   urlPath <- parsedValue[2]
-  
+
   baseUrl <- paste0(accountName, azureDomain)
   parsedUrlPath <- strsplit(urlPath, "?", fixed = TRUE)[[1]]
-  
+
   storageContainerPath <- parsedUrlPath[1]
   queryParameters <- parsedUrlPath[2]
   virtualDirectory <- strsplit(substring(storageContainerPath, 2, nchar(storageContainerPath)), "/", fixed = TRUE)
-  
+
   containerName <- virtualDirectory[[1]][1]
   containerUrl <- paste0(baseUrl, "/", containerName, "?", queryParameters)
-  
+
   # Verify directory has multiple directories
   if(length(virtualDirectory[[1]]) > 1){
     # Rebuilding output path for the file upload
     path <- ""
     for(i in 2:length(virtualDirectory[[1]])){
-      path <- paste0(path, virtualDirectory[[1]][i], "/")  
+      path <- paste0(path, virtualDirectory[[1]][i], "/")
     }
-    
+
     path <- substring(path, 1, nchar(path) - 1)
     output$destination$container$path <- path
   }
-  
+
   output$destination$container$containerUrl <- containerUrl
   output
 }

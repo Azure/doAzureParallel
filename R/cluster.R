@@ -147,6 +147,7 @@ makeCluster <- function(clusterSetting = "cluster_settings.json", fullName = FAL
   }
 
   if (!is.null(poolConfig[["pool"]])) {
+    validateDeprecatedClusterConfig(clusterSetting)
     poolConfig <- poolConfig[["pool"]]
   }
   else {
