@@ -213,7 +213,7 @@ setVerbose <- function(value = FALSE){
 
       # We need to merge any files passed by the calling lib with the resource files specified here
       resourceFiles <- append(resourceFiles, requiredJobResourceFiles)
-      cloudMergeEnabled <- list(name = "cloudMergeEnabled", value = "TRUE")
+      cloudCombineEnabled <- list(name = "cloudCombineEnabled", value = "TRUE")
 
       chunkSize <- 1
       
@@ -232,9 +232,9 @@ setVerbose <- function(value = FALSE){
       chunkSizeValue <- list(name = "chunkSize", value = as.character(chunkSize))
       
       if (is.null(obj$packages)) {
-        metadata <- list(cloudMergeEnabled, chunkSizeValue)
+        metadata <- list(cloudCombineEnabled, chunkSizeValue)
       } else {
-        metadata <- list(cloudMergeEnabled, chunkSizeValue, obj$packages)
+        metadata <- list(cloudCombineEnabled, chunkSizeValue, obj$packages)
       }
 
       response <- .addJob(jobId = id,
