@@ -118,6 +118,7 @@
 .addJob <- function(jobId,
                     poolId,
                     resourceFiles,
+                    metadata,
                     ...){
   args <- list(...)
   packages <- args$packages
@@ -150,6 +151,7 @@
          poolInfo = poolInfo,
          jobPreparationTask = jobPreparationTask,
          usesTaskDependencies = usesTaskDependencies,
+         metadata = metadata,
          raw = TRUE)
 
   return(response)

@@ -170,6 +170,8 @@ waitForNodesToComplete <- function(clusterId, timeout = 86400){
 getJobResult <- function(jobId = "", ...){
   args <- list(...)
 
+  print("Getting job results...")
+  
   if(!is.null(args$container)){
     results <- downloadBlob(container, paste0("result/", jobId, "-merge-result.rds"))
   }
@@ -177,6 +179,12 @@ getJobResult <- function(jobId = "", ...){
     results <- downloadBlob(jobId, paste0("result/", jobId, "-merge-result.rds"))
   }
 
+  if(is.vector(results)){
+    tempFile <- tempfile("getJobResult", fileext = ".rds")
+    writeBin(results, tempFile)
+    results <- readRDS(tempFile)
+  }
+  
   if(!is.null(args$pass) && args$pass){
     failTasks <- sapply(results, .isError)
   }
