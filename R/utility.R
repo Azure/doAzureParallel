@@ -146,53 +146,37 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     }
     
     nodes <- rAzureBatch::listPoolNodes(poolId)
+    nodesWithFailures <- c()
     
-    startTaskFailed <- FALSE
-    
+    count <- 0
     if (!is.null(nodes$value) && length(nodes$value) > 0) {
-      nodeStates <- lapply(nodes$value, function(x) {
-        if (x$state == "idle") {
-          return(1)
-        }
-        else if (x$state == "creating") {
-          return(0.25)
-        }
-        else if (x$state == "starting") {
-          return(0.50)
-        }
-        else if (x$state == "waitingforstarttask") {
-          return(0.75)
-        }
-        else if (x$state == "starttaskfailed") {
-          startTaskFailed <- TRUE
-          return(1)
-        }
-        else if (x$state == "preempted") {
-          return(1)
-        }
-        else {
-          return(0)
-        }
-      })
+      for(i in 1:length(nodes$value)){
+        count <- switch(
+          nodes$value[[i]]$state,
+          "idle" = {1},
+          "creating" = {0.25},
+          "starting" = {0.50},
+          "waitingforstartask" = {0.75},
+          "starttaskfailed" = {
+            nodesWithFailures <- c(nodesWithFailures, nodes$value[[i]]$id)
+            1
+          },
+          "preempted" = {1},
+          0
+        )
+      }
       
-      count <- sum(unlist(nodeStates))
-      
-      if (count > prevCount) {
+      if (count > pb$getVal()) {
         setTxtProgressBar(pb, count)
-        prevCount <- count
       }
       
-      if (startTaskFailed) {
-        stop("Start tasks have failed.")  
-      }
-      
-      if (count == numOfNodes) {
-        return(0)
-        
+      if (nodesWithFailures > 0) {
+        for (i in 1:length(nodesWithFailures)) {
+          warning(sprintf("The specified node '%s' start task has failed.", nodesWithFailures[i]))
+        }
       }
     }
     
-    setTxtProgressBar(pb, prevCount)
     Sys.sleep(30)
   }
   
