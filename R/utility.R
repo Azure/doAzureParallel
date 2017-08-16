@@ -148,10 +148,15 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     nodes <- rAzureBatch::listPoolNodes(poolId)
     nodesWithFailures <- c()
     
-    count <- 0
+    currenProgressBarCount <- 0
     if (!is.null(nodes$value) && length(nodes$value) > 0) {
       for(i in 1:length(nodes$value)){
-        count <- switch(
+        
+        # The progress total count is the number of the nodes. Each node counts as 1.
+        # If a node is not in idle, prempted, or start task failed, the value is 
+        # less than 1. The default value is 0 because the node has not been allocated to
+        # the pool yet. 
+        currenProgressBarCount <- switch(
           nodes$value[[i]]$state,
           "idle" = {1},
           "creating" = {0.25},
@@ -170,10 +175,13 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
         setTxtProgressBar(pb, count)
       }
       
-      if (nodesWithFailures > 0) {
+      if (length(nodesWithFailures) > 0) {
+        nodesFailureWarningLabel <- sprintf("The following %i nodes failed while running the start task:\n", length(nodesWithFailures))
         for (i in 1:length(nodesWithFailures)) {
-          warning(sprintf("The specified node '%s' start task has failed.", nodesWithFailures[i]))
+          nodesFailureWarningLabel <- paste0(nodesFailureWarningLabel, sprintf("%s\n", nodesWithFailures[i]))
         }
+        
+        warning(nodesFailureWarningLabel)
       }
     }
     
