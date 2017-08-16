@@ -89,7 +89,7 @@ getJobList <- function(jobIds = c()){
 
 #' Polling method to check status of cluster boot up
 #'
-#' @param clusterId The cluster name to poll for
+#' @param poolId The cluster name to poll for
 #' @param timeout Timeout in seconds, default timeout is one day
 #'
 #' @examples
@@ -97,46 +97,60 @@ getJobList <- function(jobIds = c()){
 #' waitForNodesToComplete(clusterId = "testCluster", timeout = 3600)
 #' }
 #' @export
-waitForNodesToComplete <- function(clusterId, timeout = 86400){
+waitForNodesToComplete <- function(poolId, timeout = 86400) {
   cat("Booting compute nodes. . . ", fill = TRUE)
 
-  pool <- rAzureBatch::getPool(clusterId)
-
+  pool <- rAzureBatch::getPool(poolId)
+  
   # Validate the getPool request first, before setting the progress bar
   if (!is.null(pool$code) && !is.null(pool$message)) {
     stop(sprintf("Code: %s - Message: %s", pool$code, pool$message))
   }
-
+  
   if (pool$targetDedicatedNodes + pool$targetLowPriorityNodes <= 0) {
     stop("Pool count needs to be greater than 0.")
   }
-
-  numOfNodes <- pool$targetDedicatedNodes + pool$targetLowPriorityNodes
-
-  pb <- txtProgressBar(min = 0, max = pool$targetDedicatedNodes + pool$targetLowPriorityNodes, style = 3)
+  
+  numOfNodes <-
+    pool$targetDedicatedNodes + pool$targetLowPriorityNodes
+  
+  pb <-
+    txtProgressBar(
+      min = 0,
+      max = pool$targetDedicatedNodes + pool$targetLowPriorityNodes,
+      style = 3
+    )
   prevCount <- 0
   timeToTimeout <- Sys.time() + timeout
-
+  
   while (Sys.time() < timeToTimeout) {
     pool <- rAzureBatch::getPool(clusterId)
-
+    
     if (!is.null(pool$resizeErrors)) {
       cat("\n")
-
+      
       resizeErrors <- ""
       for (i in 1:length(pool$resizeErrors)) {
-        resizeErrors <- paste0(resizeErrors, sprintf("Code: %s - Message: %s \n", pool$resizeErrors[[i]]$code, pool$resizeErrors[[i]]$message))
+        resizeErrors <-
+          paste0(
+            resizeErrors,
+            sprintf(
+              "Code: %s - Message: %s \n",
+              pool$resizeErrors[[i]]$code,
+              pool$resizeErrors[[i]]$message
+            )
+          )
       }
-
+      
       stop(resizeErrors)
     }
-
-    nodes <- rAzureBatch::listPoolNodes(clusterId)
-
-    startTaskFailed <- TRUE
-
+    
+    nodes <- rAzureBatch::listPoolNodes(poolId)
+    
+    startTaskFailed <- FALSE
+    
     if (!is.null(nodes$value) && length(nodes$value) > 0) {
-      nodeStates <- lapply(nodes$value, function(x){
+      nodeStates <- lapply(nodes$value, function(x) {
         if (x$state == "idle") {
           return(1)
         }
@@ -150,7 +164,7 @@ waitForNodesToComplete <- function(clusterId, timeout = 86400){
           return(0.75)
         }
         else if (x$state == "starttaskfailed") {
-          startTaskFailed <- FALSE
+          startTaskFailed <- TRUE
           return(1)
         }
         else if (x$state == "preempted") {
@@ -160,25 +174,28 @@ waitForNodesToComplete <- function(clusterId, timeout = 86400){
           return(0)
         }
       })
-
+      
       count <- sum(unlist(nodeStates))
-
+      
       if (count > prevCount) {
         setTxtProgressBar(pb, count)
         prevCount <- count
       }
-
-      stopifnot(startTaskFailed)
-
+      
+      if (startTaskFailed) {
+        stop("Start tasks have failed.")  
+      }
+      
       if (count == numOfNodes) {
-        return(0);
+        return(0)
+        
       }
     }
-
+    
     setTxtProgressBar(pb, prevCount)
     Sys.sleep(30)
   }
-
+  
   rAzureBatch::deletePool(clusterId)
   stop("Timeout expired")
 }
