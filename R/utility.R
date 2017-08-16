@@ -250,7 +250,7 @@ validateClusterConfig <- function(clusterFilePath){
 }
 
 #' Validating cluster configuration files below doAzureParallel version 0.3.2
-validateDeprecatedClusterConfig <- function(clusterFilePath){
+validateDeprecatedClusterConfig_0.3.2 <- function(clusterFilePath){
   if (file.exists(clusterFilePath)) {
     poolConfig <- rjson::fromJSON(file = clusterFilePath)
   }
