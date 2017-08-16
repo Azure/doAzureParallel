@@ -167,6 +167,7 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
             1
           },
           "preempted" = {1},
+          "running" = {1},
           0
         )
       }
