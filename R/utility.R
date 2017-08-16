@@ -124,7 +124,7 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
   timeToTimeout <- Sys.time() + timeout
   
   while (Sys.time() < timeToTimeout) {
-    pool <- rAzureBatch::getPool(clusterId)
+    pool <- rAzureBatch::getPool(poolId)
     
     if (!is.null(pool$resizeErrors)) {
       cat("\n")
@@ -180,7 +180,7 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     Sys.sleep(30)
   }
   
-  rAzureBatch::deletePool(clusterId)
+  rAzureBatch::deletePool(poolId)
   stop("Timeout expired")
 }
 
