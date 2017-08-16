@@ -89,7 +89,7 @@ getJobList <- function(jobIds = c()){
 
 #' Polling method to check status of cluster boot up
 #'
-#' @param clusterId The cluster name to poll for
+#' @param poolId The cluster name to poll for
 #' @param timeout Timeout in seconds, default timeout is one day
 #'
 #' @examples
@@ -97,67 +97,123 @@ getJobList <- function(jobIds = c()){
 #' waitForNodesToComplete(clusterId = "testCluster", timeout = 3600)
 #' }
 #' @export
-waitForNodesToComplete <- function(clusterId, timeout = 86400){
-  print("Booting compute nodes. . . ")
+waitForNodesToComplete <- function(poolId, timeout = 86400) {
+  cat("Booting compute nodes. . . ", fill = TRUE)
 
-  pool <- getPool(clusterId)
+  pool <- rAzureBatch::getPool(poolId)
 
-  numOfNodes <- pool$targetDedicatedNodes + pool$targetLowPriorityNodes
+  # Validate the getPool request first, before setting the progress bar
+  if (!is.null(pool$code) && !is.null(pool$message)) {
+    stop(sprintf("Code: %s - Message: %s", pool$code, pool$message))
+  }
 
-  pb <- txtProgressBar(min = 0, max = pool$targetDedicatedNodes + pool$targetLowPriorityNodes, style = 3)
-  prevCount <- 0
+  if (pool$targetDedicatedNodes + pool$targetLowPriorityNodes <= 0) {
+    stop("Pool count needs to be greater than 0.")
+  }
+
+  totalNodes <-
+    pool$targetDedicatedNodes + pool$targetLowPriorityNodes
+
+  pb <-
+    txtProgressBar(
+      min = 0,
+      max = totalNodes,
+      style = 3
+    )
+
   timeToTimeout <- Sys.time() + timeout
 
-  while(Sys.time() < timeToTimeout){
-    nodes <- listPoolNodes(clusterId)
+  while (Sys.time() < timeToTimeout) {
+    pool <- rAzureBatch::getPool(poolId)
 
-    startTaskFailed <- TRUE
+    if (!is.null(pool$resizeErrors)) {
+      cat("\n")
 
-    if(!is.null(nodes$value) && length(nodes$value) > 0){
-      nodeStates <- lapply(nodes$value, function(x){
-        if(x$state == "idle"){
-          return(1)
-        }
-        else if(x$state == "creating"){
-          return(0.25)
-        }
-        else if(x$state == "starting"){
-          return(0.50)
-        }
-        else if(x$state == "waitingforstarttask"){
-          return(0.75)
-        }
-        else if(x$state == "starttaskfailed"){
-          startTaskFailed <- FALSE
-          return(1)
-        }
-        else if(x$state == "preempted"){
-          return(1)
-        }
-        else{
-          return(0)
-        }
-      })
-
-      count <- sum(unlist(nodeStates))
-
-      if(count > prevCount){
-        setTxtProgressBar(pb, count)
-        prevCount <- count
+      resizeErrors <- ""
+      for (i in 1:length(pool$resizeErrors)) {
+        resizeErrors <-
+          paste0(
+            resizeErrors,
+            sprintf(
+              "Code: %s - Message: %s \n",
+              pool$resizeErrors[[i]]$code,
+              pool$resizeErrors[[i]]$message
+            )
+          )
       }
 
-      stopifnot(startTaskFailed)
+      stop(resizeErrors)
+    }
 
-      if(count == numOfNodes){
-        return(0);
+    nodes <- rAzureBatch::listPoolNodes(poolId)
+
+    if (!is.null(nodes$value) && length(nodes$value) > 0) {
+      nodesWithFailures <- c()
+      currentProgressBarCount <- 0
+
+      for (i in 1:length(nodes$value)) {
+        # The progress total count is the number of the nodes. Each node counts as 1.
+        # If a node is not in idle, prempted, running, or start task failed, the value is
+        # less than 1. The default value is 0 because the node has not been allocated to
+        # the pool yet.
+        nodeValue <- switch(
+          nodes$value[[i]]$state,
+          "idle" = {
+            1
+          },
+          "creating" = {
+            0.25
+          },
+          "starting" = {
+            0.50
+          },
+          "waitingforstartask" = {
+            0.75
+          },
+          "starttaskfailed" = {
+            nodesWithFailures <- c(nodesWithFailures, nodes$value[[i]]$id)
+            1
+          },
+          "preempted" = {
+            1
+          },
+          "running" = {
+            1
+          },
+          0
+        )
+
+        currentProgressBarCount <- currentProgressBarCount + nodeValue
+      }
+
+      if (currentProgressBarCount >= pb$getVal()) {
+        setTxtProgressBar(pb, currentProgressBarCount)
+      }
+
+      if (length(nodesWithFailures) > 0) {
+        nodesFailureWarningLabel <-
+          sprintf(
+            "The following %i nodes failed while running the start task:\n",
+            length(nodesWithFailures)
+          )
+        for (i in 1:length(nodesWithFailures)) {
+          nodesFailureWarningLabel <-
+            paste0(nodesFailureWarningLabel,
+                   sprintf("%s\n", nodesWithFailures[i]))
+        }
+
+        warning(nodesFailureWarningLabel)
       }
     }
 
-    setTxtProgressBar(pb, prevCount)
+    if (pb$getVal() >= totalNodes) {
+      return(0);
+    }
+
     Sys.sleep(30)
   }
 
-  deletePool(poolId)
+  rAzureBatch::deletePool(poolId)
   stop("Timeout expired")
 }
 
