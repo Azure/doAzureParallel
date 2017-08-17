@@ -4,10 +4,10 @@
 \alias{waitForNodesToComplete}
 \title{Polling method to check status of cluster boot up}
 \usage{
-waitForNodesToComplete(clusterId, timeout = 86400)
+waitForNodesToComplete(poolId, timeout = 86400)
 }
 \arguments{
-\item{clusterId}{The cluster name to poll for}
+\item{poolId}{The cluster name to poll for}
 
 \item{timeout}{Timeout in seconds, default timeout is one day}
 }
