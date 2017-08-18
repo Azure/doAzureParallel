@@ -311,7 +311,7 @@ validateClusterConfig <- function(clusterFilePath) {
   stopifnot(is.character(pool$name))
   stopifnot(is.character(pool$vmSize))
   stopifnot(is.character(pool$poolSize$autoscaleFormula))
-  stopifnot(pool$poolSize$autoscaleFormula %in% names(AUTOSCALE_FORMULA))
+  stopifnot(pool$poolSize$autoscaleFormula %in% names(autoscaleFormula))
 
   stopifnot(pool$poolSize$dedicatedNodes$min <= pool$poolSize$dedicatedNodes$max)
   stopifnot(pool$poolSize$lowPriorityNodes$min <= pool$poolSize$lowPriorityNodes$max)
@@ -327,7 +327,7 @@ validateClusterConfig <- function(clusterFilePath) {
 }
 
 #' Validating cluster configuration files below doAzureParallel version 0.3.2
-validateDeprecatedClusterConfig_0.3.2 <- function(clusterFilePath) {
+validateDeprecatedClusterConfig <- function(clusterFilePath) {
   if (file.exists(clusterFilePath)) {
     poolConfig <- rjson::fromJSON(file = clusterFilePath)
   }
@@ -371,7 +371,7 @@ validateDeprecatedClusterConfig_0.3.2 <- function(clusterFilePath) {
   stopifnot(is.character(poolConfig$pool$name))
   stopifnot(is.character(poolConfig$pool$vmSize))
   stopifnot(is.character(poolConfig$pool$poolSize$autoscaleFormula))
-  stopifnot(poolConfig$pool$poolSize$autoscaleFormula %in% names(AUTOSCALE_FORMULA))
+  stopifnot(poolConfig$pool$poolSize$autoscaleFormula %in% names(autoscaleFormula))
 
   stopifnot(
     poolConfig$pool$poolSize$dedicatedNodes$min <= poolConfig$pool$poolSize$dedicatedNodes$max

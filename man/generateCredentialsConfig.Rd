@@ -11,7 +11,8 @@ generateCredentialsConfig(fileName, ...)
 
 \item{...}{Further named parameters
 \itemize{
- \item{"batchAccount"}: {A list of files that the Batch service will download to the compute node before running the command line.}
+ \item{"batchAccount"}: {A list of files that the Batch service
+ will download to the compute node before running the command line.}
  \item{"batchKey"}: {Arguments in the foreach parameters that will be used for the task running.}
  \item{"batchUrl"}: {A list of packages that the Batch service will download to the compute node.}
  \item{"storageAccount"}: {The R environment that the task will run under.}

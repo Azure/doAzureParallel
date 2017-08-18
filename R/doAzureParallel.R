@@ -507,7 +507,7 @@ setVerbose <- function(value = FALSE) {
     if (failTasks[i] == 1) {
       stdoutFile <- paste0(azureStorageUrl, "/", "stdout")
       stderrFile <- paste0(azureStorageUrl, "/", "stderr")
-      RstderrFile <- paste0(azureStorageUrl, "/", "logs")
+      rlogFile <- paste0(azureStorageUrl, "/", "logs")
 
       stdoutFile <-
         paste0(stdoutFile,
@@ -525,8 +525,8 @@ setVerbose <- function(value = FALSE) {
                i,
                "-stderr.txt",
                queryParameterUrl)
-      RstderrFile <-
-        paste0(RstderrFile,
+      rlogFile <-
+        paste0(rlogFile,
                "/",
                id,
                "-task",
@@ -549,7 +549,7 @@ setVerbose <- function(value = FALSE) {
           "'>",
           "stderr.txt",
           "</a> | <a href='",
-          RstderrFile,
+          rlogFile,
           "'>",
           "R output",
           "</a> <br/>"

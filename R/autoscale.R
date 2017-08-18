@@ -1,4 +1,4 @@
-AUTOSCALE_WORKDAY_FORMULA <- paste0(
+autoscaleWorkdayFormula <- paste0(
   "$curTime = time();",
   "$workHours = $curTime.hour >= 8 && $curTime.hour < 18;",
   "$isWeekday = $curTime.weekday >= 1 && $curTime.weekday <= 5;",
@@ -6,12 +6,12 @@ AUTOSCALE_WORKDAY_FORMULA <- paste0(
   "$TargetDedicatedNodes = $isWorkingWeekdayHour ? %s:%s;"
 )
 
-AUTOSCALE_WEEKEND_FORMULA <- paste0(
+autoscaleWeekendFormula <- paste0(
   "$isWeekend = $curTime.weekday >= 6 && $curTime.weekday <= 7;",
   "$TargetDedicatedNodes = $isWeekend ? %s:%s;"
 )
 
-AUTOSCALE_MAX_CPU_FORMULA <- paste0(
+autoscaleMaxCpuFormula <- paste0(
   "$totalNodes = (min($CPUPercent.GetSample(TimeInterval_Minute * 10)) > 0.7) ? ",
   "($CurrentDedicated * 1.1) : $CurrentDedicated; $totalNodes = ",
   "(avg($CPUPercent.GetSample(TimeInterval_Minute * 60)) < 0.2) ? ",
@@ -19,7 +19,7 @@ AUTOSCALE_MAX_CPU_FORMULA <- paste0(
   "$TargetDedicatedNodes = min(%s, $totalNodes)"
 )
 
-AUTOSCALE_QUEUE_FORMULA <- paste0(
+autoscaleQueueFormula <- paste0(
   "$samples = $ActiveTasks.GetSamplePercent(TimeInterval_Minute * 15);",
   "$tasks = $samples < 70 ? max(0,$ActiveTasks.GetSample(1)) : ",
   "max( $ActiveTasks.GetSample(1), avg($ActiveTasks.GetSample(TimeInterval_Minute * 15)));",
@@ -31,11 +31,11 @@ AUTOSCALE_QUEUE_FORMULA <- paste0(
   "$NodeDeallocationOption = taskcompletion;"
 )
 
-AUTOSCALE_FORMULA <- list(
-  "WEEKEND" = AUTOSCALE_WEEKEND_FORMULA,
-  "WORKDAY" = AUTOSCALE_WORKDAY_FORMULA,
-  "MAX_CPU" = AUTOSCALE_MAX_CPU_FORMULA,
-  "QUEUE" = AUTOSCALE_QUEUE_FORMULA
+autoscaleFormula <- list(
+  "WEEKEND" = autoscaleWeekendFormula,
+  "WORKDAY" = autoscaleWorkdayFormula,
+  "MAX_CPU" = autoscaleMaxCpuFormula,
+  "QUEUE" = autoscaleQueueFormula
 )
 
 getAutoscaleFormula <-
@@ -45,21 +45,21 @@ getAutoscaleFormula <-
            lowPriorityMin,
            lowPriorityMax,
            maxTasksPerNode = 1) {
-    formulas <- names(AUTOSCALE_FORMULA)
+    formulas <- names(autoscaleFormula)
 
     if (formulaName == formulas[1]) {
-      return(sprintf(AUTOSCALE_WEEKEND_FORMULA, dedicatedMin, dedicatedMax))
+      return(sprintf(autoscaleWeekendFormula, dedicatedMin, dedicatedMax))
     }
     else if (formulaName == formulas[2]) {
-      return(sprintf(AUTOSCALE_WORKDAY_FORMULA, dedicatedMin, dedicatedMax))
+      return(sprintf(autoscaleWorkdayFormula, dedicatedMin, dedicatedMax))
     }
     else if (formulaName == formulas[3]) {
-      return(sprintf(AUTOSCALE_MAX_CPU_FORMULA, dedicatedMin))
+      return(sprintf(autoscaleMaxCpuFormula, dedicatedMin))
     }
     else if (formulaName == formulas[4]) {
       return(
         sprintf(
-          AUTOSCALE_QUEUE_FORMULA,
+          autoscaleQueueFormula,
           maxTasksPerNode,
           dedicatedMin,
           dedicatedMax,

@@ -55,16 +55,16 @@ getparentenv <- function(pkgname) {
     parenv
 }
 
-AZ_BATCH_JOB_PREP_DIR <- args[1]
-AZ_BATCH_TASK_WORKING_DIR <- args[2]
-AZ_BATCH_JOB_ENV <- args[3]
-AZ_BATCH_TASK_ENV <- args[4]
+batchJobPreparationDirectory <- args[1]
+batchTaskWorkingDirectory <- args[2]
+batchJobEnvironment <- args[3]
+batchTaskEnvironment <- args[4]
 
-setwd(AZ_BATCH_TASK_WORKING_DIR)
+setwd(batchTaskWorkingDirectory)
 
 azbatchenv <-
-  readRDS(paste0(AZ_BATCH_JOB_PREP_DIR, "/", AZ_BATCH_JOB_ENV))
-taskArgs <- readRDS(AZ_BATCH_TASK_ENV)
+  readRDS(paste0(batchJobPreparationDirectory, "/", batchJobEnvironment))
+taskArgs <- readRDS(batchTaskEnvironment)
 
 for (package in azbatchenv$packages) {
   library(package, character.only = TRUE)
@@ -91,11 +91,11 @@ result <- lapply(taskArgs, function(args) {
   })
 })
 
-file_result_name <- strsplit(AZ_BATCH_TASK_ENV, "[.]")[[1]][1]
+fileResultName <- strsplit(batchTaskEnvironment, "[.]")[[1]][1]
 saveRDS(result,
         file = file.path(
-          AZ_BATCH_TASK_WORKING_DIR,
-          paste0(file_result_name, "-result.rds")
+          batchTaskWorkingDirectory,
+          paste0(fileResultName, "-result.rds")
         ))
 
 quit(save = "yes",

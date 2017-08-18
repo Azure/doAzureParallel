@@ -9,15 +9,15 @@ if (length(args) == 0) {
   args[2] <- "out.txt"
 }
 
-AZ_BATCH_JOB_PREP_DIR <- args[1]
-AZ_BATCH_TASK_WORKING_DIR <- args[2]
-AZ_BATCH_JOB_ID <- args[3]
+batchJobPreparationDirectory <- args[1]
+batchTaskWorkingDirectory <- args[2]
+batchJobId <- args[3]
 
-N <- args[4]
+n <- args[4]
 numOfTasks <- args[5]
 
 azbatchenv <-
-  readRDS(paste0(AZ_BATCH_JOB_PREP_DIR, "/", AZ_BATCH_JOB_ID, ".rds"))
+  readRDS(paste0(batchJobPreparationDirectory, "/", batchJobId, ".rds"))
 
 for (package in azbatchenv$packages) {
   library(package, character.only = TRUE)
@@ -31,15 +31,15 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
   results <- vector("list", numOfTasks)
   count <- 1
   tryCatch({
-    for (i in 1:N) {
-      task_result <-
+    for (i in 1:n) {
+      taskResult <-
         file.path(
-          AZ_BATCH_TASK_WORKING_DIR,
+          batchTaskWorkingDirectory,
           "result",
-          paste0(AZ_BATCH_JOB_ID, "-task", i, "-result.rds")
+          paste0(batchJobId, "-task", i, "-result.rds")
         )
 
-      task <- readRDS(task_result)
+      task <- readRDS(taskResult)
 
       for (t in 1:length(task)) {
         results[count] <- task[t]
@@ -48,8 +48,8 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
     }
 
     saveRDS(results, file = file.path(
-      AZ_BATCH_TASK_WORKING_DIR,
-      paste0(AZ_BATCH_JOB_ID, "-merge-result.rds")
+      batchTaskWorkingDirectory,
+      paste0(batchJobId, "-merge-result.rds")
     ))
   },
   error = function(e) {
