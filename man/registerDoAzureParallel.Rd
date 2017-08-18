@@ -2,7 +2,8 @@
 % Please edit documentation in R/doAzureParallel.R
 \name{registerDoAzureParallel}
 \alias{registerDoAzureParallel}
-\title{The registerDoAzureParallel function is used to register the Azure cloud-enabled parallel backend with the foreach package.}
+\title{The registerDoAzureParallel function is used to register
+the Azure cloud-enabled parallel backend with the foreach package.}
 \usage{
 registerDoAzureParallel(cluster)
 }
@@ -10,7 +11,8 @@ registerDoAzureParallel(cluster)
 \item{cluster}{The cluster object to use for parallelization}
 }
 \description{
-The registerDoAzureParallel function is used to register the Azure cloud-enabled parallel backend with the foreach package.
+The registerDoAzureParallel function is used to register
+the Azure cloud-enabled parallel backend with the foreach package.
 }
 \examples{
 registerDoAzureParallel(cluster)

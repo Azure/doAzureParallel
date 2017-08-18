@@ -1,4 +1,5 @@
-#' The registerDoAzureParallel function is used to register the Azure cloud-enabled parallel backend with the foreach package.
+#' The registerDoAzureParallel function is used to register
+#' the Azure cloud-enabled parallel backend with the foreach package.
 #'
 #' @param cluster The cluster object to use for parallelization
 #'

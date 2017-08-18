@@ -4,7 +4,7 @@
 \alias{generateClusterConfig}
 \title{Creates a configuration file for the user's cluster setup.}
 \usage{
-generateClusterConfig(fileName, ...)
+generateClusterConfig(fileName)
 }
 \arguments{
 \item{fileName}{Cluster settings file name}

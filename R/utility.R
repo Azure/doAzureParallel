@@ -117,7 +117,7 @@ getJobList <- function(jobIds = c()) {
 #'
 #' @examples
 #' \dontrun{
-#' waitForNodesToComplete(clusterId = "testCluster", timeout = 3600)
+#' waitForNodesToComplete(poolId = "testCluster", timeout = 3600)
 #' }
 #' @export
 waitForNodesToComplete <- function(poolId, timeout = 86400) {
