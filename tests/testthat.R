@@ -10,5 +10,3 @@ library(testthat)
 library(doAzureParallel)
 
 test_check("doAzureParallel")
-
-

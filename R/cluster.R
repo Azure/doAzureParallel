@@ -17,35 +17,48 @@
 #'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
 #' }
 #' @export
-generateCredentialsConfig <- function(fileName, ...){
+generateCredentialsConfig <- function(fileName, ...) {
   args <- list(...)
 
-  batchAccount <- ifelse(is.null(args$batchAccount), "batch_account_name", args$batchAccount)
-  batchKey <- ifelse(is.null(args$batchKey), "batch_account_key", args$batchKey)
-  batchUrl <- ifelse(is.null(args$batchUrl), "batch_account_url", args$batchUrl)
+  batchAccount <-
+    ifelse(is.null(args$batchAccount),
+           "batch_account_name",
+           args$batchAccount)
+  batchKey <-
+    ifelse(is.null(args$batchKey), "batch_account_key", args$batchKey)
+  batchUrl <-
+    ifelse(is.null(args$batchUrl), "batch_account_url", args$batchUrl)
 
-  storageName <- ifelse(is.null(args$storageAccount), "storage_account_name", args$storageAccount)
-  storageKey <- ifelse(is.null(args$storageKey), "storage_account_key", args$storageKey)
+  storageName <-
+    ifelse(is.null(args$storageAccount),
+           "storage_account_name",
+           args$storageAccount)
+  storageKey <-
+    ifelse(is.null(args$storageKey),
+           "storage_account_key",
+           args$storageKey)
 
-  packages <- ifelse(is.null(args$packages), list(), args$packages)
-
-  if(!file.exists(paste0(getwd(), "/", fileName))){
+  if (!file.exists(paste0(getwd(), "/", fileName))) {
     config <- list(
       batchAccount = list(
         name = batchAccount,
         key = batchKey,
         url = batchUrl
       ),
-      storageAccount = list(
-        name = storageName,
-        key = storageKey
-      )
+      storageAccount = list(name = storageName,
+                            key = storageKey)
     )
 
-    configJson <- jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
-    write(configJson, file=paste0(getwd(), "/", fileName))
+    configJson <-
+      jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
+    write(configJson, file = paste0(getwd(), "/", fileName))
 
-    print(sprintf("A config file has been generated %s. Please enter your Batch credentials.", paste0(getwd(), "/", fileName)))
+    print(
+      sprintf(
+        "A config file has been generated %s. Please enter your Batch credentials.",
+        paste0(getwd(), "/", fileName)
+      )
+    )
   }
 }
 
@@ -59,38 +72,37 @@ generateCredentialsConfig <- function(fileName, ...){
 #' }
 #'
 #' @export
-generateClusterConfig <- function(fileName, ...){
-  args <- list(...)
-
-  packages <- ifelse(is.null(args$packages), list(), args$packages)
-
-  if(!file.exists(fileName) || !file.exists(paste0(getwd(), "/", fileName))){
+generateClusterConfig <- function(fileName) {
+  if (!file.exists(fileName) ||
+      !file.exists(paste0(getwd(), "/", fileName))) {
     config <- list(
       name = "myPoolName",
       vmSize = "Standard_D2_v2",
       maxTasksPerNode = 1,
       poolSize = list(
-        dedicatedNodes = list(
-          min = 3,
-          max = 3
-        ),
-        lowPriorityNodes = list(
-          min = 3,
-          max = 3
-        ),
+        dedicatedNodes = list(min = 3,
+                              max = 3),
+        lowPriorityNodes = list(min = 3,
+                                max = 3),
         autoscaleFormula = "QUEUE"
       ),
-      rPackages = list(
-        cran = vector(),
-        github = vector()
-      )
+      rPackages = list(cran = vector(),
+                       github = vector())
     )
 
-    configJson <- jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
-    write(configJson, file=paste0(getwd(), "/", fileName))
+    configJson <-
+      jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
+    write(configJson, file = paste0(getwd(), "/", fileName))
 
-    print(sprintf("A cluster settings has been generated %s. Please enter your cluster specification.", paste0(getwd(), "/", fileName)))
-    print("Note: To maximize all CPU cores, set the maxTasksPerNode property up to 4x the number of cores for the VM size.")
+    print(
+      sprintf(
+        "A cluster settings has been generated %s. Please enter your cluster specification.",
+        paste0(getwd(), "/", fileName)
+      )
+    )
+    print(
+      "Note: To maximize all CPU cores, set the maxTasksPerNode property up to 4x the number of cores for the VM size."
+    )
   }
 }
 
@@ -119,63 +131,62 @@ makeCluster <-
       poolConfig <-
         rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
     }
-    
+
     config <- getOption("az_config")
     if (is.null(config)) {
       stop("Credentials were not set.")
     }
-    
-    config$poolId = poolConfig$name
-    options("az_config" = config)
-    
+
     installCranCommand <- NULL
     installGithubCommand <- NULL
-    
+
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$cran) &&
         length(poolConfig$rPackages$cran) > 0) {
       installCranCommand <-
         getPoolPackageInstallationCommand("cran", poolConfig$rPackages$cran)
     }
-    
+
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$github) &&
         length(poolConfig$rPackages$github) > 0) {
       installGithubCommand <-
         getPoolPackageInstallationCommand("github", poolConfig$rPackages$github)
     }
-    
+
     packages <- NULL
     if (!is.null(installCranCommand)) {
       packages <- installCranCommand
     }
-    
+
     if (!is.null(installGithubCommand) && is.null(packages)) {
       packages <- installGithubCommand
     }
     else if (!is.null(installGithubCommand) && !is.null(packages)) {
       packages <- c(installCranCommand, installGithubCommand)
     }
-    
+
     if (!is.null(poolConfig[["pool"]])) {
       validateDeprecatedClusterConfig_0.3.2(clusterSetting)
       poolConfig <- poolConfig[["pool"]]
+
+      config$poolId <- poolConfig$name
     }
     else {
       validateClusterConfig(clusterSetting)
     }
-    
+
     response <- .addPool(pool = poolConfig,
                          packages = packages,
                          resourceFiles = resourceFiles)
-    
+
     pool <- rAzureBatch::getPool(poolConfig$name)
-    
+
     if (grepl("AuthenticationFailed", response)) {
       stop("Check your credentials and try again.")
-      
+
     }
-    
+
     if (grepl("PoolExists", response)) {
       cat(
         sprintf(
@@ -185,11 +196,11 @@ makeCluster <-
         ),
         fill = TRUE
       )
-      
-      
+
+
       clusterNodeMismatchWarning <-
         "There is a mismatched between the projected cluster %s nodes '%s' and the existing cluster %s nodes '%s'"
-      
+
       if (pool$targetDedicatedNodes !=  poolConfig$poolSize$dedicatedNodes) {
         dedicatedLabel <- "dedicated"
         warning(
@@ -202,10 +213,10 @@ makeCluster <-
           )
         )
       }
-      
+
       if (pool$targetLowPriorityNodes != poolConfig$poolSize$lowPriorityNodes) {
         lowPriorityLabel <- "low priority"
-        
+
         warning(
           sprintf(
             clusterNodeMismatchWarning,
@@ -222,13 +233,14 @@ makeCluster <-
         waitForNodesToComplete(pool$id, 60000)
       }
     }
-    
+
     cat("Your pool has been registered.", fill = TRUE)
     cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
         fill = TRUE)
     cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
         fill = TRUE)
-    
+
+    options("az_config" = config)
     return(getOption("az_config"))
   }
 
@@ -242,8 +254,8 @@ makeCluster <-
 #' stopCluster(clusterConfiguration)
 #' }
 #' @export
-stopCluster <- function(cluster){
-  deletePool(cluster$poolId)
+stopCluster <- function(cluster) {
+  rAzureBatch::deletePool(cluster$poolId)
 
   print(sprintf("Your %s cluster has been destroyed.", cluster$poolId))
 }
@@ -253,36 +265,41 @@ stopCluster <- function(cluster){
 #' @param fileName The cluster configuration that was created in \code{makeCluster}
 #'
 #' @export
-setCredentials <- function(fileName = "az_config.json"){
-  if(file.exists(fileName)){
-    config <- rjson::fromJSON(file=paste0(fileName))
+setCredentials <- function(fileName = "az_config.json") {
+  if (file.exists(fileName)) {
+    config <- rjson::fromJSON(file = paste0(fileName))
   }
   else{
-    config <- rjson::fromJSON(file=paste0(getwd(), "/", fileName))
+    config <- rjson::fromJSON(file = paste0(getwd(), "/", fileName))
   }
 
   options("az_config" = config)
   print("Your azure credentials have been set.")
 }
 
-getPoolWorkers <- function(poolId, ...){
+getPoolWorkers <- function(poolId, ...) {
   args <- list(...)
   raw <- !is.null(args$RAW)
 
-  batchCredentials <- getBatchCredentials()
+  nodes <- rAzureBatch::listPoolNodes(poolId)
 
-  nodes <- listPoolNodes(poolId)
-
-  if(length(nodes$value) > 0){
-    for(i in 1:length(nodes$value)){
-      print(sprintf("Node: %s - %s - %s", nodes$value[[i]]$id, nodes$value[[i]]$state, nodes$value[[i]]$ipAddress))
+  if (length(nodes$value) > 0) {
+    for (i in 1:length(nodes$value)) {
+      print(
+        sprintf(
+          "Node: %s - %s - %s",
+          nodes$value[[i]]$id,
+          nodes$value[[i]]$state,
+          nodes$value[[i]]$ipAddress
+        )
+      )
     }
   }
   else{
     print("There are currently no nodes in the pool.")
   }
 
-  if(raw){
+  if (raw) {
     return(nodes)
   }
 }
