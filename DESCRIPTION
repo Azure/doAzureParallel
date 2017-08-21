@@ -17,5 +17,7 @@ Depends:
     iterators (>= 1.0.8),
     rAzureBatch (>= 0.2.4)
 Suggests:
-    testthat, caret, plyr
-RoxygenNote: 6.0.1
+    testthat,
+    caret,
+    plyr
+RoxygenNote: 5.0.1

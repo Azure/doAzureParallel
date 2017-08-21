@@ -38,7 +38,7 @@ getPoolPackageInstallationCommand <- function(type, packages){
 
 linuxWrapCommands <- function(commands = c()){
   commandLine <- sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
-                         paste0(paste(commands, sep = " ", collapse = "; "),"; "))
+                         paste0(paste(commands, sep = " ", collapse = "; "), ";"))
 
   commandLine
 }
@@ -415,4 +415,3 @@ createOutputFile <- function(filePattern, url){
   output$destination$container$containerUrl <- containerUrl
   output
 }
-

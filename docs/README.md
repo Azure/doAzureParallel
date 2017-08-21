@@ -32,3 +32,7 @@ This section will provide information about how Azure works, how best to take ad
 7. **Persistent Storage** [(link)](./23-persistent-storage.md)
 
    Taking advantage of persistent storage for long-running jobs
+
+8. **Customize Cluster** [(link)](./30-customize-cluster.md)
+
+   Setting up your cluster to user's specific needs

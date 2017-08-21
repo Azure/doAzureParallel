@@ -27,19 +27,16 @@ enableCloudCombine <- azbatchenv$enableCloudCombine
 cloudCombine <- azbatchenv$cloudCombine
 
 if(typeof(cloudCombine) == "list" && enableCloudCombine){
-  results <- vector("list", numOfTasks)
+  #results <- vector("list", numOfTasks)
+  results <- list()
   count <- 1
   tryCatch({
-    for(i in 1:N){
+    for (i in 1:N) {
       task_result <- paste0(AZ_BATCH_TASK_WORKING_DIR, "/result/", AZ_BATCH_JOB_ID, "-task", i, "-result.rds")
       task <- readRDS(task_result)
-      
-      for(t in 1 : length(task)){
-        results[count] <- task[t]
-        count <- count + 1
-      }
+      results <- append(results, task)
     }
-    
+
     saveRDS(results, file = paste0(AZ_BATCH_TASK_WORKING_DIR, "/", paste0(AZ_BATCH_JOB_ID, "-merge-result.rds")))
   }, error = function(e) {
     print(e)

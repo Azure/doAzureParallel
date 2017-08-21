@@ -83,7 +83,8 @@ generateClusterConfig <- function(fileName, ...){
       rPackages = list(
         cran = vector(),
         github = vector()
-      )
+      ),
+      commandLine = vector()
     )
 
     configJson <- jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
@@ -119,44 +120,50 @@ makeCluster <-
       poolConfig <-
         rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
     }
-    
+
     config <- getOption("az_config")
     if (is.null(config)) {
       stop("Credentials were not set.")
     }
-    
+
     config$poolId = poolConfig$name
     options("az_config" = config)
-    
+
     installCranCommand <- NULL
     installGithubCommand <- NULL
-    
+
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$cran) &&
         length(poolConfig$rPackages$cran) > 0) {
       installCranCommand <-
         getPoolPackageInstallationCommand("cran", poolConfig$rPackages$cran)
     }
-    
+
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$github) &&
         length(poolConfig$rPackages$github) > 0) {
       installGithubCommand <-
         getPoolPackageInstallationCommand("github", poolConfig$rPackages$github)
     }
-    
+
     packages <- NULL
     if (!is.null(installCranCommand)) {
       packages <- installCranCommand
     }
-    
+
     if (!is.null(installGithubCommand) && is.null(packages)) {
       packages <- installGithubCommand
     }
     else if (!is.null(installGithubCommand) && !is.null(packages)) {
       packages <- c(installCranCommand, installGithubCommand)
     }
-    
+
+    commandLine <- NULL
+    if (!is.null(poolConfig$commandLine)) {
+      commandLine <- poolConfig$commandLine
+    }
+
+
     if (!is.null(poolConfig[["pool"]])) {
       validateDeprecatedClusterConfig_0.3.2(clusterSetting)
       poolConfig <- poolConfig[["pool"]]
@@ -164,18 +171,19 @@ makeCluster <-
     else {
       validateClusterConfig(clusterSetting)
     }
-    
+
     response <- .addPool(pool = poolConfig,
                          packages = packages,
-                         resourceFiles = resourceFiles)
-    
+                         resourceFiles = resourceFiles,
+                         commandLine = commandLine)
+
     pool <- rAzureBatch::getPool(poolConfig$name)
-    
+
     if (grepl("AuthenticationFailed", response)) {
       stop("Check your credentials and try again.")
-      
+
     }
-    
+
     if (grepl("PoolExists", response)) {
       cat(
         sprintf(
@@ -185,11 +193,11 @@ makeCluster <-
         ),
         fill = TRUE
       )
-      
-      
+
+
       clusterNodeMismatchWarning <-
         "There is a mismatched between the projected cluster %s nodes '%s' and the existing cluster %s nodes '%s'"
-      
+
       if (pool$targetDedicatedNodes !=  poolConfig$poolSize$dedicatedNodes) {
         dedicatedLabel <- "dedicated"
         warning(
@@ -202,10 +210,10 @@ makeCluster <-
           )
         )
       }
-      
+
       if (pool$targetLowPriorityNodes != poolConfig$poolSize$lowPriorityNodes) {
         lowPriorityLabel <- "low priority"
-        
+
         warning(
           sprintf(
             clusterNodeMismatchWarning,
@@ -222,13 +230,13 @@ makeCluster <-
         waitForNodesToComplete(pool$id, 60000)
       }
     }
-    
+
     cat("Your pool has been registered.", fill = TRUE)
     cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
         fill = TRUE)
     cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
         fill = TRUE)
-    
+
     return(getOption("az_config"))
   }
 
