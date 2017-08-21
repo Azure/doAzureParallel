@@ -58,7 +58,7 @@ setChunkSize <- function(value = 1){
   assign("chunkSize", value, envir = .doAzureBatchGlobals)
 }
 
-#' Apply reduce function on a groups iterations of the foreach loop together per task.
+#' Apply reduce function on a group of iterations of the foreach loop together per task.
 #'
 #' @param fun The number of iterations to group
 #'
