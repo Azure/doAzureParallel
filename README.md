@@ -171,7 +171,8 @@ Use your pool configuration JSON file to define your pool in Azure.
   "rPackages": {
     "cran": ["some_cran_package", "some_other_cran_package"],
     "github": ["username/some_github_package", "another_username/some_other_github_package"]
-  }
+  },
+  "commandLine": []
 }
 ```
 NOTE: If you do **not** want your cluster to autoscale, simply set the number of min nodes equal to max nodes for low-priority and dedicated.
@@ -276,7 +277,7 @@ results <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar% { .
 
 ### Resizing Your Cluster
 
-At some point, you may also want to resize your cluster manually. You can do this simply with the command *resizeClsuter*.
+At some point, you may also want to resize your cluster manually. You can do this simply with the command *resizeCluster*.
 
 ```R
 cluster <- makeCluster("cluster.json")
@@ -350,6 +351,21 @@ foreach(i = 1:3, .options.azure = list(outputFiles = list(output))) %dopar% {
   fileConn<-file(fileName)
   close(fileConn)
   NULL
+}
+```
+
+### Customize Cluster
+The commandline property in the cluster configuration file allows users to prepare the nodes' environments. For example, users can perform actions such as installing applications that your foreach loop requires. Note: Batch clusters are run with Centos-OS Azure DSVMs. 
+
+```javascript
+{
+  ...
+  "commandLine": [
+    "yum install -y gdal gdal-devel",
+    "yum install -y proj-devel",
+    "yum install -y proj-nad",
+    "yum install -y proj-epsg"
+  ]
 }
 ```
 
