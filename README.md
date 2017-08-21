@@ -353,22 +353,6 @@ foreach(i = 1:3, .options.azure = list(outputFiles = list(output))) %dopar% {
   NULL
 }
 ```
-
-### Customize Cluster
-The commandline property in the cluster configuration file allows users to prepare the nodes' environments. For example, users can perform actions such as installing applications that your foreach loop requires. Note: Batch clusters are run with Centos-OS Azure DSVMs. 
-
-```javascript
-{
-  ...
-  "commandLine": [
-    "yum install -y gdal gdal-devel",
-    "yum install -y proj-devel",
-    "yum install -y proj-nad",
-    "yum install -y proj-epsg"
-  ]
-}
-```
-
 ## Next Steps
 
 For more information, please visit [our documentation](./docs/README.md).
