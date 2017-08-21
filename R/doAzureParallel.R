@@ -210,7 +210,7 @@ setVerbose <- function(value = FALSE) {
     tryCatch({
       retryCounter <- retryCounter + 1
 
-      response <- createContainer(id, raw = TRUE)
+      response <- rAzureBatch::createContainer(id, raw = TRUE)
       if (grepl("ContainerAlreadyExists", response)) {
         if (!is.null(obj$options$azure$job)) {
           containerResponse <- grepl("ContainerAlreadyExists", response)

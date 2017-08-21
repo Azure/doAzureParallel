@@ -71,11 +71,11 @@ getJobList <- function(jobIds = c()) {
   }
 
   jobs <-
-    listJobs(query = list("$filter" = filter, "$select" = "id,state"))
+    rAzureBatch::listJobs(query = list("$filter" = filter, "$select" = "id,state"))
   print("Job List: ")
 
   for (j in 1:length(jobs$value)) {
-    tasks <- listTask(jobs$value[[j]]$id)
+    tasks <- rAzureBatch::listTask(jobs$value[[j]]$id)
     count <- 0
     if (length(tasks$value) > 0) {
       taskStates <-
@@ -258,11 +258,11 @@ getJobResult <- function(jobId = "", ...) {
 
   if (!is.null(args$container)) {
     results <-
-      downloadBlob(container, paste0("result/", jobId, "-merge-result.rds"))
+      rAzureBatch::downloadBlob(args$container, paste0("result/", jobId, "-merge-result.rds"))
   }
   else{
     results <-
-      downloadBlob(jobId, paste0("result/", jobId, "-merge-result.rds"))
+      rAzureBatch::downloadBlob(jobId, paste0("result/", jobId, "-merge-result.rds"))
   }
 
   return(results)
