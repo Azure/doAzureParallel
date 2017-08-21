@@ -415,7 +415,3 @@ createOutputFile <- function(filePattern, url){
   output$destination$container$containerUrl <- containerUrl
   output
 }
-
-getSasTokenUrl <- function(){
-
-}
