@@ -158,6 +158,12 @@ makeCluster <-
       packages <- c(installCranCommand, installGithubCommand)
     }
 
+    commandLine <- NULL
+    if (!is.null(poolConfig$commandLine)) {
+      commandLine <- poolConfig$commandLine
+    }
+
+
     if (!is.null(poolConfig[["pool"]])) {
       validateDeprecatedClusterConfig_0.3.2(clusterSetting)
       poolConfig <- poolConfig[["pool"]]
@@ -168,7 +174,8 @@ makeCluster <-
 
     response <- .addPool(pool = poolConfig,
                          packages = packages,
-                         resourceFiles = resourceFiles)
+                         resourceFiles = resourceFiles,
+                         commandLine = commandLine)
 
     pool <- rAzureBatch::getPool(poolConfig$name)
 
