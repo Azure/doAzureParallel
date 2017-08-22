@@ -171,7 +171,8 @@ Use your pool configuration JSON file to define your pool in Azure.
   "rPackages": {
     "cran": ["some_cran_package", "some_other_cran_package"],
     "github": ["username/some_github_package", "another_username/some_other_github_package"]
-  }
+  },
+  "commandLine": []
 }
 ```
 NOTE: If you do **not** want your cluster to autoscale, simply set the number of min nodes equal to max nodes for low-priority and dedicated.
@@ -276,7 +277,7 @@ results <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar% { .
 
 ### Resizing Your Cluster
 
-At some point, you may also want to resize your cluster manually. You can do this simply with the command *resizeClsuter*.
+At some point, you may also want to resize your cluster manually. You can do this simply with the command *resizeCluster*.
 
 ```R
 cluster <- makeCluster("cluster.json")
@@ -315,8 +316,19 @@ setVerbose(True)
 # turn off verbose mode
 setVerbose(False)
 ```
+### Bypassing merge task 
+
+Skipping the merge task is useful when the tasks results don't need to be merged into a list. To bypass the merge task, you can pass the *enableMerge* flag to the foreach object:
+
+```R
+# Enable merge task
+foreach(i = 1:3, .options.azure = list(enableMerge = TRUE))
+
+# Disable merge task
+foreach(i = 1:3, .options.azure = list(enableMerge = FALSE))
+```
+Note: User defined functions for the merge task is on our list of features that we are planning on doing.
 
 ## Next Steps
 
 For more information, please visit [our documentation](./docs/README.md).
-
