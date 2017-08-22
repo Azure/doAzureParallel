@@ -495,8 +495,6 @@ setVerbose <- function(value = FALSE) {
         foreach::getResult(it)
       }
     }
-
-    rAzureBatch::deleteJob(id)
   }
   else{
     print(
