@@ -180,10 +180,12 @@ makeCluster <-
         !is.null(poolConfig$rPackages$githubAuthenticationToken)) {
       if (length(poolConfig$rPackages$githubAuthenticationToken) == 1) {
         environmentSettings <-
-          list(list(
-            name = "GITHUB_PAT",
-            value = poolConfig$rPackages$githubAuthenticationToken
-          ))
+          list(
+            list(
+              name = "GITHUB_PAT",
+              value = poolConfig$rPackages$githubAuthenticationToken
+            )
+          )
       } else {
         stop("githubAuthenticationToken length is not equal to 1")
       }
@@ -224,29 +226,37 @@ makeCluster <-
 
 
       clusterNodeMismatchWarning <-
-        "There is a mismatched between the projected cluster %s nodes '%s' and the existing cluster %s nodes '%s'"
+        "There is a mismatched between the projected cluster %s nodes min/max '%s'/'%s' and the existing cluster %s nodes '%s'"
 
-      if (pool$targetDedicatedNodes !=  poolConfig$poolSize$dedicatedNodes) {
+      if (!(
+        poolConfig$poolSize$dedicatedNodes$min <= pool$targetDedicatedNodes &&
+        pool$targetDedicatedNodes <= poolConfig$poolSize$dedicatedNodes$max
+      )) {
         dedicatedLabel <- "dedicated"
         warning(
           sprintf(
             clusterNodeMismatchWarning,
             dedicatedLabel,
-            poolConfig$poolSize$dedicatedNodes,
+            poolConfig$poolSize$dedicatedNodes$min,
+            poolConfig$poolSize$dedicatedNodes$max,
             dedicatedLabel,
             pool$targetDedicatedNodes
           )
         )
       }
 
-      if (pool$targetLowPriorityNodes != poolConfig$poolSize$lowPriorityNodes) {
+      if (!(
+        poolConfig$poolSize$lowPriorityNodes$min <= pool$targetLowPriorityNodes &&
+        pool$targetLowPriorityNodes <= poolConfig$poolSize$lowPriorityNodes$min
+      )) {
         lowPriorityLabel <- "low priority"
 
         warning(
           sprintf(
             clusterNodeMismatchWarning,
             lowPriorityLabel,
-            poolConfig$poolSize$lowPriorityNodes,
+            poolConfig$poolSize$lowPriorityNodes$min,
+            poolConfig$poolSize$lowPriorityNodes$max,
             lowPriorityLabel,
             pool$targetLowPriorityNodes
           )
