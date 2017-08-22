@@ -76,7 +76,7 @@ setChunkSize <- function(value = 1) {
 #' @param fun The number of iterations to group
 #'
 #' @export
-setReduce <- function(fun = NULL) {
+setReduce <- function(fun = NULL, ...) {
   args <- list(...)
 
   if (missing(fun))
@@ -87,7 +87,9 @@ setReduce <- function(fun = NULL) {
   }
 
   # Otherwise explicitly set or clear the function
-  if (!(is.function(fun) || is.null(fun))) stop("setGather requires a function or NULL")
+  if (!(is.function(fun) ||
+        is.null(fun)))
+    stop("setGather requires a function or NULL")
 
   assign("gather", fun, envir = .doAzureBatchGlobals)
   assign("gatherArgs", args, envir = .doAzureBatchGlobals)
@@ -151,7 +153,7 @@ setVerbose <- function(value = FALSE) {
     for (sym in export) {
       if (!exists(sym, envir, inherits = TRUE))
         stop(sprintf("unable to find variable '%s'", sym))
-      
+
       val <- get(sym, envir, inherits = TRUE)
       if (is.function(val) &&
           (identical(environment(val), .GlobalEnv) ||
@@ -220,7 +222,8 @@ setVerbose <- function(value = FALSE) {
     cloudCombine <- NULL
   }
 
-  if (!is.null(obj$options$azure$reduce) && is.function(obj$options$azure$reduce)) {
+  if (!is.null(obj$options$azure$reduce) &&
+      is.function(obj$options$azure$reduce)) {
     assign("gather", obj$options$azure$reduce, envir = .doAzureBatchGlobals)
   }
 
@@ -381,9 +384,9 @@ setVerbose <- function(value = FALSE) {
     {
       c(length(argsList))
     }
-    else {
-      seq(chunkSize, length(argsList), chunkSize)
-    }
+  else {
+    seq(chunkSize, length(argsList), chunkSize)
+  }
 
   if (length(startIndices) > length(endIndices)) {
     endIndices[length(startIndices)] <- ntasks
@@ -417,27 +420,37 @@ setVerbose <- function(value = FALSE) {
   rAzureBatch::updateJob(id)
 
   if (enableCloudCombine) {
-    .addTask(id,
+    .addTask(
+      id,
       taskId = paste0(id, "-merge"),
-      rCommand = sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s %s %s > %s.txt",
-                         "$AZ_BATCH_JOB_PREP_WORKING_DIR",
-                         "$AZ_BATCH_TASK_WORKING_DIR",
-                         id,
-                         length(tasks),
-                         ntasks,
-                         paste0(id, "-merge")),
+      rCommand = sprintf(
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s %s %s > %s.txt",
+        "$AZ_BATCH_JOB_PREP_WORKING_DIR",
+        "$AZ_BATCH_TASK_WORKING_DIR",
+        id,
+        length(tasks),
+        ntasks,
+        paste0(id, "-merge")
+      ),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
       dependsOn = tasks,
       cloudCombine = cloudCombine,
-      outputFiles = obj$options$azure$outputFiles)
+      outputFiles = obj$options$azure$outputFiles
+    )
   }
 
   if (wait) {
     waitForTasksToComplete(id, jobTimeout)
 
     if (typeof(cloudCombine) == "list" && enableCloudCombine) {
-      response <- rAzureBatch::downloadBlob(id, paste0("result/", id, "-merge-result.rds"), sasToken = sasToken, accountName = storageCredentials$name)
+      response <-
+        rAzureBatch::downloadBlob(
+          id,
+          paste0("result/", id, "-merge-result.rds"),
+          sasToken = sasToken,
+          accountName = storageCredentials$name
+        )
       tempFile <- tempfile("doAzureParallel", fileext = ".rds")
       bin <- httr::content(response, "raw")
       writeBin(bin, tempFile)
@@ -465,7 +478,8 @@ setVerbose <- function(value = FALSE) {
       errorValue <- foreach::getErrorValue(it)
       errorIndex <- foreach::getErrorIndex(it)
 
-      cat(sprintf("Number of errors: %i", numberOfFailedTasks), fill = TRUE)
+      cat(sprintf("Number of errors: %i", numberOfFailedTasks),
+          fill = TRUE)
 
       rAzureBatch::deleteJob(id)
 
