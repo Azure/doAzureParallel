@@ -309,9 +309,9 @@ setVerbose <- function(value = FALSE){
     stop("Aborted mission. Your active job quota has been reached. To increase your active job quota, go to https://docs.microsoft.com/en-us/azure/batch/batch-quota-limit")
   }
 
-  print("Job Summary: ")
+  cat("Job Summary: ", fill = TRUE)
   job <- rAzureBatch::getJob(id)
-  print(sprintf("Id: %s", job$id))
+  cat(sprintf("Id: %s", job$id), fill = TRUE)
 
   chunkSize <- 1
 
@@ -328,8 +328,6 @@ setVerbose <- function(value = FALSE){
   }
 
   ntasks <- length(argsList)
-  nout <- ceiling(ntasks / chunkSize)
-  remainingtasks <- ntasks %% chunkSize
 
   startIndices <- seq(1, length(argsList), chunkSize)
 
@@ -341,8 +339,6 @@ setVerbose <- function(value = FALSE){
     else {
       seq(chunkSize, length(argsList), chunkSize)
     }
-
-  minLength <- min(length(startIndices), length(endIndices))
 
   if (length(startIndices) > length(endIndices)) {
     endIndices[length(startIndices)] <- ntasks
@@ -367,29 +363,24 @@ setVerbose <- function(value = FALSE){
   rAzureBatch::updateJob(id)
 
   if (enableCloudCombine) {
-    r <- .addTask(id,
-                  taskId = paste0(id, "-merge"),
-                  rCommand = sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s %s %s > %s.txt",
-                                     "$AZ_BATCH_JOB_PREP_WORKING_DIR",
-                                     "$AZ_BATCH_TASK_WORKING_DIR",
-                                     id,
-                                     length(tasks),
-                                     ntasks,
-                                     paste0(id, "-merge")),
-                  envir = .doAzureBatchGlobals,
-                  packages = obj$packages,
-                  dependsOn = tasks,
-                  cloudCombine = cloudCombine,
-                  outputFiles = obj$options$azure$outputFiles)
+    .addTask(id,
+      taskId = paste0(id, "-merge"),
+      rCommand = sprintf("Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s %s %s > %s.txt",
+                         "$AZ_BATCH_JOB_PREP_WORKING_DIR",
+                         "$AZ_BATCH_TASK_WORKING_DIR",
+                         id,
+                         length(tasks),
+                         ntasks,
+                         paste0(id, "-merge")),
+      envir = .doAzureBatchGlobals,
+      packages = obj$packages,
+      dependsOn = tasks,
+      cloudCombine = cloudCombine,
+      outputFiles = obj$options$azure$outputFiles)
   }
 
   if (wait) {
-    if (enableCloudCombine) {
-      rAzureBatch::waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout + 1)
-    }
-    else {
-      rAzureBatch::waitForTasksToComplete(id, jobTimeout, progress = !is.null(obj$progress), tasks = nout)
-    }
+    waitForTasksToComplete(id, jobTimeout)
 
     if (typeof(cloudCombine) == "list" && enableCloudCombine) {
       response <- rAzureBatch::downloadBlob(id, paste0("result/", id, "-merge-result.rds"), sasToken = sasToken, accountName = storageCredentials$name)
@@ -417,7 +408,7 @@ setVerbose <- function(value = FALSE){
       errorValue <- foreach::getErrorValue(it)
       errorIndex <- foreach::getErrorIndex(it)
 
-      print(sprintf("Number of errors: %i", numberOfFailedTasks))
+      cat(sprintf("Number of errors: %i", numberOfFailedTasks), fill = TRUE)
 
       if (identical(obj$errorHandling, 'stop') && !is.null(errorValue)) {
         msg <- sprintf('task %d failed - "%s"', errorIndex,
