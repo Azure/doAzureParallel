@@ -15,4 +15,3 @@ Groups iterations of the foreach loop together per task.
 \examples{
 setChunkSize(10)
 }
-

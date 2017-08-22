@@ -19,4 +19,3 @@ Polling method to check status of cluster boot up
 waitForNodesToComplete(poolId = "testCluster", timeout = 3600)
 }
 }
-

@@ -2,14 +2,15 @@
 % Please edit documentation in R/doAzureParallel.R
 \name{setReduce}
 \alias{setReduce}
-\title{Apply reduce function on a groups iterations of the foreach loop together per task.}
+\title{Apply reduce function on a group of iterations of the foreach loop together per task.}
 \usage{
-setReduce(fun = NULL)
+setReduce(fun = NULL, ...)
 }
 \arguments{
 \item{fun}{The number of iterations to group}
+
+\item{...}{The arguments needed for the reduction function}
 }
 \description{
-Apply reduce function on a groups iterations of the foreach loop together per task.
+Apply reduce function on a group of iterations of the foreach loop together per task.
 }
-

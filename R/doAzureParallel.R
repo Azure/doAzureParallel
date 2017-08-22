@@ -74,6 +74,7 @@ setChunkSize <- function(value = 1) {
 #' Apply reduce function on a group of iterations of the foreach loop together per task.
 #'
 #' @param fun The number of iterations to group
+#' @param ... The arguments needed for the reduction function
 #'
 #' @export
 setReduce <- function(fun = NULL, ...) {

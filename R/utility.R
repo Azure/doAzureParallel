@@ -41,8 +41,7 @@ getPoolPackageInstallationCommand <- function(type, packages) {
 linuxWrapCommands <- function(commands = c()) {
   # Do not allow absolute paths is enforced in lintr
   commandLine <-
-    sprintf("%sbin/bash -c \"set -e; set -o pipefail; %s wait\"",
-            "/",
+    sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
             paste0(paste(
               commands, sep = " ", collapse = "; "
             ), ";"))
@@ -326,7 +325,7 @@ validateClusterConfig <- function(clusterFilePath) {
   TRUE
 }
 
-#' Validating cluster configuration files below doAzureParallel version 0.3.2
+# Validating cluster configuration files below doAzureParallel version 0.3.2
 validateDeprecatedClusterConfig <- function(clusterFilePath) {
   if (file.exists(clusterFilePath)) {
     poolConfig <- rjson::fromJSON(file = clusterFilePath)
