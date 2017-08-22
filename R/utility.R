@@ -1,4 +1,4 @@
-getJobPackageInstallationCommand <- function(type, packages){
+getJobPackageInstallationCommand <- function(type, packages) {
   script <- ""
   if (type == "cran") {
     script <- "Rscript $AZ_BATCH_JOB_PREP_WORKING_DIR/install_cran.R"
@@ -16,14 +16,16 @@ getJobPackageInstallationCommand <- function(type, packages){
   }
 }
 
-getPoolPackageInstallationCommand <- function(type, packages){
+getPoolPackageInstallationCommand <- function(type, packages) {
   poolInstallationCommand <- character(length(packages))
 
   if (type == "cran") {
-    script <- "Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1])\' %s"
+    script <-
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1])\' %s"
   }
   else if (type == "github") {
-    script <- "Rscript -e \'args <- commandArgs(TRUE)\' -e \'devtools::install_github(args[1])\' %s"
+    script <-
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'devtools::install_github(args[1])\' %s"
   }
   else {
     stop("Using an incorrect package source")
@@ -36,9 +38,13 @@ getPoolPackageInstallationCommand <- function(type, packages){
   poolInstallationCommand
 }
 
-linuxWrapCommands <- function(commands = c()){
-  commandLine <- sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
-                         paste0(paste(commands, sep = " ", collapse = "; "), ";"))
+linuxWrapCommands <- function(commands = c()) {
+  # Do not allow absolute paths is enforced in lintr
+  commandLine <-
+    sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
+            paste0(paste(
+              commands, sep = " ", collapse = "; "
+            ), ";"))
 
   commandLine
 }
@@ -52,37 +58,53 @@ linuxWrapCommands <- function(commands = c()){
 #' getJobList(c("job-001", "job-002"))
 #' }
 #' @export
-getJobList <- function(jobIds = c()){
+getJobList <- function(jobIds = c()) {
   filter <- ""
 
-  if(length(jobIds) > 1){
-    for(i in 1:length(jobIds)){
+  if (length(jobIds) > 1) {
+    for (i in 1:length(jobIds)) {
       filter <- paste0(filter, sprintf("id eq '%s'", jobIds[i]), " or ")
     }
 
     filter <- substr(filter, 1, nchar(filter) - 3)
   }
 
-  jobs <- listJobs(query = list("$filter" = filter, "$select" = "id,state"))
+  jobs <-
+    rAzureBatch::listJobs(query = list("$filter" = filter, "$select" = "id,state"))
   print("Job List: ")
 
-  for(j in 1:length(jobs$value)){
-    tasks <- listTask(jobs$value[[j]]$id)
+  for (j in 1:length(jobs$value)) {
+    tasks <- rAzureBatch::listTask(jobs$value[[j]]$id)
     count <- 0
-    if(length(tasks$value) > 0){
-      taskStates <- lapply(tasks$value, function(x) x$state == "completed")
+    if (length(tasks$value) > 0) {
+      taskStates <-
+        lapply(tasks$value, function(x)
+          x$state == "completed")
 
-      for(i in 1:length(taskStates)){
-        if(taskStates[[i]] == TRUE){
+      for (i in 1:length(taskStates)) {
+        if (taskStates[[i]] == TRUE) {
           count <- count + 1
         }
       }
 
-      summary <- sprintf("[ id: %s, state: %s, status: %d", jobs$value[[j]]$id, jobs$value[[j]]$state, ceiling((count/length(tasks$value) * 100)))
+      summary <-
+        sprintf(
+          "[ id: %s, state: %s, status: %d",
+          jobs$value[[j]]$id,
+          jobs$value[[j]]$state,
+          ceiling(count / length(tasks$value) * 100)
+        )
       print(paste0(summary,  "% ]"))
     }
     else {
-      print(sprintf("[ id: %s, state: %s, status: %s ]", jobs$value[[j]]$id, jobs$value[[j]]$state, "No tasks were run."))
+      print(
+        sprintf(
+          "[ id: %s, state: %s, status: %s ]",
+          jobs$value[[j]]$id,
+          jobs$value[[j]]$state,
+          "No tasks were run."
+        )
+      )
     }
   }
 }
@@ -94,7 +116,7 @@ getJobList <- function(jobIds = c()){
 #'
 #' @examples
 #' \dontrun{
-#' waitForNodesToComplete(clusterId = "testCluster", timeout = 3600)
+#' waitForNodesToComplete(poolId = "testCluster", timeout = 3600)
 #' }
 #' @export
 waitForNodesToComplete <- function(poolId, timeout = 86400) {
@@ -115,11 +137,9 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     pool$targetDedicatedNodes + pool$targetLowPriorityNodes
 
   pb <-
-    txtProgressBar(
-      min = 0,
-      max = totalNodes,
-      style = 3
-    )
+    txtProgressBar(min = 0,
+                   max = totalNodes,
+                   style = 3)
 
   timeToTimeout <- Sys.time() + timeout
 
@@ -183,7 +203,8 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
           0
         )
 
-        currentProgressBarCount <- currentProgressBarCount + nodeValue
+        currentProgressBarCount <-
+          currentProgressBarCount + nodeValue
       }
 
       if (currentProgressBarCount >= pb$getVal()) {
@@ -207,7 +228,8 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     }
 
     if (pb$getVal() >= totalNodes) {
-      return(0);
+      return(0)
+
     }
 
     Sys.sleep(30)
@@ -230,24 +252,22 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
 #' getJobResult(jobId = "job-001")
 #' }
 #' @export
-getJobResult <- function(jobId = "", ...){
+getJobResult <- function(jobId = "", ...) {
   args <- list(...)
 
-  if(!is.null(args$container)){
-    results <- downloadBlob(container, paste0("result/", jobId, "-merge-result.rds"))
+  if (!is.null(args$container)) {
+    results <-
+      rAzureBatch::downloadBlob(args$container, paste0("result/", jobId, "-merge-result.rds"))
   }
   else{
-    results <- downloadBlob(jobId, paste0("result/", jobId, "-merge-result.rds"))
-  }
-
-  if(!is.null(args$pass) && args$pass){
-    failTasks <- sapply(results, .isError)
+    results <-
+      rAzureBatch::downloadBlob(jobId, paste0("result/", jobId, "-merge-result.rds"))
   }
 
   return(results)
 }
 
-validateClusterConfig <- function(clusterFilePath){
+validateClusterConfig <- function(clusterFilePath) {
   if (file.exists(clusterFilePath)) {
     pool <- rjson::fromJSON(file = clusterFilePath)
   }
@@ -290,7 +310,7 @@ validateClusterConfig <- function(clusterFilePath){
   stopifnot(is.character(pool$name))
   stopifnot(is.character(pool$vmSize))
   stopifnot(is.character(pool$poolSize$autoscaleFormula))
-  stopifnot(pool$poolSize$autoscaleFormula %in% names(AUTOSCALE_FORMULA))
+  stopifnot(pool$poolSize$autoscaleFormula %in% names(autoscaleFormula))
 
   stopifnot(pool$poolSize$dedicatedNodes$min <= pool$poolSize$dedicatedNodes$max)
   stopifnot(pool$poolSize$lowPriorityNodes$min <= pool$poolSize$lowPriorityNodes$max)
@@ -305,13 +325,14 @@ validateClusterConfig <- function(clusterFilePath){
   TRUE
 }
 
-#' Validating cluster configuration files below doAzureParallel version 0.3.2
-validateDeprecatedClusterConfig_0.3.2 <- function(clusterFilePath){
+# Validating cluster configuration files below doAzureParallel version 0.3.2
+validateDeprecatedClusterConfig <- function(clusterFilePath) {
   if (file.exists(clusterFilePath)) {
     poolConfig <- rjson::fromJSON(file = clusterFilePath)
   }
   else{
-    poolConfig <- rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
+    poolConfig <-
+      rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
   }
 
   if (is.null(poolConfig$pool$poolSize)) {
@@ -349,10 +370,14 @@ validateDeprecatedClusterConfig_0.3.2 <- function(clusterFilePath){
   stopifnot(is.character(poolConfig$pool$name))
   stopifnot(is.character(poolConfig$pool$vmSize))
   stopifnot(is.character(poolConfig$pool$poolSize$autoscaleFormula))
-  stopifnot(poolConfig$pool$poolSize$autoscaleFormula %in% names(AUTOSCALE_FORMULA))
+  stopifnot(poolConfig$pool$poolSize$autoscaleFormula %in% names(autoscaleFormula))
 
-  stopifnot(poolConfig$pool$poolSize$dedicatedNodes$min <= poolConfig$pool$poolSize$dedicatedNodes$max)
-  stopifnot(poolConfig$pool$poolSize$lowPriorityNodes$min <= poolConfig$pool$poolSize$lowPriorityNodes$max)
+  stopifnot(
+    poolConfig$pool$poolSize$dedicatedNodes$min <= poolConfig$pool$poolSize$dedicatedNodes$max
+  )
+  stopifnot(
+    poolConfig$pool$poolSize$lowPriorityNodes$min <= poolConfig$pool$poolSize$lowPriorityNodes$max
+  )
   stopifnot(poolConfig$pool$maxTasksPerNode >= 1)
 
   stopifnot(is.double(poolConfig$pool$poolSize$dedicatedNodes$min))
@@ -370,17 +395,11 @@ validateDeprecatedClusterConfig_0.3.2 <- function(clusterFilePath){
 #' @param url the destination blob or virtual directory within the Azure Storage container
 #'
 #' @export
-createOutputFile <- function(filePattern, url){
+createOutputFile <- function(filePattern, url) {
   output <- list(
     filePattern = filePattern,
-    destination = list(
-      container = list(
-        containerUrl = url
-      )
-    ),
-    uploadOptions = list(
-      uploadCondition = "taskCompletion"
-    )
+    destination = list(container = list(containerUrl = url)),
+    uploadOptions = list(uploadCondition = "taskCompletion")
   )
 
   # Parsing url to obtain container's virtual directory path
@@ -395,16 +414,18 @@ createOutputFile <- function(filePattern, url){
 
   storageContainerPath <- parsedUrlPath[1]
   queryParameters <- parsedUrlPath[2]
-  virtualDirectory <- strsplit(substring(storageContainerPath, 2, nchar(storageContainerPath)), "/", fixed = TRUE)
+  virtualDirectory <-
+    strsplit(substring(storageContainerPath, 2, nchar(storageContainerPath)), "/", fixed = TRUE)
 
   containerName <- virtualDirectory[[1]][1]
-  containerUrl <- paste0(baseUrl, "/", containerName, "?", queryParameters)
+  containerUrl <-
+    paste0(baseUrl, "/", containerName, "?", queryParameters)
 
   # Verify directory has multiple directories
-  if(length(virtualDirectory[[1]]) > 1){
+  if (length(virtualDirectory[[1]]) > 1) {
     # Rebuilding output path for the file upload
     path <- ""
-    for(i in 2:length(virtualDirectory[[1]])){
+    for (i in 2:length(virtualDirectory[[1]])) {
       path <- paste0(path, virtualDirectory[[1]][i], "/")
     }
 

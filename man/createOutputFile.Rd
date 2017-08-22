@@ -14,4 +14,3 @@ createOutputFile(filePattern, url)
 \description{
 Utility function for creating an output file
 }
-

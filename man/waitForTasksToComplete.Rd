@@ -4,9 +4,8 @@
 \alias{waitForTasksToComplete}
 \title{Wait for current tasks to complete}
 \usage{
-waitForTasksToComplete(jobId, timeout, ...)
+waitForTasksToComplete(jobId, timeout)
 }
 \description{
 Wait for current tasks to complete
 }
-
