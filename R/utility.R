@@ -438,16 +438,16 @@ waitForTasksToComplete <- function(jobId, timeout) {
       break
     }
 
-    skiptokenParameter <-
+    skipTokenParameter <-
       strsplit(currentTasks$odata.nextLink, "&")[[1]][2]
 
-    skiptokenValue <-
-      substr(skiptokenParameter,
+    skipTokenValue <-
+      substr(skipTokenParameter,
              nchar("$skiptoken=") + 1,
-             nchar(skiptokenParameter))
+             nchar(skipTokenParameter))
 
     currentTasks <-
-      rAzureBatch::listTask(jobId, skiptoken = URLdecode(skiptokenValue))
+      rAzureBatch::listTask(jobId, skipToken = URLdecode(skipTokenValue))
     numOfTasks <- numOfTasks + length(currentTasks$value)
   }
 
@@ -473,16 +473,16 @@ waitForTasksToComplete <- function(jobId, timeout) {
         break
       }
 
-      skiptokenParameter <-
+      skipTokenParameter <-
         strsplit(currentTasks$odata.nextLink, "&")[[1]][2]
 
-      skiptokenValue <-
-        substr(skiptokenParameter,
+      skipTokenValue <-
+        substr(skipTokenParameter,
                nchar("$skiptoken=") + 1,
-               nchar(skiptokenParameter))
+               nchar(skipTokenParameter))
 
       currentTasks <-
-        rAzureBatch::listTask(jobId, skiptoken = URLdecode(skiptokenValue))
+        rAzureBatch::listTask(jobId, skipToken = URLdecode(skipTokenValue))
 
       taskStates <-
         lapply(currentTasks$value, function(x)
