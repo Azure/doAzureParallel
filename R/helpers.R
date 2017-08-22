@@ -191,7 +191,7 @@
   )
 
   if (!is.null(environmentSettings)) {
-    startTask$environmentSettings = environmentSettings
+    startTask$environmentSettings <- environmentSettings
   }
 
   if (length(resourceFiles) > 0) {
