@@ -329,30 +329,6 @@ foreach(i = 1:3, .options.azure = list(enableMerge = FALSE))
 ```
 Note: User defined functions for the merge task is on our list of features that we are planning on doing.
 
-### Output Files
-Batch will automatically handle your output files when the user assigns a file pattern and storage container url. 
-
-```R
-# Pushing output files
-storageAccount <- "storageAccountName"
-outputFolder <- "outputs"
-
-createContainer(outputFolder)
-writeToken <- rAzureBatch::createSasToken("w", "c", outputFolder)
-containerUrl <- rAzureBatch::createBlobUrl(storageAccount = storageAccount,
-                                           containerName = outputFolder,
-                                           sasToken = writeToken)
-
-output <- createOutputFile("test-*.txt", containerUrl)
-
-foreach(i = 1:3, .options.azure = list(outputFiles = list(output))) %dopar% {
-  fileName <- paste0("test-", i, ".txt")
-  file.create(fileName) 
-  fileConn<-file(fileName)
-  close(fileConn)
-  NULL
-}
-```
 ## Next Steps
 
 For more information, please visit [our documentation](./docs/README.md).
