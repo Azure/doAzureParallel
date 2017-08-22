@@ -226,7 +226,8 @@ makeCluster <-
 
 
       clusterNodeMismatchWarning <-
-        "There is a mismatched between the projected cluster %s nodes min/max '%s'/'%s' and the existing cluster %s nodes '%s'"
+        paste0("There is a mismatched between the projected cluster %s ",
+               "nodes min/max '%s'/'%s' and the existing cluster %s nodes '%s'")
 
       if (!(
         poolConfig$poolSize$dedicatedNodes$min <= pool$targetDedicatedNodes &&
