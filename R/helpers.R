@@ -165,7 +165,7 @@
   return(response)
 }
 
-.addPool <- function(pool, packages, resourceFiles, ...) {
+.addPool <- function(pool, packages, environmentSettings, resourceFiles, ...) {
   args <- list(...)
 
   commands <- c(
@@ -189,6 +189,10 @@
     )),
     waitForSuccess = TRUE
   )
+
+  if (!is.null(environmentSettings)) {
+    startTask$environmentSettings = environmentSettings
+  }
 
   if (length(resourceFiles) > 0) {
     startTask$resourceFiles <- resourceFiles

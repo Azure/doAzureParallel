@@ -88,7 +88,8 @@ generateClusterConfig <- function(fileName) {
       ),
       rPackages = list(
         cran = vector(),
-        github = vector()
+        github = vector(),
+        githubAuthenticationToken = NULL
       ),
       commandLine = vector()
     )
@@ -174,6 +175,20 @@ makeCluster <-
       commandLine <- poolConfig$commandLine
     }
 
+    environmentSettings <- NULL
+    if (!is.null(poolConfig$rPackages) &&
+        !is.null(poolConfig$rPackages$githubAuthenticationToken)) {
+      if (length(poolConfig$rPackages$githubAuthenticationToken) == 1) {
+        environmentSettings <-
+          list(list(
+            name = "GITHUB_PAT",
+            value = poolConfig$rPackages$githubAuthenticationToken
+          ))
+      } else {
+        stop("githubAuthenticationToken length is not equal to 1")
+      }
+    }
+
     if (!is.null(poolConfig[["pool"]])) {
       validateDeprecatedClusterConfig(clusterSetting)
       poolConfig <- poolConfig[["pool"]]
@@ -182,10 +197,13 @@ makeCluster <-
       validateClusterConfig(clusterSetting)
     }
 
-    response <- .addPool(pool = poolConfig,
-                         packages = packages,
-                         resourceFiles = resourceFiles,
-                         commandLine = commandLine)
+    response <- .addPool(
+      pool = poolConfig,
+      packages = packages,
+      environmentSettings = environmentSettings,
+      resourceFiles = resourceFiles,
+      commandLine = commandLine
+    )
 
     pool <- rAzureBatch::getPool(poolConfig$name)
 
