@@ -45,7 +45,7 @@ linuxWrapCommands <- function(commands = c()) {
             "/",
             paste0(paste(
               commands, sep = " ", collapse = "; "
-            ), "; "))
+            ), ";"))
 
   commandLine
 }
