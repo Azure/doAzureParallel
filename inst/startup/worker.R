@@ -92,6 +92,11 @@ result <- lapply(taskArgs, function(args) {
 })
 
 fileResultName <- strsplit(batchTaskEnvironment, "[.]")[[1]][1]
+  
+if (!is.null(azbatchenv$gather)) {
+  result <- Reduce(azbatchenv$gather, result)
+}
+  
 saveRDS(result,
         file = file.path(
           batchTaskWorkingDirectory,

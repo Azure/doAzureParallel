@@ -15,3 +15,4 @@ Set the verbosity for calling httr rest api calls
 \examples{
 setVerbose(TRUE)
 }
+

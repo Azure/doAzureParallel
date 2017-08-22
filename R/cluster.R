@@ -87,8 +87,11 @@ generateClusterConfig <- function(fileName) {
                                 max = 3),
         autoscaleFormula = "QUEUE"
       ),
-      rPackages = list(cran = vector(),
-                       github = vector())
+      rPackages = list(
+        cran = vector(),
+        github = vector()
+      ),
+      commandLine = vector()
     )
 
     configJson <-
@@ -167,11 +170,14 @@ makeCluster <-
       packages <- c(installCranCommand, installGithubCommand)
     }
 
+    commandLine <- NULL
+    if (!is.null(poolConfig$commandLine)) {
+      commandLine <- poolConfig$commandLine
+    }
+
     if (!is.null(poolConfig[["pool"]])) {
       validateDeprecatedClusterConfig(clusterSetting)
       poolConfig <- poolConfig[["pool"]]
-
-      config$poolId <- poolConfig$name
     }
     else {
       validateClusterConfig(clusterSetting)
@@ -179,7 +185,8 @@ makeCluster <-
 
     response <- .addPool(pool = poolConfig,
                          packages = packages,
-                         resourceFiles = resourceFiles)
+                         resourceFiles = resourceFiles,
+                         commandLine = commandLine)
 
     pool <- rAzureBatch::getPool(poolConfig$name)
 
@@ -241,6 +248,7 @@ makeCluster <-
     cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
         fill = TRUE)
 
+    config$poolId <- poolConfig$name
     options("az_config" = config)
     return(getOption("az_config"))
   }

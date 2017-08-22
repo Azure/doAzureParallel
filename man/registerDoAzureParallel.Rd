@@ -17,3 +17,4 @@ the Azure cloud-enabled parallel backend with the foreach package.
 \examples{
 registerDoAzureParallel(cluster)
 }
+

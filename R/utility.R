@@ -437,3 +437,95 @@ createOutputFile <- function(filePattern, url) {
   output$destination$container$containerUrl <- containerUrl
   output
 }
+
+#' Wait for current tasks to complete
+#'
+#' @export
+waitForTasksToComplete <- function(jobId, timeout) {
+  cat("Waiting for tasks to complete. . .", fill = TRUE)
+
+  numOfTasks <- 0
+  currentTasks <- rAzureBatch::listTask(jobId)
+
+  if (is.null(currentTasks$value)) {
+    stop(paste0("Error: ", currentTasks$message$value))
+    return()
+  }
+
+  numOfTasks <- numOfTasks + length(currentTasks$value)
+
+  # Getting the total count of tasks for progress bar
+  repeat {
+    if (is.null(currentTasks$odata.nextLink)) {
+      break
+    }
+
+    skipTokenParameter <-
+      strsplit(currentTasks$odata.nextLink, "&")[[1]][2]
+
+    skipTokenValue <-
+      substr(skipTokenParameter,
+             nchar("$skiptoken=") + 1,
+             nchar(skipTokenParameter))
+
+    currentTasks <-
+      rAzureBatch::listTask(jobId, skipToken = URLdecode(skipTokenValue))
+    numOfTasks <- numOfTasks + length(currentTasks$value)
+  }
+
+  pb <- txtProgressBar(min = 0, max = numOfTasks, style = 3)
+
+  timeToTimeout <- Sys.time() + timeout
+
+  while (Sys.time() < timeToTimeout) {
+    count <- 0
+    currentTasks <- rAzureBatch::listTask(jobId)
+
+    taskStates <-
+      lapply(currentTasks$value, function(x)
+        x$state != "completed")
+    for (i in 1:length(taskStates)) {
+      if (taskStates[[i]] == FALSE) {
+        count <- count + 1
+      }
+    }
+
+    repeat {
+      if (is.null(currentTasks$odata.nextLink)) {
+        break
+      }
+
+      skipTokenParameter <-
+        strsplit(currentTasks$odata.nextLink, "&")[[1]][2]
+
+      skipTokenValue <-
+        substr(skipTokenParameter,
+               nchar("$skiptoken=") + 1,
+               nchar(skipTokenParameter))
+
+      currentTasks <-
+        rAzureBatch::listTask(jobId, skipToken = URLdecode(skipTokenValue))
+
+      taskStates <-
+        lapply(currentTasks$value, function(x)
+          x$state != "completed")
+
+      for (i in 1:length(taskStates)) {
+        if (taskStates[[i]] == FALSE) {
+          count <- count + 1
+        }
+      }
+    }
+
+    setTxtProgressBar(pb, count)
+
+    if (all(taskStates == FALSE)) {
+      cat("\n")
+      return(0)
+    }
+
+    Sys.sleep(10)
+  }
+
+  stop("A timeout has occurred when waiting for tasks to complete.")
+}
