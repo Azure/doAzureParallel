@@ -36,3 +36,7 @@ This section will provide information about how Azure works, how best to take ad
 8. **Customize Cluster** [(link)](./30-customize-cluster.md)
 
    Setting up your cluster to user's specific needs
+
+9. **Private GitHub Repository** [(link)](./31-private-github-packages.md)
+
+   Download and install packages from a private GitHub repository
