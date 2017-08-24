@@ -18,4 +18,5 @@ Depends:
     rAzureBatch (>= 0.4.0)
 Suggests:
     testthat, caret, plyr, lintr
+Remotes: Azure/rAzureBatch
 RoxygenNote: 6.0.1
