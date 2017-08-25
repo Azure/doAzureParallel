@@ -4,6 +4,8 @@ The commandline property in the cluster configuration file allows users to prepa
 
 Note: Batch clusters are run with Centos-OS Azure DSVMs.
 
+Note: All commands are already run as the sudo user, so there is no need to append sudo to your command line. _Commands may fail if you add the sudo user as part of the command._
+
 ```javascript
 {
   ...
