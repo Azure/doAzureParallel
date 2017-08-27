@@ -119,7 +119,6 @@ getJobList <- function(jobIds = c()) {
 #' }
 #' @export
 getJob <- function(jobId) {
-
   if (is.null(jobId)) {
     stop("must specify the jobId parameter")
   }
@@ -134,7 +133,13 @@ getJob <- function(jobId) {
   cat(sprintf("\tcompleted: %s", taskCounts$completed), fill = TRUE)
   cat(sprintf("\tsucceeded: %s", taskCounts$succeeded), fill = TRUE)
   cat(sprintf("\tfailed: %s", taskCounts$failed), fill = TRUE)
-  cat(sprintf("\ttotal: %s", taskCounts$active + taskCounts$running + taskCounts$completed), fill = TRUE)
+  cat(
+    sprintf(
+      "\ttotal: %s",
+      taskCounts$active + taskCounts$running + taskCounts$completed
+    ),
+    fill = TRUE
+  )
 }
 
 #' Polling method to check status of cluster boot up
