@@ -306,10 +306,6 @@ getJobResult <- function(jobId = "", ...) {
     results <- readRDS(tempFile)
   }
 
-  if (!is.null(args$pass) && args$pass) {
-    failTasks <- sapply(results, .isError)
-  }
-
   return(results)
 }
 

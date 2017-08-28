@@ -316,8 +316,8 @@ setVerbose <- function(value = FALSE) {
 
       chunkSize <- 1
 
-      if (!is.null(obj$options$azure$chunksize)) {
-        chunkSize <- obj$options$azure$chunksize
+      if (!is.null(obj$options$azure$chunkSize)) {
+        chunkSize <- obj$options$azure$chunkSize
       }
 
       if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
