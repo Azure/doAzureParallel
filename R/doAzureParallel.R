@@ -311,8 +311,8 @@ setVerbose <- function(value = FALSE) {
       resourceFiles <-
         append(resourceFiles, requiredJobResourceFiles)
 
-      cloudCombineEnabled <-
-        list(name = "cloudCombineEnabled", value = "TRUE")
+      enableCloudCombine <-
+        list(name = "enableCloudCombine", value = "TRUE")
 
       chunkSize <- 1
 
@@ -328,9 +328,9 @@ setVerbose <- function(value = FALSE) {
         list(name = "chunkSize", value = as.character(chunkSize))
 
       if (is.null(obj$packages)) {
-        metadata <- list(cloudCombineEnabled, chunkSizeValue)
+        metadata <- list(enableCloudCombine, chunkSizeValue)
       } else {
-        metadata <- list(cloudCombineEnabled, chunkSizeValue, obj$packages)
+        metadata <- list(enableCloudCombine, chunkSizeValue, obj$packages)
       }
 
       response <- .addJob(
