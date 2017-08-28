@@ -152,7 +152,7 @@ getJob <- function(jobId, verbose = TRUE) {
 
   taskCounts <- rAzureBatch::getJobTaskCounts(jobId = jobId)
 
-  tasks = list(
+  tasks <- list(
     active = taskCounts$active,
     running = taskCounts$running,
     completed = taskCounts$completed,
