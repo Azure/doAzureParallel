@@ -82,13 +82,13 @@ getJobList <- function(jobIds = c()) {
 
     if (total > 0) {
       if (completed > 0) {
-        status = sprintf("%s %%", ceiling(completed / total * 100))
+        status <- sprintf("%s %%", ceiling(completed / total * 100))
       } else {
-        status = "No tasks were run"
+        status <- "No tasks were run"
       }
     }
     else {
-      status = "No tasks in the job"
+      status <- "No tasks in the job"
     }
     cat(
       sprintf(
