@@ -159,7 +159,7 @@
     poolInfo = poolInfo,
     jobPreparationTask = jobPreparationTask,
     usesTaskDependencies = usesTaskDependencies,
-    raw = TRUE
+    content = "text"
   )
 
   return(response)
@@ -224,7 +224,7 @@
     ),
     autoScaleEvaluationInterval = "PT5M",
     maxTasksPerNode = pool$maxTasksPerNode,
-    raw = TRUE
+    content = "text"
   )
 
   return(response)
