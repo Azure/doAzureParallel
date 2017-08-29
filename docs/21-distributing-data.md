@@ -29,7 +29,7 @@ results <- foreach(chunk = iter(chunks)) %dopar% {
 
 Some workloads may require data pre-loaded into the cluster as soon as the cluster is provisioned. doAzureParallel supports this with the concept of a *resource file* - a file that is automatically downloaded to each node of the cluster after the cluster is created.
 
-**NOTE** The default setting for storage containers is _private_. You can either use a SAS (link to sas docs) to access the resources or [make the container public using the Azure Portal](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-manage-access-to-resources).
+**NOTE** The default setting for storage containers is _private_. You can either use a [SAS](../samples/resource_files/sas_resource_files_example.R) to access the resources or [make the container public using the Azure Portal](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-manage-access-to-resources).
 
 **IMPORTANT** Public storage containers can be ready by anyone who knows the URL. We do not recommend storing any private or sensitive information in public storage containers!
 
