@@ -27,7 +27,9 @@ results <- foreach(chunk = iter(chunks)) %dopar% {
 
 ## Pre-loading Data Into The Cluster
 
-Some workloads may require data pre-loaded into the cluster as soon as the cluster is provisioned. doAzureParallel supports this with the concept of a *resource file* - a file that is automatically downloaded to each node of the cluster after the cluster is created. 
+Some workloads may require data pre-loaded into the cluster as soon as the cluster is provisioned. doAzureParallel supports this with the concept of a *resource file* - a file that is automatically downloaded to each node of the cluster after the cluster is created. Note: Creating containers's default setting is private. It must be changed to 
+public if user does not want to use SAS tokens.
+
 
 Here's an example that uses data stored in a public location on Azure Blob Storage:
 
