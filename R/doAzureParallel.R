@@ -311,35 +311,35 @@ setVerbose <- function(value = FALSE) {
       resourceFiles <-
         append(resourceFiles, requiredJobResourceFiles)
 
-      cloudCombineEnabled <- list(name = "cloudCombineEnabled", value = "TRUE")
+      enableCloudCombine <-
+        list(name = "enableCloudCombine", value = "TRUE")
 
       chunkSize <- 1
-      
-      if(!is.null(obj$options$azure$chunkSize)){
+
+      if (!is.null(obj$options$azure$chunkSize)) {
         chunkSize <- obj$options$azure$chunkSize
       }
-      
-      if(!is.null(obj$options$azure$chunksize)){
-        chunkSize <- obj$options$azure$chunksize
-      }
-      
-      if(exists("chunkSize", envir=.doAzureBatchGlobals)){
-        chunkSize <- get("chunkSize", envir=.doAzureBatchGlobals)
-      }
-      
-      chunkSizeValue <- list(name = "chunkSize", value = as.character(chunkSize))
-      
-      if (is.null(obj$packages)) {
-        metadata <- list(cloudCombineEnabled, chunkSizeValue)
-      } else {
-        metadata <- list(cloudCombineEnabled, chunkSizeValue, obj$packages)
+
+      if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
+        chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
       }
 
-      response <- .addJob(jobId = id,
-                          poolId = data$poolId,
-                          resourceFiles = resourceFiles,
-                          metadata = metadata,
-                          packages = obj$packages)
+      chunkSizeValue <-
+        list(name = "chunkSize", value = as.character(chunkSize))
+
+      if (is.null(obj$packages)) {
+        metadata <- list(enableCloudCombine, chunkSizeValue)
+      } else {
+        metadata <- list(enableCloudCombine, chunkSizeValue, obj$packages)
+      }
+
+      response <- .addJob(
+        jobId = id,
+        poolId = data$poolId,
+        resourceFiles = resourceFiles,
+        metadata = metadata,
+        packages = obj$packages
+      )
 
 
       if (grepl("ActiveJobAndScheduleQuotaReached", response)) {
