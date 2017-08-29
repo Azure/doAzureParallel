@@ -44,7 +44,7 @@ linuxWrapCommands <- function(commands = c()) {
     sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
             paste0(paste(
               commands, sep = " ", collapse = "; "
-            ), " ;"))
+            ), ";"))
 
   commandLine
 }
