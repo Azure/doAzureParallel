@@ -89,7 +89,7 @@ generateClusterConfig <- function(fileName) {
       rPackages = list(
         cran = vector(),
         github = vector(),
-        githubAuthenticationToken = NULL
+        githubAuthenticationToken = ""
       ),
       commandLine = vector()
     )
