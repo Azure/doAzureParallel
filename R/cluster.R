@@ -89,7 +89,7 @@ generateClusterConfig <- function(fileName) {
       rPackages = list(
         cran = vector(),
         github = vector(),
-        githubAuthenticationToken = NULL
+        githubAuthenticationToken = ""
       ),
       commandLine = vector()
     )
@@ -177,18 +177,14 @@ makeCluster <-
 
     environmentSettings <- NULL
     if (!is.null(poolConfig$rPackages) &&
-        !is.null(poolConfig$rPackages$githubAuthenticationToken)) {
-      if (length(poolConfig$rPackages$githubAuthenticationToken) == 1) {
-        environmentSettings <-
-          list(
-            list(
-              name = "GITHUB_PAT",
-              value = poolConfig$rPackages$githubAuthenticationToken
-            )
-          )
-      } else {
-        stop("githubAuthenticationToken length is not equal to 1")
-      }
+        !is.null(poolConfig$rPackages$githubAuthenticationToken) &&
+        poolConfig$rPackages$githubAuthenticationToken != "") {
+
+      environmentSettings <-
+        list(list(
+          name = "GITHUB_PAT",
+          value = poolConfig$rPackages$githubAuthenticationToken
+        ))
     }
 
     if (!is.null(poolConfig[["pool"]])) {
