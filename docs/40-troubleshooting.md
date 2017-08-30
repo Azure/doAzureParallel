@@ -1,5 +1,5 @@
 # Getting logs without Azure Portal
-Logs on a cluster node are not persisted through Azure Storage. `getClusterLogs` function will fetch the boot up script that users use in (customize script) [./30-customize-cluster.md] and (package installation) [./20-package-management.md].
+Logs on a cluster node are not persisted through Azure Storage. `getClusterLogs` function will fetch the boot up script that users use in [customize script](./30-customize-cluster.md) and [package installation](./20-package-management.md).
 
 ```R
 # This call will fetch the stderr.txt file and save it as a text file named "pool-errors.txt"
