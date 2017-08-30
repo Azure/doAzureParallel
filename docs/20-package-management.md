@@ -70,6 +70,38 @@ results <- foreach(i = 1:number_of_iterations, .packages=c('package_1', 'package
 
 Installing packages from github using this method is not yet supported.
 
+## Installing Packages from BioConductor
+Currently there is no native support for Bioconductor package installation, but it can be achieved by installing the packages directly in your environment or using the 'commandLine' feature in the cluster configuration. We recommend using the 'commandLine' to install the base BioConductor package and then install additional packages either through the 'commandLine' as well, or directly in your code.
+
+### Installing BioConductor using the 'commandLine'
+
+Simply update your cluster configuration commandLine as follows:
+```json
+"commandLine": [
+    "Rscript -e 'args <- commandArgs(TRUE)' -e 'options(warn=2)' -e 'source(\"https://bioconductor.org/biocLite.R\")'"
+]
+```
+
+### Installing additional packages on the cluster using the 'commandLine'
+
+Add any additional bioconductor pacakges _after_ the initial bioconductor package update, for example to install GenomicsFeatures and AnnotationDbi set the commandLine as follows:
+```json
+"commandLine": [
+    "Rscript -e 'args <- commandArgs(TRUE)' -e 'options(warn=2)' -e 'source(\"https://bioconductor.org/biocLite.R\")'",
+    "Rscript -e 'args <- commandArgs(TRUE)' -e 'options(warn=2)' -e biocLite(c('GenomicFeatures', 'AnnotationDbi'))"
+]
+```
+
+### Installing additional packages in your code
+
+If you have already configured BioConductor at the cluster level, you should have access to biocLite in your code. Within your foreach loop add the call to biocLite to install the packages:
+
+```r
+results <- foreach(i = 1:number_of_iterations) %dopar% { 
+    biocLite(c('GenomicsFeatures', 'AnnotationDbi'))
+    ...
+    }
+```
 
 ## Uninstalling packages
 Uninstalling packages from your pool is not supported. However, you may consider rebuilding your pool.
