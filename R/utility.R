@@ -21,11 +21,11 @@ getPoolPackageInstallationCommand <- function(type, packages) {
 
   if (type == "cran") {
     script <-
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' -e \'install.packages(args[1])\' %s"
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'install.packages(args[1])\' %s"
   }
   else if (type == "github") {
     script <-
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' -e \'devtools::install_github(args[1])\' %s"
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'devtools::install_github(args[1])\' %s"
   }
   else {
     stop("Using an incorrect package source")
