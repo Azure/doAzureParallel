@@ -482,8 +482,6 @@ setVerbose <- function(value = FALSE) {
       cat(sprintf("Number of errors: %i", numberOfFailedTasks),
           fill = TRUE)
 
-      rAzureBatch::deleteJob(id)
-
       if (identical(obj$errorHandling, "stop") &&
           !is.null(errorValue)) {
         msg <- sprintf("task %d failed - '%s'",
