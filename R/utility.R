@@ -529,6 +529,6 @@ waitForTasksToComplete <- function(jobId, timeout) {
   stop("A timeout has occurred when waiting for tasks to complete.")
 }
 
-areEqual <- function(a, b) {
+areShallowEqual <- function(a, b) {
   !is.null(a) && !is.null(b) && a == b
 }

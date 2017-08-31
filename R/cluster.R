@@ -211,8 +211,18 @@ makeCluster <-
     if (grepl("PoolBeingDeleted", response)) {
       pool <- rAzureBatch::getPool(poolConfig$name)
 
-      cat("Waiting for deleting the previous pool. Should take less than 10 minutes\n")
-      while (areEqual(rAzureBatch::getPool(poolConfig$name)$state,
+      cat(
+        sprintf(
+          paste("Cluster '%s' already exists and is being deleted.",
+                "Another cluster with the same name cannot be created",
+                "until it is deleted. Please wait for the cluster to be deleted",
+                "or create one with a different name"),
+          poolConfig$name
+        ),
+        fill = TRUE
+      )
+
+      while (areShallowEqual(rAzureBatch::getPool(poolConfig$name)$state,
                       "deleting")) {
         cat(".")
         Sys.sleep(10)
@@ -234,7 +244,7 @@ makeCluster <-
     if (grepl("PoolExists", response)) {
       cat(
         sprintf(
-          "The specified pool '%s' already exists. Pool '%s' will be used.",
+          "The specified cluster '%s' already exists. Cluster '%s' will be used.",
           pool$id,
           pool$id
         ),
@@ -242,9 +252,11 @@ makeCluster <-
       )
 
       clusterNodeMismatchWarning <-
-        paste0(
-          "There is a mismatched between the projected cluster %s ",
-          "nodes min/max '%s'/'%s' and the existing cluster %s nodes '%s'"
+        paste(
+          "There is a mismatched between the projected cluster %s",
+          "nodes min/max '%s'/'%s' and the existing cluster %s nodes '%s'",
+          "Use the 'resizeCluster' function to get the correct amount",
+          "of workers."
         )
 
       if (!(
@@ -287,7 +299,7 @@ makeCluster <-
       waitForNodesToComplete(poolConfig$name, 60000)
     }
 
-    cat("Your pool has been registered.", fill = TRUE)
+    cat("Your cluster has been registered.", fill = TRUE)
     cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
         fill = TRUE)
     cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
