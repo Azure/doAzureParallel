@@ -228,8 +228,8 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     }
 
     if (pb$getVal() >= totalNodes) {
+      cat('\n')
       return(0)
-
     }
 
     Sys.sleep(30)
@@ -527,4 +527,8 @@ waitForTasksToComplete <- function(jobId, timeout) {
   }
 
   stop("A timeout has occurred when waiting for tasks to complete.")
+}
+
+areEqual <- function(a, b) {
+  !is.null(a) && !is.null(b) && a == b
 }

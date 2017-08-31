@@ -179,12 +179,13 @@ makeCluster <-
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$githubAuthenticationToken) &&
         poolConfig$rPackages$githubAuthenticationToken != "") {
-
       environmentSettings <-
-        list(list(
-          name = "GITHUB_PAT",
-          value = poolConfig$rPackages$githubAuthenticationToken
-        ))
+        list(
+          list(
+            name = "GITHUB_PAT",
+            value = poolConfig$rPackages$githubAuthenticationToken
+          )
+        )
     }
 
     if (!is.null(poolConfig[["pool"]])) {
@@ -203,12 +204,32 @@ makeCluster <-
       commandLine = commandLine
     )
 
-    pool <- rAzureBatch::getPool(poolConfig$name)
-
     if (grepl("AuthenticationFailed", response)) {
       stop("Check your credentials and try again.")
-
     }
+
+    if (grepl("PoolBeingDeleted", response)) {
+      pool <- rAzureBatch::getPool(poolConfig$name)
+
+      cat('Waiting for deleting the previous pool. Should take less than 10 minutes\n')
+      while (areEqual(rAzureBatch::getPool(poolConfig$name)$state,
+                      'deleting')) {
+        cat('.')
+        Sys.sleep(10)
+      }
+
+      cat('\n')
+
+      response <- .addPool(
+        pool = poolConfig,
+        packages = packages,
+        environmentSettings = environmentSettings,
+        resourceFiles = resourceFiles,
+        commandLine = commandLine
+      )
+    }
+
+    pool <- rAzureBatch::getPool(poolConfig$name)
 
     if (grepl("PoolExists", response)) {
       cat(
@@ -220,10 +241,11 @@ makeCluster <-
         fill = TRUE
       )
 
-
       clusterNodeMismatchWarning <-
-        paste0("There is a mismatched between the projected cluster %s ",
-               "nodes min/max '%s'/'%s' and the existing cluster %s nodes '%s'")
+        paste0(
+          "There is a mismatched between the projected cluster %s ",
+          "nodes min/max '%s'/'%s' and the existing cluster %s nodes '%s'"
+        )
 
       if (!(
         poolConfig$poolSize$dedicatedNodes$min <= pool$targetDedicatedNodes &&
@@ -260,10 +282,9 @@ makeCluster <-
         )
       }
     }
-    else{
-      if (wait) {
-        waitForNodesToComplete(pool$id, 60000)
-      }
+
+    if (wait && !grepl("PoolExists", response)) {
+      waitForNodesToComplete(poolConfig$name, 60000)
     }
 
     cat("Your pool has been registered.", fill = TRUE)
