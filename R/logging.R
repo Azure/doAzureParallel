@@ -12,8 +12,10 @@
 #'}
 #'
 #' @examples
-#' stdoutText <- getClusterLogs(cluster, "tvm-1170471534_1-20170829t072146z", type = "stdout", verbose = FALSE)
-#' getClusterLogs(cluster, "tvm-1170471534_2-20170829t072146z", type = "stderr", localPath = "abc.txt", overwrite = TRUE)
+#' stdoutText <- getClusterLogs(cluster, "tvm-1170471534_1-20170829t072146z",
+#' type = "stdout", verbose = FALSE)
+#' getClusterLogs(cluster, "tvm-1170471534_2-20170829t072146z",
+#' type = "stderr", localPath = "abc.txt", overwrite = TRUE)
 #' @export
 getClusterLogs <-
   function(cluster,
@@ -38,7 +40,6 @@ getClusterLogs <-
       nodeId,
       filePath,
       content = "text",
-      write = write,
       progress = TRUE,
       localPath = localPath,
       overwrite = overwrite
@@ -64,10 +65,10 @@ getClusterLogs <-
 #'}
 #'
 #' @examples
-#' stdoutFile <- getJobLogs("job20170822055031", "job20170822055031-task1", type = "stdout")
-#' getJobLogs("job20170822055031", "job20170822055031-task1", type = "rlogs", localPath = "hello.txt")
+#' stdoutFile <- getPersistedJobLogs("job20170822055031", "job20170822055031-task1", type = "stdout")
+#' getPersistedJobLogs("job20170822055031", "job20170822055031-task1", type = "rlogs", localPath = "hello.txt")
 #' @export
-getJobLogs <-
+getPersistedJobLogs <-
   function(jobId,
            taskId,
            type = c("rlogs", "stdout", "stderr"),
@@ -96,6 +97,48 @@ getJobLogs <-
       rAzureBatch::downloadBlob(
         jobId,
         blobPath,
+        content = "text",
+        localDest = localPath,
+        overwrite = overwrite,
+        progress = TRUE
+      )
+
+    if (verbose) {
+      cat(jobFileContent)
+    }
+
+    jobFileContent
+  }
+
+#' Get job log files from cluster node. By default, this operation will print the files on screen.
+#'
+#' @param jobId Id of the foreach job
+#' @param taskId Id of the task
+#' @param type Type of logs: rlogs, stdout, or stderr
+#' @param verbose Flag for printing the log files onto console
+#' @param ... Further named parameters
+#' \itemize{
+#'  \item{"localPath"}: { Path to save file to }
+#'  \item{"overwrite"}: { Will only overwrite existing localPath }
+#'}
+#'
+#' @examples
+#' stdoutFile <- getJobLogs("job20170822055031", "job20170822055031-task1", type = "stdout")
+#' getJobLogs("job20170822055031", "job20170822055031-task1", type = "rlogs", localPath = "hello.txt")
+#' @export
+getJobLogs <-
+  function(jobId,
+           taskId,
+           filePath,
+           verbose = TRUE,
+           overwrite = FALSE,
+           localPath = NULL) {
+
+    jobFileContent <-
+      rAzureBatch::getTaskFile(
+        jobId,
+        taskId,
+        filePath,
         content = "text",
         localDest = localPath,
         overwrite = overwrite,
