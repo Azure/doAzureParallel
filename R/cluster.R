@@ -211,14 +211,14 @@ makeCluster <-
     if (grepl("PoolBeingDeleted", response)) {
       pool <- rAzureBatch::getPool(poolConfig$name)
 
-      cat('Waiting for deleting the previous pool. Should take less than 10 minutes\n')
+      cat("Waiting for deleting the previous pool. Should take less than 10 minutes\n")
       while (areEqual(rAzureBatch::getPool(poolConfig$name)$state,
-                      'deleting')) {
-        cat('.')
+                      "deleting")) {
+        cat(".")
         Sys.sleep(10)
       }
 
-      cat('\n')
+      cat("\n")
 
       response <- .addPool(
         pool = poolConfig,

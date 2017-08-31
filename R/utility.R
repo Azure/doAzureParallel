@@ -228,7 +228,7 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     }
 
     if (pb$getVal() >= totalNodes) {
-      cat('\n')
+      cat("\n")
       return(0)
     }
 
