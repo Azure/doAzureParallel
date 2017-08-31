@@ -175,16 +175,11 @@ makeCluster <-
       commandLine <- poolConfig$commandLine
     }
 
-    environmentSettings <- NULL
-    if (!is.null(poolConfig$rPackages) &&
-        !is.null(poolConfig$rPackages$githubAuthenticationToken) &&
-        poolConfig$rPackages$githubAuthenticationToken != "") {
-
-      environmentSettings <-
-        list(list(
-          name = "GITHUB_PAT",
-          value = poolConfig$rPackages$githubAuthenticationToken
-        ))
+    gitTokens <- Filter(function(x) !is.null(x) && x != "", list(
+      config = if (!is.null(poolConfig$rPackages)) poolConfig$rPackages$githubAuthenticationToken,
+      env    = Sys.getenv("GITHUB_PAT")))
+    environmentSettings <- if (length(gitTokens) > 0) {
+      list(list(name = "GITHUB_PAT", value = gitTokens[[1]]))
     }
 
     if (!is.null(poolConfig[["pool"]])) {
