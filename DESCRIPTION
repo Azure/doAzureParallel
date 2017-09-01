@@ -20,6 +20,9 @@ Imports:
     jsonlite,
     rjson
 Suggests:
-    testthat, caret, plyr, lintr
+    testthat,
+    caret,
+    plyr,
+    lintr
 Remotes: Azure/rAzureBatch
 RoxygenNote: 6.0.1

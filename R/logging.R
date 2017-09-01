@@ -1,4 +1,4 @@
-#' Get node log files from compute nodes. By default, this operation will print the files on screen.
+#' Get node files from compute nodes. By default, this operation will print the files on screen.
 #'
 #' @param cluster The cluster object
 #' @param nodeId Id of the node
@@ -49,7 +49,7 @@ getClusterFile <-
     nodeFileContent
   }
 
-#' Get job log files from cluster node. By default, this operation will print the files on screen.
+#' Get job-related files from cluster node. By default, this operation will print the files on screen.
 #'
 #' @param jobId Id of the foreach job
 #' @param taskId Id of the task
