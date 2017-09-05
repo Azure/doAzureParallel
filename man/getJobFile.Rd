@@ -18,7 +18,11 @@ getJobFile(jobId, taskId, filePath, downloadPath = NULL, verbose = TRUE,
 
 \item{...}{Further named parameters
 \itemize{
+<<<<<<< HEAD
  \item{"localPath"}: { Path to save file to }
+=======
+ \item{"downloadPath"}: { Path to save file to }
+>>>>>>> e873e84c058f5bf4b45b14a95164aaae77a3265c
  \item{"overwrite"}: { Will only overwrite existing localPath }
 }}
 }

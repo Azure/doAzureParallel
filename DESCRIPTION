@@ -18,7 +18,8 @@ Depends:
 Imports:
     rAzureBatch (>= 0.4.0),
     jsonlite,
-    rjson
+    rjson,
+    xml2
 Suggests:
     testthat,
     caret,

@@ -7,15 +7,17 @@
 #'
 #' @param ... Further named parameters
 #' \itemize{
-#'  \item{"localPath"}: { Path to save file to }
+#'  \item{"downloadPath"}: { Path to save file to }
 #'  \item{"overwrite"}: { Will only overwrite existing localPath }
 #'}
 #'
 #' @examples
+#' \dontrun{
 #' stdoutText <- getClusterFile(cluster, "tvm-1170471534_1-20170829t072146z",
 #' filePath = "stdout.txt", verbose = FALSE)
 #' getClusterFile(cluster, "tvm-1170471534_2-20170829t072146z",
-#' filePath = "wd/output.csv", localPath = "output.csv", overwrite = TRUE)
+#' filePath = "wd/output.csv", downloadPath = "output.csv", overwrite = TRUE)
+#' }
 #' @export
 getClusterFile <-
   function(cluster,
@@ -23,7 +25,7 @@ getClusterFile <-
            filePath,
            verbose = TRUE,
            overwrite = FALSE,
-           localPath = NULL) {
+           downloadPath = NULL) {
     prefixfilePath <- "startup/%s"
 
     if (startsWith(filePath, "/")) {
@@ -36,15 +38,10 @@ getClusterFile <-
       cluster$poolId,
       nodeId,
       filePath,
-      content = "text",
       progress = TRUE,
-      localPath = localPath,
+      downloadPath = downloadPath,
       overwrite = overwrite
     )
-
-    if (verbose) {
-      cat(nodeFileContent)
-    }
 
     nodeFileContent
   }
@@ -57,13 +54,15 @@ getClusterFile <-
 #' @param verbose Flag for printing the log files onto console
 #' @param ... Further named parameters
 #' \itemize{
-#'  \item{"localPath"}: { Path to save file to }
+#'  \item{"downloadPath"}: { Path to save file to }
 #'  \item{"overwrite"}: { Will only overwrite existing localPath }
 #'}
 #'
 #' @examples
-#' stdoutFile <- getJobFile("job20170822055031", "job20170822055031-task1", type = "stdout")
-#' getJobFile("job20170822055031", "job20170822055031-task1", type = "rlogs", localPath = "hello.txt")
+#' \dontrun{
+#' stdoutFile <- getJobFile("job20170822055031", "job20170822055031-task1", "stderr.txt")
+#' getJobFile("job20170822055031", "job20170822055031-task1", "stdout.txt", downloadPath = "hello.txt")
+#' }
 #' @export
 getJobFile <-
   function(jobId,
@@ -82,15 +81,10 @@ getJobFile <-
         jobId,
         taskId,
         filePath,
-        content = "text",
-        localDest = downloadPath,
+        downloadPath = downloadPath,
         overwrite = overwrite,
         progress = TRUE
       )
-
-    if (verbose) {
-      cat(jobFileContent)
-    }
 
     jobFileContent
   }

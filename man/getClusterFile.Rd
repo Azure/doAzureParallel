@@ -5,7 +5,11 @@
 \title{Get node files from compute nodes. By default, this operation will print the files on screen.}
 \usage{
 getClusterFile(cluster, nodeId, filePath, verbose = TRUE, overwrite = FALSE,
+<<<<<<< HEAD
   localPath = NULL)
+=======
+  downloadPath = NULL)
+>>>>>>> e873e84c058f5bf4b45b14a95164aaae77a3265c
 }
 \arguments{
 \item{cluster}{The cluster object}
@@ -18,7 +22,7 @@ getClusterFile(cluster, nodeId, filePath, verbose = TRUE, overwrite = FALSE,
 
 \item{...}{Further named parameters
 \itemize{
- \item{"localPath"}: { Path to save file to }
+ \item{"downloadPath"}: { Path to save file to }
  \item{"overwrite"}: { Will only overwrite existing localPath }
 }}
 }
