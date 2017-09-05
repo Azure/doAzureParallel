@@ -4,8 +4,10 @@
 #' whose name begins with the specified prefix.
 #'
 #' @examples
+#' \dontrun{
 #' containers <- listStorageContainers()
 #' View(containers)
+#' }
 #' @export
 listStorageContainers <- function(prefix = "") {
   xmlResponse <-
@@ -35,7 +37,9 @@ listStorageContainers <- function(prefix = "") {
 #' @param container The name of the container
 #'
 #' @examples
+#' \dontrun{
 #' deleteStorageContainer("outputContainerName")
+#' }
 #' @export
 deleteStorageContainer <- function(container) {
   response <-
@@ -55,8 +59,10 @@ deleteStorageContainer <- function(container) {
 #' @param prefix Id of the node
 #'
 #' @examples
+#' \dontrun{
 #' files <- listStorageFiles("job001")
 #' View(files)
+#' }
 #' @export
 listStorageFiles <- function(container, prefix = "", ...) {
   xmlResponse <-
@@ -96,7 +102,9 @@ listStorageFiles <- function(container, prefix = "", ...) {
 #'  \item{"verbose"}: { Show verbose messages }
 #'}
 #' @examples
+#' \dontrun{
 #' stdoutText <- getStorageFile(testContainer, "logs/stdout.txt")
+#' }
 #' @export
 getStorageFile <-
   function(container,

@@ -12,10 +12,12 @@
 #'}
 #'
 #' @examples
+#' \dontrun{
 #' stdoutText <- getClusterFile(cluster, "tvm-1170471534_1-20170829t072146z",
 #' filePath = "stdout.txt", verbose = FALSE)
 #' getClusterFile(cluster, "tvm-1170471534_2-20170829t072146z",
 #' filePath = "wd/output.csv", downloadPath = "output.csv", overwrite = TRUE)
+#' }
 #' @export
 getClusterFile <-
   function(cluster,
@@ -57,8 +59,10 @@ getClusterFile <-
 #'}
 #'
 #' @examples
-#' stdoutFile <- getJobFile("job20170822055031", "job20170822055031-task1", type = "stdout")
-#' getJobFile("job20170822055031", "job20170822055031-task1", type = "rlogs", downloadPath = "hello.txt")
+#' \dontrun{
+#' stdoutFile <- getJobFile("job20170822055031", "job20170822055031-task1", "stderr.txt")
+#' getJobFile("job20170822055031", "job20170822055031-task1", "stdout.txt", downloadPath = "hello.txt")
+#' }
 #' @export
 getJobFile <-
   function(jobId,
