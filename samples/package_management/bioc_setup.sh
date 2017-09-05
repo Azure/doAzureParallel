@@ -1,4 +1,4 @@
-if [ ! -d "microsoft-r-open" ]
+if [ ! -d "microsoft-r-open" ]; then
     # Download R
     wget https://mran.microsoft.com/install/mro/3.4.0/microsoft-r-open-3.4.0.tar.gz
 
