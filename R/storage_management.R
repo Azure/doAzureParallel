@@ -36,10 +36,6 @@ listStorageContainers <- function(prefix = "") {
 #'
 #' @param container The name of the container
 #'
-#' @examples
-#' \dontrun{
-#' deleteStorageContainer("outputContainerName")
-#' }
 #' @export
 deleteStorageContainer <- function(container) {
   response <-
