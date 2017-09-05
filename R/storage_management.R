@@ -75,13 +75,17 @@ listStorageFiles <- function(container, prefix = "", ...) {
   leaseState <-
     getXmlValues(xmlResponse, ".//Blob/Properties/LeaseState")
 
-  data.frame(
-    filePath,
-    contentLength,
-    contentType,
-    leaseState,
-    lastModified
+  storageFiles <- data.frame(
+    FilePath = filePath,
+    ContentLength = contentLength,
+    ContentType = contentType,
+    LeaseState = leaseState,
+    LastModified = lastModified
   )
+
+  attr(storageFiles,"containerName") <- container
+
+  storageFiles
 }
 
 #' Get a storage file from Azure Storage. By default, this operation will print the files on screen.

@@ -1,18 +1,19 @@
 # Getting logs without Azure Portal
-Logs on a cluster node are not persisted through Azure Storage. `getClusterLogs` function will fetch the boot up script that users use in [customize script](./30-customize-cluster.md) and [package installation](./20-package-management.md).
+## Viewing files from Azure Storage
+In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. For more information on reading log files, check out [managing storage](./41-managing-storage-via.R.md). 
+
+## Viewing files directly from compute node
+Logs on a cluster node are not persisted through Azure Storage. `getClusterFile` function will fetch any files including stdout and stderr log files in the cluster. This is particularly useful for users that utilizing [customize script](./30-customize-cluster.md) on their nodes and installing specific [packages](./20-package-management.md).
 
 ```R
-# This call will fetch the stderr.txt file and save it as a text file named "pool-errors.txt"
-getClusterLogs(cluster, "tvm-1170471534_2-20170829t072146z", type = "stderr", localPath = "abc.txt")
+# This will download stderr.txt directly from the cluster. 
+getClusterFile(cluster, "tvm-1170471534_2-20170829t072146z", "stderr.txt", downloadPath = "pool-errors.txt")
 ```
 
-In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. Without using Azure Storage Explorer or Azure Portal, `getJobLogs` function will fetch logs via R. There are three types of log files in the foreach job. 
-
-- "rlogs": These log files contain information about the expression that gets executed within the foreach. Errors related to R could be found here or in the stderr type depending on the issue.
-- "stdout": Non R-output files will contain information about the job package installation and file uploads regarding the use of blobxfer. 
-- "stderr": Any errors that are not related to R will be in this file. 
+When executing long-running jobs, users might want to check the status of the job by checking the logs. The logs and results are not uploaded to Azure Storage until tasks are completed. By running `getJobFile` function, the user is able to view log files in real time.
 
 ```R
-# This call will fetch the task's R output file"
-getJobLogs("job20170822055031", "job20170822055031-task1", type = "rlogs")
+# Allows users to read the stdout file in memory 
+stdoutFile <- getJobFile("job20170824195123", "job20170824195123-task1", "stdout.txt")
+cat(stdoutFile)
 ```
