@@ -464,8 +464,7 @@ setHttpTraffic <- function(value = FALSE) {
           id,
           paste0("result/", id, "-merge-result.rds"),
           sasToken = sasToken,
-          accountName = storageCredentials$name,
-          content = "raw"
+          accountName = storageCredentials$name
         )
 
       tempFile <- tempfile("doAzureParallel", fileext = ".rds")

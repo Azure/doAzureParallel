@@ -528,3 +528,7 @@ waitForTasksToComplete <- function(jobId, timeout) {
 
   stop("A timeout has occurred when waiting for tasks to complete.")
 }
+
+getXmlValues <- function(xmlResponse, xmlPath){
+  xml2::xml_text(xml2::xml_find_all(xmlResponse, xmlPath))
+}
