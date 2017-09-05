@@ -21,11 +21,11 @@ getPoolPackageInstallationCommand <- function(type, packages) {
 
   if (type == "cran") {
     script <-
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1])\' %s"
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'install.packages(args[1])\' %s"
   }
   else if (type == "github") {
     script <-
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'devtools::install_github(args[1])\' %s"
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'devtools::install_github(args[1])\' %s"
   }
   else {
     stop("Using an incorrect package source")
@@ -228,8 +228,8 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     }
 
     if (pb$getVal() >= totalNodes) {
+      cat("\n")
       return(0)
-
     }
 
     Sys.sleep(30)
@@ -531,4 +531,7 @@ waitForTasksToComplete <- function(jobId, timeout) {
 
 getXmlValues <- function(xmlResponse, xmlPath){
   xml2::xml_text(xml2::xml_find_all(xmlResponse, xmlPath))
+  
+areShallowEqual <- function(a, b) {
+  !is.null(a) && !is.null(b) && a == b
 }

@@ -89,7 +89,7 @@ generateClusterConfig <- function(fileName) {
       rPackages = list(
         cran = vector(),
         github = vector(),
-        githubAuthenticationToken = NULL
+        githubAuthenticationToken = ""
       ),
       commandLine = vector()
     )
@@ -177,18 +177,15 @@ makeCluster <-
 
     environmentSettings <- NULL
     if (!is.null(poolConfig$rPackages) &&
-        !is.null(poolConfig$rPackages$githubAuthenticationToken)) {
-      if (length(poolConfig$rPackages$githubAuthenticationToken) == 1) {
-        environmentSettings <-
+        !is.null(poolConfig$rPackages$githubAuthenticationToken) &&
+        poolConfig$rPackages$githubAuthenticationToken != "") {
+      environmentSettings <-
+        list(
           list(
-            list(
-              name = "GITHUB_PAT",
-              value = poolConfig$rPackages$githubAuthenticationToken
-            )
+            name = "GITHUB_PAT",
+            value = poolConfig$rPackages$githubAuthenticationToken
           )
-      } else {
-        stop("githubAuthenticationToken length is not equal to 1")
-      }
+        )
     }
 
     if (!is.null(poolConfig[["pool"]])) {
@@ -207,27 +204,60 @@ makeCluster <-
       commandLine = commandLine
     )
 
-    pool <- rAzureBatch::getPool(poolConfig$name)
-
     if (grepl("AuthenticationFailed", response)) {
       stop("Check your credentials and try again.")
-
     }
+
+    if (grepl("PoolBeingDeleted", response)) {
+      pool <- rAzureBatch::getPool(poolConfig$name)
+
+      cat(
+        sprintf(
+          paste("Cluster '%s' already exists and is being deleted.",
+                "Another cluster with the same name cannot be created",
+                "until it is deleted. Please wait for the cluster to be deleted",
+                "or create one with a different name"),
+          poolConfig$name
+        ),
+        fill = TRUE
+      )
+
+      while (areShallowEqual(rAzureBatch::getPool(poolConfig$name)$state,
+                      "deleting")) {
+        cat(".")
+        Sys.sleep(10)
+      }
+
+      cat("\n")
+
+      response <- .addPool(
+        pool = poolConfig,
+        packages = packages,
+        environmentSettings = environmentSettings,
+        resourceFiles = resourceFiles,
+        commandLine = commandLine
+      )
+    }
+
+    pool <- rAzureBatch::getPool(poolConfig$name)
 
     if (grepl("PoolExists", response)) {
       cat(
         sprintf(
-          "The specified pool '%s' already exists. Pool '%s' will be used.",
+          "The specified cluster '%s' already exists. Cluster '%s' will be used.",
           pool$id,
           pool$id
         ),
         fill = TRUE
       )
 
-
       clusterNodeMismatchWarning <-
-        paste0("There is a mismatched between the projected cluster %s ",
-               "nodes min/max '%s'/'%s' and the existing cluster %s nodes '%s'")
+        paste(
+          "There is a mismatched between the projected cluster %s",
+          "nodes min/max '%s'/'%s' and the existing cluster %s nodes '%s'.",
+          "Use the 'resizeCluster' function to get the correct amount",
+          "of workers."
+        )
 
       if (!(
         poolConfig$poolSize$dedicatedNodes$min <= pool$targetDedicatedNodes &&
@@ -248,7 +278,7 @@ makeCluster <-
 
       if (!(
         poolConfig$poolSize$lowPriorityNodes$min <= pool$targetLowPriorityNodes &&
-        pool$targetLowPriorityNodes <= poolConfig$poolSize$lowPriorityNodes$min
+        pool$targetLowPriorityNodes <= poolConfig$poolSize$lowPriorityNodes$max
       )) {
         lowPriorityLabel <- "low priority"
 
@@ -264,13 +294,12 @@ makeCluster <-
         )
       }
     }
-    else{
-      if (wait) {
-        waitForNodesToComplete(pool$id, 60000)
-      }
+
+    if (wait && !grepl("PoolExists", response)) {
+      waitForNodesToComplete(poolConfig$name, 60000)
     }
 
-    cat("Your pool has been registered.", fill = TRUE)
+    cat("Your cluster has been registered.", fill = TRUE)
     cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
         fill = TRUE)
     cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),

@@ -1,7 +1,7 @@
 Package: doAzureParallel
 Type: Package
 Title: doAzureParallel
-Version: 0.4.0
+Version: 0.4.1
 Author: Brian Hoang
 Maintainer: Brian Hoang <brhoan@microsoft.com>
 Description: The project is for data experts who use R at scale. The project
@@ -14,9 +14,11 @@ License: Microsoft Corporation
 LazyData: TRUE
 Depends:
     foreach (>= 1.4.3),
-    iterators (>= 1.0.8),
-    rAzureBatch (>= 0.4.0)
+    iterators (>= 1.0.8)
 Imports:
+    rAzureBatch (>= 0.4.0),
+    jsonlite,
+    rjson,
     xml2
 Suggests:
     testthat, caret, plyr, lintr
