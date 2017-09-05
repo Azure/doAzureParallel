@@ -12,6 +12,3 @@ deleteStorageContainer(container)
 \description{
 Delete a storage container from Azure Storage
 }
-\examples{
-deleteStorageContainer("outputContainerName")
-}

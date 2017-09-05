@@ -531,7 +531,8 @@ waitForTasksToComplete <- function(jobId, timeout) {
 
 getXmlValues <- function(xmlResponse, xmlPath){
   xml2::xml_text(xml2::xml_find_all(xmlResponse, xmlPath))
-  
-areShallowEqual <- function(a, b) {
+}
+
+areShallowEqual <- function(a, b){
   !is.null(a) && !is.null(b) && a == b
 }

@@ -14,6 +14,8 @@ whose name begins with the specified prefix.}
 List storage containers from Azure Storage.
 }
 \examples{
+\dontrun{
 containers <- listStorageContainers()
 View(containers)
+}
 }

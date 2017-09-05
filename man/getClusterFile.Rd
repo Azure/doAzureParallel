@@ -5,11 +5,7 @@
 \title{Get node files from compute nodes. By default, this operation will print the files on screen.}
 \usage{
 getClusterFile(cluster, nodeId, filePath, verbose = TRUE, overwrite = FALSE,
-<<<<<<< HEAD
-  localPath = NULL)
-=======
   downloadPath = NULL)
->>>>>>> e873e84c058f5bf4b45b14a95164aaae77a3265c
 }
 \arguments{
 \item{cluster}{The cluster object}
@@ -30,8 +26,10 @@ getClusterFile(cluster, nodeId, filePath, verbose = TRUE, overwrite = FALSE,
 Get node files from compute nodes. By default, this operation will print the files on screen.
 }
 \examples{
+\dontrun{
 stdoutText <- getClusterFile(cluster, "tvm-1170471534_1-20170829t072146z",
 filePath = "stdout.txt", verbose = FALSE)
 getClusterFile(cluster, "tvm-1170471534_2-20170829t072146z",
-filePath = "wd/output.csv", localPath = "output.csv", overwrite = TRUE)
+filePath = "wd/output.csv", downloadPath = "output.csv", overwrite = TRUE)
+}
 }

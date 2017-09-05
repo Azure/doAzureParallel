@@ -15,6 +15,8 @@ listStorageFiles(container, prefix = "", ...)
 List storage files from Azure storage.
 }
 \examples{
+\dontrun{
 files <- listStorageFiles("job001")
 View(files)
+}
 }

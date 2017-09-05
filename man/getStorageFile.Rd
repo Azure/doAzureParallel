@@ -23,5 +23,7 @@ getStorageFile(container, blobPath, downloadPath = NULL, overwrite = FALSE,
 Get a storage file from Azure Storage. By default, this operation will print the files on screen.
 }
 \examples{
+\dontrun{
 stdoutText <- getStorageFile(testContainer, "logs/stdout.txt")
+}
 }

@@ -18,11 +18,7 @@ getJobFile(jobId, taskId, filePath, downloadPath = NULL, verbose = TRUE,
 
 \item{...}{Further named parameters
 \itemize{
-<<<<<<< HEAD
- \item{"localPath"}: { Path to save file to }
-=======
  \item{"downloadPath"}: { Path to save file to }
->>>>>>> e873e84c058f5bf4b45b14a95164aaae77a3265c
  \item{"overwrite"}: { Will only overwrite existing localPath }
 }}
 }
@@ -30,6 +26,8 @@ getJobFile(jobId, taskId, filePath, downloadPath = NULL, verbose = TRUE,
 Get job-related files from cluster node. By default, this operation will print the files on screen.
 }
 \examples{
-stdoutFile <- getJobFile("job20170822055031", "job20170822055031-task1", type = "stdout")
-getJobFile("job20170822055031", "job20170822055031-task1", type = "rlogs", localPath = "hello.txt")
+\dontrun{
+stdoutFile <- getJobFile("job20170822055031", "job20170822055031-task1", "stderr.txt")
+getJobFile("job20170822055031", "job20170822055031-task1", "stdout.txt", downloadPath = "hello.txt")
+}
 }

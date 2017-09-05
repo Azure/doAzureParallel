@@ -18,14 +18,11 @@ listStorageContainers <- function(prefix = "") {
     getXmlValues(xmlResponse, ".//Container/Properties/Last-Modified")
   publicAccess <-
     getXmlValues(xmlResponse, ".//Container/Properties/PublicAccess")
-  leaseDuration <-
-    getXmlValues(xmlResponse, ".//Container/Properties/LeaseDuration")
   leaseState <-
     getXmlValues(xmlResponse, ".//Container/Properties/LeaseState")
 
-  cbind(
+  data.frame(
     Name = name,
-    LeaseDuration = leaseDuration,
     PublicAccess = publicAccess,
     LeaseState = leaseState,
     LastModified = lastModified
@@ -78,12 +75,12 @@ listStorageFiles <- function(container, prefix = "", ...) {
   leaseState <-
     getXmlValues(xmlResponse, ".//Blob/Properties/LeaseState")
 
-  cbind(
-    FilePath = filePath,
-    ContentLength = contentLength,
-    ContentType = contentType,
-    LeaseState = leaseState,
-    LastModified = lastModified
+  data.frame(
+    filePath,
+    contentLength,
+    contentType,
+    leaseState,
+    lastModified
   )
 }
 
