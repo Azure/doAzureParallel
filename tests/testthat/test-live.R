@@ -1,9 +1,14 @@
 context("live scenario test")
 test_that("Scenario Test", {
   testthat::skip_on_travis()
+  credentialsFileName <- "credentials.json"
+  clusterFileName <- "cluster.json"
 
-  doAzureParallel::setCredentials("credentials.json")
-  cluster <- doAzureParallel::makeCluster("cluster.json")
+  doAzureParallel::generateCredentialsConfig(credentialsFileName)
+  doAzureParallel::generateClusterConfig(clusterFileName)
+
+  doAzureParallel::setCredentials(credentialsFileName)
+  cluster <- doAzureParallel::makeCluster(clusterFileName)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'
