@@ -75,21 +75,14 @@ Currently there is no native support for Bioconductor package installation, but 
 
 ### Installing BioConductor using the 'commandLine'
 
+We recommend using the [script provided in the samples](../samples/package_management/bioc_setup.sh) section of this project which will install the required pre-requisites for BioConductor as well as BioConductor itself.
+
 Simply update your cluster configuration commandLine as follows:
 ```json
 "commandLine": [
-    "Rscript -e 'args <- commandArgs(TRUE)' -e 'options(warn=2)' -e 'source(\"https://bioconductor.org/biocLite.R\")'"
-]
-```
-
-### Installing additional packages on the cluster using the 'commandLine'
-
-Add any additional bioconductor pacakges _after_ the initial bioconductor package update, for example to install GenomicsFeatures and AnnotationDbi set the commandLine as follows:
-```json
-"commandLine": [
-    "Rscript -e 'args <- commandArgs(TRUE)' -e 'options(warn=2)' -e 'source(\"https://bioconductor.org/biocLite.R\")'",
-    "Rscript -e 'args <- commandArgs(TRUE)' -e 'options(warn=2)' -e biocLite(c('GenomicFeatures', 'AnnotationDbi'))"
-]
+    "wget https://raw.githubusercontent.com/Azure/doAzureParallel/bioConductorDocs/samples/package_management/bioc_setup.sh",
+    "chmod u+x ./bioc_setup.sh",
+    "./bioc_setup.sh"]
 ```
 
 ### Installing additional packages in your code
@@ -98,6 +91,7 @@ If you have already configured BioConductor at the cluster level, you should hav
 
 ```r
 results <- foreach(i = 1:number_of_iterations) %dopar% { 
+    library(BiocInstaller)
     biocLite(c('GenomicsFeatures', 'AnnotationDbi'))
     ...
     }
