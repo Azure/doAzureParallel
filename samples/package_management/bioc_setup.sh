@@ -9,6 +9,5 @@ if [ ! -d "microsoft-r-open" ]; then
     ./microsoft-r-open/install.sh
 fi 
 
-# Update PATH
-## NOTE: This may be hard to do programatically!
-export PATH=/usr/lib64/microsoft-r/3.4/lib64/R/bin:$PATH
+# Update PATH on the node permanently
+echo "export PATH=/usr/lib64/microsoft-r/3.4/lib64/R/bin:$PATH" >> /etc/environment
