@@ -1,6 +1,6 @@
 # Getting logs without Azure Portal
 ## Viewing files from Azure Storage
-In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. For more information on reading log files, check out [managing storage](./41-managing-storage-via.R.md). 
+In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. For more information on reading log files, check out [managing storage](./41-managing-storage-via-R.md). 
 
 ## Viewing files directly from compute node
 Logs on a cluster node are not persisted through Azure Storage. `getClusterFile` function will fetch any files including stdout and stderr log files in the cluster. This is particularly useful for users that utilizing [customize script](./30-customize-cluster.md) on their nodes and installing specific [packages](./20-package-management.md).

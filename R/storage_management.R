@@ -83,7 +83,7 @@ listStorageFiles <- function(container, prefix = "", ...) {
     LastModified = lastModified
   )
 
-  attr(storageFiles,"containerName") <- container
+  attr(storageFiles, "containerName") <- container
 
   storageFiles
 }
