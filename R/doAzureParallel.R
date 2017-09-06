@@ -459,17 +459,18 @@ setHttpTraffic <- function(value = FALSE) {
     waitForTasksToComplete(id, jobTimeout)
 
     if (typeof(cloudCombine) == "list" && enableCloudCombine) {
+      tempFile <- tempfile("doAzureParallel", fileext = ".rds")
+
       response <-
         rAzureBatch::downloadBlob(
           id,
           paste0("result/", id, "-merge-result.rds"),
           sasToken = sasToken,
           accountName = storageCredentials$name,
-          content = "raw"
+          downloadPath = tempFile,
+          overwrite = TRUE
         )
 
-      tempFile <- tempfile("doAzureParallel", fileext = ".rds")
-      writeBin(response, tempFile)
       results <- readRDS(tempFile)
 
       failTasks <- sapply(results, .isError)
