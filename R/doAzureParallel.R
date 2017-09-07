@@ -107,7 +107,21 @@ setVerbose <- function(value = FALSE) {
   if (!is.logical(value))
     stop("setVerbose requires a logical argument")
 
-  options(verbose = value)
+  options(azureVerbose = value)
+}
+
+#' Set the verbosity for calling httr rest api calls
+#'
+#' @param value Boolean value for turning on and off verbose mode
+#'
+#' @examples
+#' setVerbose(TRUE)
+#' @export
+setHttpTraffic <- function(value = FALSE) {
+  if (!is.logical(value))
+    stop("setVerbose requires a logical argument")
+
+  options(azureHttpTraffic = value)
 }
 
 .doAzureParallel <- function(obj, expr, envir, data) {
@@ -242,7 +256,7 @@ setVerbose <- function(value = FALSE) {
     tryCatch({
       retryCounter <- retryCounter + 1
 
-      response <- rAzureBatch::createContainer(id, raw = TRUE)
+      response <- rAzureBatch::createContainer(id, content = "text")
       if (grepl("ContainerAlreadyExists", response)) {
         if (!is.null(obj$options$azure$job)) {
           containerResponse <- grepl("ContainerAlreadyExists", response)
@@ -445,16 +459,18 @@ setVerbose <- function(value = FALSE) {
     waitForTasksToComplete(id, jobTimeout)
 
     if (typeof(cloudCombine) == "list" && enableCloudCombine) {
+      tempFile <- tempfile("doAzureParallel", fileext = ".rds")
+
       response <-
         rAzureBatch::downloadBlob(
           id,
           paste0("result/", id, "-merge-result.rds"),
           sasToken = sasToken,
-          accountName = storageCredentials$name
+          accountName = storageCredentials$name,
+          downloadPath = tempFile,
+          overwrite = TRUE
         )
-      tempFile <- tempfile("doAzureParallel", fileext = ".rds")
-      bin <- httr::content(response, "raw")
-      writeBin(bin, tempFile)
+
       results <- readRDS(tempFile)
 
       failTasks <- sapply(results, .isError)

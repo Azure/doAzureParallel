@@ -529,6 +529,10 @@ waitForTasksToComplete <- function(jobId, timeout) {
   stop("A timeout has occurred when waiting for tasks to complete.")
 }
 
-areShallowEqual <- function(a, b) {
+getXmlValues <- function(xmlResponse, xmlPath){
+  xml2::xml_text(xml2::xml_find_all(xmlResponse, xmlPath))
+}
+
+areShallowEqual <- function(a, b){
   !is.null(a) && !is.null(b) && a == b
 }
