@@ -85,6 +85,8 @@ Simply update your cluster configuration commandLine as follows:
     "./bioc_setup.sh"]
 ```
 
+A [working sample](../samples/package_management/bioconductor_cluster.json) can be found in the samples directory.
+
 ### Installing additional packages in your code
 
 If you have already configured BioConductor at the cluster level, you should have access to biocLite in your code. Within your foreach loop add the call to biocLite to install the packages:
