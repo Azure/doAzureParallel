@@ -1,3 +1,5 @@
+# Run this test for users to make sure the core features
+# of doAzureParallel are still working
 context("live scenario test")
 test_that("Scenario Test", {
   testthat::skip_on_travis()
