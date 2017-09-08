@@ -14,7 +14,12 @@ getClusterFile(cluster, "tvm-1170471534_2-20170829t072146z", "stderr.txt", downl
 ```
 
 ### My job never starts running. How can I troubleshoot this issue?
-This is often caused by the node not being in a good state. Take a look at the state of the nodes in the cluster to see if any of there are and nodes in an error or failed state.
+This is often caused by the node not being in a good state. Take a look at the state of the nodes in the cluster to see if any of there are and nodes in an error or failed state. If not node is in a startTaskFailed state follow the instructions above. If the node is in an 'unknown' or 'unusable' state you may need to manually reboot the node.
+
+```r
+# reboot a node
+rAzureBatch::rebootNode('<my_cluster_id>', '<my_node_id>')
+```
 
 ### Why do some packages fail with the following error?
 ```sh
