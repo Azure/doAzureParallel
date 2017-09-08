@@ -7,6 +7,7 @@ test_that("Scenario Test", {
   doAzureParallel::generateCredentialsConfig(credentialsFileName)
   doAzureParallel::generateClusterConfig(clusterFileName)
 
+  # set your credentials
   doAzureParallel::setCredentials(credentialsFileName)
   cluster <- doAzureParallel::makeCluster(clusterFileName)
   doAzureParallel::registerDoAzureParallel(cluster)
