@@ -529,7 +529,48 @@ waitForTasksToComplete <- function(jobId, timeout) {
   stop("A timeout has occurred when waiting for tasks to complete.")
 }
 
-getXmlValues <- function(xmlResponse, xmlPath){
+waitForJobPreparation <- function(jobId, poolId) {
+  cat("Job Preparation Status: Package(s) being installed")
+
+  filter <- paste(
+    sprintf("poolId eq '%s' and", poolId),
+    "jobPreparationTaskExecutionInfo/state eq 'completed'"
+  )
+
+  select <- "jobPreparationTaskExecutionInfo"
+
+  repeat {
+    statuses <- rAzureBatch::getJobPreparationStatus(jobId,
+                                                     content = "parsed",
+                                                     filter = filter,
+                                                     select = select)
+
+    statuses <- sapply(statuses$value, function(x) {
+      x$jobPreparationTaskExecutionInfo$result == "Success"
+    })
+
+    if (TRUE %in% statuses) {
+      break
+    }
+
+    # Verify that all the job preparation tasks are not failing
+    if (all(FALSE %in% statuses)) {
+      cat("\n")
+      stop(paste(
+        sprintf("Job '%s' unable to install packages.", jobId),
+        "Use the 'getJobFile' function to get more information about",
+        "job package installation."
+      ))
+    }
+
+    cat(".")
+    Sys.sleep(10)
+  }
+
+  cat("\n")
+}
+
+getXmlValues <- function(xmlResponse, xmlPath) {
   xml2::xml_text(xml2::xml_find_all(xmlResponse, xmlPath))
 }
 
