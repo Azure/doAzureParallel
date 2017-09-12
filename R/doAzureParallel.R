@@ -456,6 +456,10 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   if (wait) {
+    if (!is.null(obj$packages)) {
+      waitForJobPreparation(id, data$poolId)
+    }
+
     waitForTasksToComplete(id, jobTimeout)
 
     if (typeof(cloudCombine) == "list" && enableCloudCombine) {
