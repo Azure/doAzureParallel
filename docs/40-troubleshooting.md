@@ -3,21 +3,38 @@
 ### After creating my cluster, my nodes go to a 'startTaskFailed' state. Why?
 The most common case for this is that there was an issue with package installation or the custom script failed to run. To troubleshoot this you can simply download the output logs from the node.
 
+The following 2 nodes failed while running the start task:
+tvm-769611554_1-20170912t183413z-p
+tvm-769611554_2-20170912t183413z-p
+
+
 ```r
 cluster <- makeCluster('myConfig.json')
-...
+
+# Often you will see an error printed to the console such as:
+#  The following 2 nodes failed while running the start task:
+# tvm-769611554_1-20170912t183413z-p
+# tvm-769611554_2-20170912t183413z-p
+
+# If you do not get this message, you can list the Nodes in the cluster
+# Look for the node$id values, for example:
+# $value[[1]]$id
+# [1] "tvm-769611554_1-20170912t183413z-p"
+rAzureBatch::listPoolNodes('<CLUSTER_ID>')
+
 # Get standard error file
 getClusterFile(cluster, "tvm-1170471534_2-20170829t072146z", "stderr.txt", downloadPath = "pool-errors.txt")
 
 # Get standard log file
-getClusterFile(cluster, "tvm-1170471534_2-20170829t072146z", "stderr.txt", downloadPath = "pool-errors.txt")
+getClusterFile(cluster, "tvm-1170471534_2-20170829t072146z", "stderr.txt", downloadPath = "pool-logs.txt")
 ```
 
 ### My job never starts running. How can I troubleshoot this issue?
-This is often caused by the node not being in a good state. Take a look at the state of the nodes in the cluster to see if any of there are and nodes in an error or failed state. If not node is in a startTaskFailed state follow the instructions above. If the node is in an 'unknown' or 'unusable' state you may need to manually reboot the node.
+This is often caused by the node not being in a good state. Take a look at the state of the nodes in the cluster to see if any of them are have an error or are in a failed state. If the node is in a startTaskFailed state follow the instructions above. If the node is in an 'unknown' or 'unusable' state you may need to manually reboot the node.
 
 ```r
 # reboot a node
+# your node_id typically looks something like this 'tvm-1170471534_2-20170829t072146z'
 rAzureBatch::rebootNode('<my_cluster_id>', '<my_node_id>')
 ```
 
@@ -27,7 +44,7 @@ ERROR: compilation failed for package '__PACKAGE__'
 * removing '/usr/lib64/microsoft-r/3.3/lib64/R/library/__PACKAGE__'
 ```
 
-This issue is due to certain compiler flags not available in the default version of R used by doAzureParallel. In order to get around this issue you can add the following commands to the command line in the cluster configuration to make sure R has the right compiler flags set.
+This issue is due to certain compiler flags not available in the default version of R used by doAzureParallel. In order to get around this issue you can add the following commands to the [command line](./30-customize-cluster.md#running-commands-when-the-cluster-starts) in the cluster configuration to make sure R has the right compiler flags set.
 
 ```json
 "commandLine": [
@@ -40,7 +57,7 @@ This issue is due to certain compiler flags not available in the default version
 
 
 ### Why do some of my packages install an older version of the package instead of the latest?
-Since doAzureParallel uses Microsoft R Open version 3.3 as the default version of R, it will automatically try to pull pacakge from [MRAN](https://mran.microsoft.com/) rather than CRAN. This is a big benefit when wanting to use a constant version of a package but does not always contain references to the latest versions. To use a specific version from CRAN or a different MRAN snapshot date, use the 'commandLine' in the cluster configuration to manually install the packages you need.
+Since doAzureParallel uses Microsoft R Open version 3.3 as the default version of R, it will automatically try to pull pacakge from [MRAN](https://mran.microsoft.com/) rather than CRAN. This is a big benefit when wanting to use a constant version of a package but does not always contain references to the latest versions. To use a specific version from CRAN or a different MRAN snapshot date, use the [command line](./30-customize-cluster.md#running-commands-when-the-cluster-starts) in the cluster configuration to manually install the packages you need.
 
 ## Viewing files from Azure Storage
 In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. For more information on reading log files, check out [managing storage](./41-managing-storage-via-R.md). 
