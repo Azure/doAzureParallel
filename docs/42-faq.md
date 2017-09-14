@@ -12,7 +12,7 @@ No. We are looking into support for different versions of R as well as custom ve
 ## How much does doAzureParallel cost?
 doAzureParallel itself is free to use and is built on top of the Azure Batch service. You are billed by the minute for each node that is assigned to your cluster. You can find more infomration on Azure Batch pricing [here](https://azure.microsoft.com/en-us/pricing/details/batch/).
 
-## Does doAzureParallel support custom pacakge installations?
+## Does doAzureParallel support custom package installations?
 Yes. The [command line](./30-customize-cluster.md#running-commands-when-the-cluster-starts) feature in the cluster configuration enables running custom commands on each node in the cluster before it is ready to do work. Leverage this mechanism to do any custom installations such as installing custom software or mounting network drives.
 
 ## Does doAzureParallel work with Windows-specific packages?

@@ -3,9 +3,12 @@
 ### After creating my cluster, my nodes go to a 'startTaskFailed' state. Why?
 The most common case for this is that there was an issue with package installation or the custom script failed to run. To troubleshoot this you can simply download the output logs from the node.
 
-The following 2 nodes failed while running the start task:
+Node IDs are prepended with tvm. Lets say that when spinning up your cluster, the following 2 nodes failed while running the start task:
+
 tvm-769611554_1-20170912t183413z-p
 tvm-769611554_2-20170912t183413z-p
+
+The following steps show how to debug this by pulling logs off of the nodes:
 
 
 ```r
@@ -29,6 +32,8 @@ getClusterFile(cluster, "tvm-1170471534_2-20170829t072146z", "stderr.txt", downl
 getClusterFile(cluster, "tvm-1170471534_2-20170829t072146z", "stderr.txt", downloadPath = "pool-logs.txt")
 ```
 
+The log files will contain any setup and error information that occured while the node was setting up.
+
 ### My job never starts running. How can I troubleshoot this issue?
 This is often caused by the node not being in a good state. Take a look at the state of the nodes in the cluster to see if any of them are have an error or are in a failed state. If the node is in a startTaskFailed state follow the instructions above. If the node is in an 'unknown' or 'unusable' state you may need to manually reboot the node.
 
@@ -37,6 +42,8 @@ This is often caused by the node not being in a good state. Take a look at the s
 # your node_id typically looks something like this 'tvm-1170471534_2-20170829t072146z'
 rAzureBatch::rebootNode('<my_cluster_id>', '<my_node_id>')
 ```
+
+When rebooting the node, the necessary scripts and your command line changes will run to get your node setup to work as part of your doAzureParallel cluster.
 
 ### Why do some packages fail with the following error?
 ```sh
@@ -57,7 +64,7 @@ This issue is due to certain compiler flags not available in the default version
 
 
 ### Why do some of my packages install an older version of the package instead of the latest?
-Since doAzureParallel uses Microsoft R Open version 3.3 as the default version of R, it will automatically try to pull pacakge from [MRAN](https://mran.microsoft.com/) rather than CRAN. This is a big benefit when wanting to use a constant version of a package but does not always contain references to the latest versions. To use a specific version from CRAN or a different MRAN snapshot date, use the [command line](./30-customize-cluster.md#running-commands-when-the-cluster-starts) in the cluster configuration to manually install the packages you need.
+Since doAzureParallel uses Microsoft R Open version 3.3 as the default version of R, it will automatically try to pull package from [MRAN](https://mran.microsoft.com/) rather than CRAN. This is a big benefit when wanting to use a constant version of a package but does not always contain references to the latest versions. To use a specific version from CRAN or a different MRAN snapshot date, use the [command line](./30-customize-cluster.md#running-commands-when-the-cluster-starts) in the cluster configuration to manually install the packages you need.
 
 ## Viewing files from Azure Storage
 In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. For more information on reading log files, check out [managing storage](./41-managing-storage-via-R.md). 
