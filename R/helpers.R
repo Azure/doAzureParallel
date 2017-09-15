@@ -29,8 +29,16 @@
   resourceFiles <-
     list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
 
+  exitConditions <- NULL
   if (!is.null(args$dependsOn)) {
     dependsOn <- list(taskIds = dependsOn)
+  }
+  else {
+    exitConditions <- list(
+      default = list(
+        dependencyAction = "satisfy"
+      )
+    )
   }
 
   resultFile <- paste0(taskId, "-result", ".rds")
@@ -122,7 +130,8 @@
     resourceFiles = resourceFiles,
     commandLine = commands,
     dependsOn = dependsOn,
-    outputFiles = outputFiles
+    outputFiles = outputFiles,
+    exitConditions = exitConditions
   )
 }
 

@@ -1,13 +1,6 @@
 #!/usr/bin/Rscript
 args <- commandArgs(trailingOnly = TRUE)
-
-# test if there is at least one argument: if not, return an error
-if (length(args) == 0) {
-  stop("At least one argument must be supplied (input file).n", call. = FALSE)
-} else if (length(args) == 1) {
-  # default output file
-  args[2] <- "out.txt"
-}
+workerErrorStatus <- 0
 
 getparentenv <- function(pkgname) {
   parenv <- NULL
@@ -55,10 +48,13 @@ getparentenv <- function(pkgname) {
     parenv
 }
 
-batchJobPreparationDirectory <- args[1]
-batchTaskWorkingDirectory <- args[2]
-batchJobEnvironment <- args[3]
-batchTaskEnvironment <- args[4]
+batchJobId <- Sys.getenv("AZ_BATCH_JOB_ID")
+batchTaskId <- Sys.getenv("AZ_BATCH_TASK_ID")
+batchJobPreparationDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
+batchTaskWorkingDirectory <- Sys.getenv("AZ_BATCH_TASK_WORKING_DIR")
+
+batchJobEnvironment <- paste0(batchJobId, ".rds")
+batchTaskEnvironment <- paste0(batchTaskId, ".rds")
 
 setwd(batchTaskWorkingDirectory)
 
@@ -87,11 +83,10 @@ result <- lapply(taskArgs, function(args) {
     eval(azbatchenv$expr, azbatchenv$exportenv)
   },
   error = function(e) {
-    print(e)
+    workerErrorStatus <<- 1
+    e
   })
 })
-
-fileResultName <- strsplit(batchTaskEnvironment, "[.]")[[1]][1]
 
 if (!is.null(azbatchenv$gather) && length(taskArgs) > 1) {
   result <- Reduce(azbatchenv$gather, result)
@@ -100,9 +95,10 @@ if (!is.null(azbatchenv$gather) && length(taskArgs) > 1) {
 saveRDS(result,
         file = file.path(
           batchTaskWorkingDirectory,
-          paste0(fileResultName, "-result.rds")
+          paste0(batchTaskId, "-result.rds")
         ))
 
+cat(paste0("Error Code: ", workerErrorStatus, fill = TRUE))
 quit(save = "yes",
-     status = 0,
+     status = workerErrorStatus,
      runLast = FALSE)
