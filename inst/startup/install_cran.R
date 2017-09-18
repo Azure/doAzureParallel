@@ -9,7 +9,7 @@ status <- tryCatch({
     }
   }
 
-  return(0)
+  0
 },
 error = function(e) {
   cat(sprintf(
@@ -19,7 +19,7 @@ error = function(e) {
 
   # Install packages doesn't return a non-exit code.
   # Using '1' as the default non-exit code
-  return(1)
+  1
 })
 
 quit(save = "yes",
