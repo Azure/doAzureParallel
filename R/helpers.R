@@ -38,7 +38,8 @@
 
   downloadCommand <-
     sprintf(
-      "/anaconda/envs/py35/bin/blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds",
+      paste("/anaconda/envs/py35/bin/blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY",
+            "--remoteresource . --include result/*.rds"),
       accountName,
       jobId,
       "$AZ_BATCH_TASK_WORKING_DIR"
