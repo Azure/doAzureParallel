@@ -1,7 +1,7 @@
 Package: doAzureParallel
 Type: Package
 Title: doAzureParallel
-Version: 0.4.1
+Version: 0.4.2
 Author: Brian Hoang
 Maintainer: Brian Hoang <brhoan@microsoft.com>
 Description: The project is for data experts who use R at scale. The project
