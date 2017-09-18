@@ -19,7 +19,7 @@
     "githubAuthenticationToken": ""
   },
   "commandLine": [
-    "wget https://raw.githubusercontent.com/Azure/doAzureParallel/bioConductorDocs/samples/package_management/bioc_setup.sh",
+    "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/samples/package_management/bioc_setup.sh",
     "chmod u+x ./bioc_setup.sh",
     "./bioc_setup.sh"]
 }
