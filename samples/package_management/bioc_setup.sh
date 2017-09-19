@@ -10,6 +10,7 @@ if [ ! -d "microsoft-r-open" ]; then
 fi 
 
 # Update PATH on the node permanently
+export PATH=/usr/lib64/microsoft-r/3.4/lib64/R/bin:$PATH
 echo "export PATH=/usr/lib64/microsoft-r/3.4/lib64/R/bin:$PATH" >> /etc/environment
 
 # Install bioconductor
