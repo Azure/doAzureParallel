@@ -220,8 +220,7 @@ results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
 ### Error Handling
 The errorhandling option specifies how failed tasks should be evaluated. By default, the error handling is 'stop' to ensure users' can have reproducible results. If a combine function is assigned, it must be able to handle error objects.
 
-Types of Error Handling:
-Error Handling | Description
+Error Handling Type | Description
 --- | ---
 stop | The execution of the foreach will stop if an error occurs
 pass | The error object of the task is included the results
