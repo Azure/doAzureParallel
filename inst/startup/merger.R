@@ -6,20 +6,9 @@ isError <- function(x) {
   inherits(x, "simpleError") || inherits(x, "try-error")
 }
 
-getSimpleErrorMessage <- function(e) {
-  print(e$message)
-  e$message
-}
-
-getSimpleErrorCall <- function(e) {
-  deparse(e$call)
-}
-
 batchTasksCount <- as.integer(args[1])
 chunkSize <- as.integer(args[2])
 errorHandling <- args[3]
-cat(chunkSize, fill = TRUE)
-cat(batchTasksCount, fill = TRUE)
 
 batchJobId <- Sys.getenv("AZ_BATCH_JOB_ID")
 batchJobPreparationDirectory <-
@@ -52,7 +41,11 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
                           full.names = TRUE)
 
       if (errorHandling == "stop" && length(files) != batchTasksCount) {
-        stop("Issues with file upload")
+        stop(paste("Error handling is set to 'stop' and there are missing results due to",
+                   "task failures. If this is not the correct behavior, change the errorHandling",
+                   "property to 'pass' or 'remove' in the foreach object.",
+                   "For more information on troubleshooting, check",
+                   "https://github.com/Azure/doAzureParallel/blob/master/docs/40-troubleshooting.md"))
       }
 
       results <- vector("list", length(files) * chunkSize)

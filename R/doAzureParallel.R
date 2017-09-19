@@ -429,10 +429,10 @@ setHttpTraffic <- function(value = FALSE) {
   rAzureBatch::updateJob(id)
 
   if (enableCloudCombine) {
-    mergeTask <- paste0(id, "-merge")
+    mergeTaskId <- paste0(id, "-merge")
     .addTask(
       jobId = id,
-      taskId = mergeTask,
+      taskId = mergeTaskId,
       rCommand = sprintf(
         "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
         length(tasks),

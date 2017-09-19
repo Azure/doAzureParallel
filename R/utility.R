@@ -485,19 +485,26 @@ waitForTasksToComplete <-
       setTxtProgressBar(pb, taskCounts$completed)
 
 
+      validationFlag <-
+        (taskCounts$validationStatus == "Validated" &&
+           totalTasks <= 200000) ||
+        totalTasks > 200000
+
       if (taskCounts$failed > 0 &&
           errorHandling == "stop" &&
-          taskCounts$validationStatus == "Validated") {
+          validationFlag) {
         cat("\n")
 
-        filter <- "state eq 'completed' and executionInfo/exitCode ne 0"
         select <- "id, executionInfo"
-
         failedTasks <-
-          rAzureBatch::listTask(jobId, filter = filter, select = select)
+          rAzureBatch::listTask(jobId, select = select)
 
         tasksFailureWarningLabel <-
-          sprintf("There are currently %i tasks failed while running the job:\n", taskCounts$failed)
+          sprintf(paste("%i task(s) failed while running the job.",
+                        "This caused the job to terminate automatically.",
+                        "To disable this behavior and continue on failure, set .errorHandling='remove | pass'",
+                        "in the foreach loop\n"), taskCounts$failed)
+
 
         for (i in 1:length(failedTasks$value)) {
           if (failedTasks$value[[i]]$executionInfo$result == "Failure") {
@@ -517,8 +524,8 @@ waitForTasksToComplete <-
           paste("Errors have occurred while running the job '%s'.",
                 "Error handling is set to 'stop' and has proceeded to terminate the job.",
                 "The user will have to handle deleting the job.",
-                "If this is not the correct behavior, change the errorHandling property",
-                "in the foreach object. Use the 'getJobFile' function to obtain the logs.",
+                "If this is not the correct behavior, change the errorHandling property to 'pass'",
+                " or 'remove' in the foreach object. Use the 'getJobFile' function to obtain the logs.",
                 "For more information about getting job logs, follow this link:",
                 paste0("https://github.com/Azure/doAzureParallel/blob/master/docs/",
                        "40-troubleshooting.md#viewing-files-directly-from-compute-node")),
@@ -527,11 +534,17 @@ waitForTasksToComplete <-
       }
 
       if (Sys.time() > timeToTimeout) {
-        stop("A timeout has occurred when waiting for tasks to complete. ")
+        stop(sprintf(paste("Timeout has occurred while waiting for tasks to complete.",
+                   "Users will have to manually track the job '%s' and get the results.",
+                   "Use the getJobResults function to obtain the results and getJobList for",
+                   "tracking job status. To change the timeout, user can set 'timeout' property in the",
+                   "foreach's options.azure.")),
+             jobId)
       }
 
       if (taskCounts$completed >= totalTasks &&
-          taskCounts$validationStatus == "Validated") {
+          (taskCounts$validationStatus == "Validated" ||
+           totalTasks >= 200000)) {
         cat("\n")
         return(0)
       }
