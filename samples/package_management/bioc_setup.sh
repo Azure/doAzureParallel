@@ -1,3 +1,5 @@
+yum erase microsoft-r-open-mro-3.3* --assumeyes
+
 if [ ! -d "microsoft-r-open" ]; then
     # Download R
     wget https://mran.microsoft.com/install/mro/3.4.0/microsoft-r-open-3.4.0.tar.gz
@@ -10,7 +12,6 @@ if [ ! -d "microsoft-r-open" ]; then
 fi 
 
 # Update PATH on the node permanently
-export PATH=/usr/lib64/microsoft-r/3.4/lib64/R/bin:$PATH
 echo "export PATH=/usr/lib64/microsoft-r/3.4/lib64/R/bin:$PATH" >> /etc/environment
 
 # Install bioconductor
