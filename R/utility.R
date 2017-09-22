@@ -71,35 +71,41 @@ getJobList <- function(jobIds = c()) {
 
   jobs <-
     rAzureBatch::listJobs(query = list("$filter" = filter, "$select" = "id,state"))
-  cat("Job List: ", fill = TRUE)
+
+  id <- character(length(jobs$value))
+  state <- character(length(jobs$value))
+  status <- character(length(jobs$value))
+  totalTasks <- character(length(jobs$value))
 
   for (j in 1:length(jobs$value)) {
+    id[j] <- jobs$value[[j]]$id
+    state[j] <- jobs$value[[j]]$state
     taskCounts <-
       rAzureBatch::getJobTaskCounts(jobId = jobs$value[[j]]$id)
     total <-
       as.integer(taskCounts$active + taskCounts$running + taskCounts$completed)
+    totalTasks[j] <- total
+
     completed <- as.integer(taskCounts$completed)
 
     if (total > 0) {
       if (completed > 0) {
-        status <- sprintf("%s %%", ceiling(completed / total * 100))
+        status[j] <- sprintf("%s %%", ceiling(completed / total * 100))
       } else {
-        status <- "No tasks were run"
+        status[j] <- "No tasks were run"
       }
     }
     else {
-      status <- "No tasks in the job"
+      status[j] <- "No tasks in the job"
     }
-    cat(
-      sprintf(
-        "[ id: %s, state: %s, status: %s ]",
-        jobs$value[[j]]$id,
-        jobs$value[[j]]$state,
-        status
-      ),
-      fill = TRUE
-    )
   }
+
+  return (data.frame(
+    Id = id,
+    State = state,
+    Status = status,
+    TotalTasks = totalTasks
+    ))
 }
 
 #' Get a job for the given job id
