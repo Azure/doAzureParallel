@@ -58,45 +58,45 @@ linuxWrapCommands <- function(commands = c()) {
 #' getJobList(c("job-001", "job-002"))
 #' }
 #' @export
-getJobList <- function(jobIds = c()) {
-  filter <- ""
+getJobList <- function(filter = NULL) {
+  filterClause <- ""
 
-  if (length(jobIds) > 1) {
-    for (i in 1:length(jobIds)) {
-      filter <- paste0(filter, sprintf("id eq '%s'", jobIds[i]), " or ")
+  if (!is.null(filter)) {
+    if (!is.null(filter$state)) {
+      filterClause <- paste0(filterClause, sprintf("state eq '%s'", filter$state))
     }
-
-    filter <- substr(filter, 1, nchar(filter) - 3)
   }
 
   jobs <-
-    rAzureBatch::listJobs(query = list("$filter" = filter, "$select" = "id,state"))
+    rAzureBatch::listJobs(query = list("$filter" = filterClause, "$select" = "id,state"))
 
   id <- character(length(jobs$value))
   state <- character(length(jobs$value))
   status <- character(length(jobs$value))
   totalTasks <- character(length(jobs$value))
 
-  for (j in 1:length(jobs$value)) {
-    id[j] <- jobs$value[[j]]$id
-    state[j] <- jobs$value[[j]]$state
-    taskCounts <-
-      rAzureBatch::getJobTaskCounts(jobId = jobs$value[[j]]$id)
-    total <-
-      as.integer(taskCounts$active + taskCounts$running + taskCounts$completed)
-    totalTasks[j] <- total
+  if (length(jobs$value) > 0) {
+    for (j in 1:length(jobs$value)) {
+      id[j] <- jobs$value[[j]]$id
+      state[j] <- jobs$value[[j]]$state
+      taskCounts <-
+        rAzureBatch::getJobTaskCounts(jobId = jobs$value[[j]]$id)
+      total <-
+        as.integer(taskCounts$active + taskCounts$running + taskCounts$completed)
+      totalTasks[j] <- total
 
-    completed <- as.integer(taskCounts$completed)
+      completed <- as.integer(taskCounts$completed)
 
-    if (total > 0) {
-      if (completed > 0) {
-        status[j] <- sprintf("%s %%", ceiling(completed / total * 100))
-      } else {
-        status[j] <- "No tasks were run"
+      if (total > 0) {
+        if (completed > 0) {
+          status[j] <- sprintf("%s %%", ceiling(completed / total * 100))
+        } else {
+          status[j] <- "No tasks were run"
+        }
       }
-    }
-    else {
-      status[j] <- "No tasks in the job"
+      else {
+        status[j] <- "No tasks in the job"
+      }
     }
   }
 
@@ -105,7 +105,7 @@ getJobList <- function(jobIds = c()) {
     State = state,
     Status = status,
     TotalTasks = totalTasks
-    ))
+  ))
 }
 
 #' Get a job for the given job id
