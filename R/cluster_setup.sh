@@ -19,7 +19,7 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get -y update
 apt-get -y install docker-ce
-docker pull container_name
+docker pull $container_name
 
 # Unzip resource files and set permissions
 # apt-get -y install unzip
