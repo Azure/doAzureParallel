@@ -171,8 +171,21 @@ makeCluster <-
     }
 
     commandLine <- NULL
+
+    # install docker and create docker container
+    docker_image = "r_base:3.4.1"
+    if (!is.null(poolConfig$containerImage)) {
+      docker_image = poolConfig$containerImage
+    }
+    
+    install_and_start_container_command = paste0("cluster_setup.sh ", docker_image, " 'docker run -d --name r-base ", docker_image, " tail -f /dev/null'")
+    container_install_command <- c(
+      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container/R/cluster_setup.sh",
+      "chmod u+x cluster_setup.sh",
+      install_and_start_container_command)
+
     if (!is.null(poolConfig$commandLine)) {
-      commandLine <- poolConfig$commandLine
+      commandLine <- c(container_install_command, poolConfig$commandLine)
     }
 
     environmentSettings <- NULL

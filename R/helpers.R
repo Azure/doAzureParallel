@@ -168,10 +168,11 @@
 .addPool <- function(pool, packages, environmentSettings, resourceFiles, ...) {
   args <- list(...)
 
-  commands <- c(
-    "export PATH=/anaconda/envs/py35/bin:$PATH",
-    "env PATH=$PATH pip install --no-dependencies blobxfer"
-  )
+  # commands <- c(
+  #   "export PATH=/anaconda/envs/py35/bin:$PATH",
+  #   "env PATH=$PATH pip install --no-dependencies blobxfer"
+  # )
+  commands <- c()
 
   if (!is.null(args$commandLine)) {
     commands <- c(commands, args$commandLine)
@@ -200,12 +201,12 @@
 
   virtualMachineConfiguration <- list(
     imageReference = list(
-      publisher = "microsoft-ads",
-      offer = "linux-data-science-vm",
-      sku = "linuxdsvm",
+      publisher = "Canonical",
+      offer = "UbuntuServer",
+      sku = "16.04-LTS",
       version = "latest"
     ),
-    nodeAgentSKUId = "batch.node.centos 7"
+    nodeAgentSKUId = "batch.node.ubuntu 16.04"
   )
 
   response <- rAzureBatch::addPool(
