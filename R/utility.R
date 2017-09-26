@@ -63,7 +63,8 @@ getJobList <- function(filter = NULL) {
 
   if (!is.null(filter)) {
     if (!is.null(filter$state)) {
-      filterClause <- paste0(filterClause, sprintf("state eq '%s'", filter$state))
+      filterClause <-
+        paste0(filterClause, sprintf("state eq '%s'", filter$state))
     }
   }
 
