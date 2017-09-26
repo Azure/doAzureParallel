@@ -37,7 +37,8 @@ workers <- function(data) {
   id <- data$poolId
   pool <- rAzureBatch::getPool(id)
 
-  if (getOption("azureVerbose")) {
+  verboseFlag <- getOption("azureVerbose")
+  if (!is.null(verboseFlag) && verboseFlag) {
     getPoolWorkers(id)
   }
 
