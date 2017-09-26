@@ -168,17 +168,11 @@
 .addPool <- function(pool, packages, environmentSettings, resourceFiles, ...) {
   args <- list(...)
 
-<<<<<<< HEAD
   # commands <- c(
   #   "export PATH=/anaconda/envs/py35/bin:$PATH",
   #   "env PATH=$PATH pip install --no-dependencies blobxfer"
   # )
   commands <- c()
-=======
-  commands <- c(
-    "/anaconda/envs/py35/bin/pip install --no-dependencies blobxfer"
-  )
->>>>>>> master
 
   if (!is.null(args$commandLine)) {
     commands <- c(commands, args$commandLine)
