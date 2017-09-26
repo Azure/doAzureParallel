@@ -41,7 +41,7 @@ getPoolPackageInstallationCommand <- function(type, packages) {
 linuxWrapCommands <- function(commands = c()) {
   # Do not allow absolute paths is enforced in lintr
   commandLine <-
-    sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
+    sprintf("/bin/bash -c \"set -e; set -o pipefail; docker run -rm -v /mnt/batch/tasks:/batch -e DOCKER_WORKING_DIR=/batch/startup/wd r-base:3.4.1 %s wait\"",
             paste0(paste(
               commands, sep = " ", collapse = "; "
             ), ";"))

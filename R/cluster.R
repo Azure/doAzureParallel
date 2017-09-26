@@ -178,7 +178,10 @@ makeCluster <-
       docker_image = poolConfig$containerImage
     }
     
-    install_and_start_container_command = paste0("cluster_setup.sh ", docker_image, " 'docker run -d --name r-base ", docker_image, " tail -f /dev/null'")
+    install_and_start_container_command = paste0("cluster_setup.sh ", docker_image, "
+                                                 'docker run --rm --name r-version -v /mnt/batch/tasks:/batch
+                                                  -e DOCKER_WORKING_DIR=/batch/startup/wd", 
+                                                 docker_image, " R --version'")
     container_install_command <- c(
       "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container/R/cluster_setup.sh",
       "chmod u+x cluster_setup.sh",
