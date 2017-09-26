@@ -17,19 +17,19 @@
 
   # Only use the download command if cloudCombine is enabled
   # Otherwise just leave it empty
-  downloadCommand <- c()
+  commands <- c()
   
   if (!is.null(cloudCombine)) {
     assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
-    
-    downloadCommand <-
-      sprintf(
-        paste("alfpark/blobxfer:0.12.1 %s %s %s --download --saskey $BLOBXFER_SASKEY",
-              "--remoteresource . --include result/*.rds"),
-        accountName,
-        jobId,
-        "$AZ_BATCH_TASK_WORKING_DIR"
-      )
+    copyCommand <- sprintf(
+      "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds",
+      accountName,
+      jobId,
+      "$AZ_BATCH_TASK_WORKING_DIR"
+    )
+  
+    downloadCommand <- dockerRunCommand("blobxfer", "alfpark/blobxfer:0.12.1", copyCommand, FALSE)
+    commands <- c(downloadCommand)
   }
 
   envFile <- paste0(taskId, ".rds")
@@ -92,9 +92,8 @@
   )
 
   outputFiles <- append(outputFiles, userOutputFiles)
-  commands <-
-    c(downloadCommand,
-      rCommand)
+
+  commands <- c(commands, dockerExecCommand(jobId, rCommand))
 
   commands <- linuxWrapCommands(commands)
 
@@ -136,12 +135,13 @@
                     ...) {
   args <- list(...)
   packages <- args$packages
-
+  containerImage <- args$containerImage
   poolInfo <- list("poolId" = poolId)
-
-  commands <- c("r-base:3.4.1 R --version")
+  
+  startRuntimeCommand <- dockerRunCommand(jobId, containerImage, "tail -f /dev/null", TRUE )
+  commands <- c(startRuntimeCommand)
   if (!is.null(packages)) {
-    jobPackages <- getJobPackageInstallationCommand("cran", packages)
+    jobPackages <- dockerExecCommand(jobId, getJobPackageInstallationCommand("cran", packages))
     commands <- c(commands, jobPackages)
   }
 
@@ -171,12 +171,7 @@
 
 .addPool <- function(pool, packages, environmentSettings, resourceFiles, ...) {
   args <- list(...)
-
-  # commands <- c(
-  #   "export PATH=/anaconda/envs/py35/bin:$PATH",
-  #   "env PATH=$PATH pip install --no-dependencies blobxfer"
-  # )
-  commands <- c("r-base:3.4.1 R --version")
+  commands <- c()
 
   if (!is.null(args$commandLine)) {
     commands <- c(commands, args$commandLine)

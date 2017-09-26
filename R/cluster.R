@@ -173,15 +173,19 @@ makeCluster <-
     commandLine <- NULL
 
     # install docker and create docker container
-    docker_image = "r_base:3.4.1"
+    dockerImage = "r_base:3.4.1"
     if (!is.null(poolConfig$containerImage)) {
-      docker_image = poolConfig$containerImage
+      dockerImage = poolConfig$containerImage
     }
     
-    install_and_start_container_command = paste0("cluster_setup.sh ", docker_image, "
-                                                 'docker run --rm --name r-version -v /mnt/batch/tasks:/batch
-                                                  -e DOCKER_WORKING_DIR=/batch/startup/wd", 
-                                                 docker_image, " R --version'")
+    config$containerImage <- dockerImage
+    
+    install_and_start_container_command = paste("cluster_setup.sh",
+                                                dockerImage, 
+                                                "'docker run --rm --name r-version -v /mnt/batch/tasks:/batch -e DOCKER_WORKING_DIR=/batch/startup/wd",
+                                                dockerImage, 
+                                                "R --version'",
+                                                sep = " ")
     container_install_command <- c(
       "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container/R/cluster_setup.sh",
       "chmod u+x cluster_setup.sh",

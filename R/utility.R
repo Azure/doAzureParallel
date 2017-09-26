@@ -38,25 +38,42 @@ getPoolPackageInstallationCommand <- function(type, packages) {
   poolInstallationCommand
 }
 
+dockerRunCommand <- function(containerName, containerImage, command, runAsDaemon = TRUE) {
+  dockerOptions <- paste("--rm",
+                         "-v /mnt/batch/tasks:/mnt/batch/tasks",
+                         "-e AZ_BATCH_JOB_PREP_WORKING_DIR=$AZ_BATCH_JOB_PREP_WORKING_DIR",
+                         "-e AZ_BATCH_TASK_WORKING_DIR=$AZ_BATCH_TASK_WORKING_DIR",
+                         "-e BLOBXFER_SASKEY=$BLOBXFER_SASKEY",
+                         sep = " ")
+  
+  if (runAsDaemon) {
+    dockerOptions <- paste("-d", dockerOptions, sep = " ")
+  }
+  
+  dockerRunCommand <- paste("docker run", dockerOptions, "--name", containerName, containerImage, command, sep = " ")
+  dockerRunCommand
+}
+
+dockerExecCommand <- function(containerName, command) {
+  dockerExecCommand <- paste("docker exec", containerName, command, sep = " ")
+  dockerExecCommand
+}
+
+dockerStopCommand <- function(containerName) {
+  dockerStopCommand <- paste("docker stop", containerName, sep = " ")
+  dockerStopCommand
+}
+
 linuxWrapCommands <- function(commands = c()) {
   
   # Sanitize the vector and don't allow empty values
   cleanCommands <- commands[lapply(commands, length)>0]
   
-  # Set docker environment
-  dockerOptions <- paste("--rm",
-                         "-v /mnt/batch/tasks:/mnt/batch/tasks",
-                         "-e AZ_BATCH_JOB_PREP_WORKING_DIR=$AZ_BATCH_JOB_PREP_WORKING_DIR",
-                         "-e AZ_BATCH_TASK_WORKING_DIR=$AZ_BATCH_TASK_WORKING_DIR",
-                         "-e BLOBXFER_SASKEY=$BLOBXFER_SASKEY ",
-                         sep = " ")
-  
   # Do not allow absolute paths is enforced in lintr
-  actions <- paste(paste0("docker run ", dockerOptions), cleanCommands, sep="")
   commandLine <-
     sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
             paste0(paste(
-              actions, sep = " ", collapse = "; "
+              cleanCommands, sep = " ", collapse = "; "
             ), ";"))
   
   commandLine

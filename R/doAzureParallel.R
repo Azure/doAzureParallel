@@ -11,7 +11,8 @@ registerDoAzureParallel <- function(cluster) {
     fun = .doAzureParallel,
     data = list(
       config = list(cluster$batchAccount, cluster$storageAccount),
-      poolId = cluster$poolId
+      poolId = cluster$poolId,
+      containerImage = cluster$containerImage
     ),
     info = .info
   )
@@ -329,7 +330,8 @@ setHttpTraffic <- function(value = FALSE) {
         jobId = id,
         poolId = data$poolId,
         resourceFiles = resourceFiles,
-        packages = obj$packages
+        packages = obj$packages,
+        containerImage = data$containerImage
       )
 
       if (grepl("ActiveJobAndScheduleQuotaReached", response)) {
@@ -417,7 +419,7 @@ setHttpTraffic <- function(value = FALSE) {
       id,
       taskId = taskId,
       rCommand =  sprintf(
-        "r-base:3.4.1 Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %s %s %s %s > %s.txt",
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %s %s %s %s > %s.txt",
         "$AZ_BATCH_JOB_PREP_WORKING_DIR",
         "$AZ_BATCH_TASK_WORKING_DIR",
         jobFileName,
@@ -440,7 +442,7 @@ setHttpTraffic <- function(value = FALSE) {
       id,
       taskId = paste0(id, "-merge"),
       rCommand = sprintf(
-        "r-base:3.4.1 Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s %s %s > %s.txt",
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s %s %s > %s.txt",
         "$AZ_BATCH_JOB_PREP_WORKING_DIR",
         "$AZ_BATCH_TASK_WORKING_DIR",
         id,
