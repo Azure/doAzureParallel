@@ -19,7 +19,7 @@ This section will provide information about how Azure works, how best to take ad
    
 4. **Package Management** [(link)](./20-package-management.md)
 
-   Best practices for managing your R packages across your Azure pool 
+   Best practices for managing your R packages in code. This includes installation at the cluster or job level as well as how to use different package providers.
    
 5. **Distributing your Data** [(link)](./21-distributing-data.md)
 
@@ -36,3 +36,9 @@ This section will provide information about how Azure works, how best to take ad
 8. **Customize Cluster** [(link)](./30-customize-cluster.md)
 
    Setting up your cluster to user's specific needs
+
+## Additional Documentation
+Take a look at our [**Troubleshooting Guide**](./40-troubleshooting.md) for information on how to diagnose common issues.
+
+Read our [**FAQ**](./42-faq.md) for known issues and common questions.
+
