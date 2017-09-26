@@ -23,9 +23,9 @@ test_that("successfully create cran pool package command line", {
   expect_equal(length(poolInstallation), 3)
   expected <-
     c(
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1])\' hts",
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1])\' lubridate",
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'install.packages(args[1])\' tidyr"
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' -e \'install.packages(args[1])\' hts",
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' -e \'install.packages(args[1])\' lubridate",
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' -e \'install.packages(args[1])\' tidyr"
     )
 
   expect_equal(poolInstallation, expected)
@@ -38,8 +38,10 @@ test_that("successfully create github pool package command line", {
 
   expected <-
     c(
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'devtools::install_github(args[1])\' Azure/doAzureParallel",
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'devtools::install_github(args[1])\' Azure/rAzureBatch"
+      paste0("Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' ",
+        "-e \'devtools::install_github(args[1])\' Azure/doAzureParallel"),
+      paste0("Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' ",
+        "-e \'devtools::install_github(args[1])\' Azure/rAzureBatch")
     )
 
   expect_equal(poolInstallation, expected)

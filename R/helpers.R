@@ -38,7 +38,8 @@
 
   downloadCommand <-
     sprintf(
-      "env PATH=$PATH blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds",
+      paste("/anaconda/envs/py35/bin/blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY",
+            "--remoteresource . --include result/*.rds"),
       accountName,
       jobId,
       "$AZ_BATCH_TASK_WORKING_DIR"
@@ -88,8 +89,7 @@
 
   outputFiles <- append(outputFiles, userOutputFiles)
   commands <-
-    c("export PATH=/anaconda/envs/py35/bin:$PATH",
-      downloadCommand,
+    c(downloadCommand,
       rCommand)
 
   commands <- linuxWrapCommands(commands)
@@ -160,19 +160,18 @@
     poolInfo = poolInfo,
     jobPreparationTask = jobPreparationTask,
     usesTaskDependencies = usesTaskDependencies,
-    metadata = metadata,
-    raw = TRUE
+    content = "text",
+    metadata = metadata
   )
 
   return(response)
 }
 
-.addPool <- function(pool, packages, resourceFiles, ...) {
+.addPool <- function(pool, packages, environmentSettings, resourceFiles, ...) {
   args <- list(...)
 
   commands <- c(
-    "export PATH=/anaconda/envs/py35/bin:$PATH",
-    "env PATH=$PATH pip install --no-dependencies blobxfer"
+    "/anaconda/envs/py35/bin/pip install --no-dependencies blobxfer"
   )
 
   if (!is.null(args$commandLine)) {
@@ -191,6 +190,10 @@
     )),
     waitForSuccess = TRUE
   )
+
+  if (!is.null(environmentSettings)) {
+    startTask$environmentSettings <- environmentSettings
+  }
 
   if (length(resourceFiles) > 0) {
     startTask$resourceFiles <- resourceFiles
@@ -222,7 +225,7 @@
     ),
     autoScaleEvaluationInterval = "PT5M",
     maxTasksPerNode = pool$maxTasksPerNode,
-    raw = TRUE
+    content = "text"
   )
 
   return(response)

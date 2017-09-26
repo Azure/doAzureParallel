@@ -33,7 +33,9 @@ generateClusterConfig("cluster_settings.json")
 
 # Now we will use resource-files to upload our dataset onto each node of our cluster.
 # Currently, our data is stored in Azure Blob in an account called 'playdatastore',
-#   in a public container called "nyc-taxi-dataset". To get this dataset onto each node,
+#   in a public container called "nyc-taxi-dataset". The default blob containers permissions
+#   settings are private when creating containers in doAzureParallel / Azure Storage Explorer.
+#   To get this dataset onto each node,
 #   we will create a resouceFile object for each blob - we will then use the resourceFile
 #   when building the cluster so that each node in the cluster knows to download these files
 #   after the node is provisioned.
