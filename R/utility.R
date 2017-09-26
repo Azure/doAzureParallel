@@ -49,13 +49,13 @@ linuxWrapCommands <- function(commands = c()) {
   commandLine
 }
 
-#' Get a list of job statuses from the given job ids
+#' Get a list of job statuses from the given filter
 #'
-#' @param jobIds A character vector of job ids
+#' @param filter A filter containing job state
 #'
 #' @examples
 #' \dontrun{
-#' getJobList(c("job-001", "job-002"))
+#' getJobList()
 #' }
 #' @export
 getJobList <- function(filter = NULL) {
