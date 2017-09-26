@@ -8,12 +8,28 @@
   cloudCombine <- args$cloudCombine
   userOutputFiles <- args$outputFiles
 
+  resultFile <- paste0(taskId, "-result", ".rds")
+  accountName <- storageCredentials$name
+  
   if (!is.null(argsList)) {
     assign("argsList", argsList, .doAzureBatchGlobals)
   }
 
+  # Only use the download command if cloudCombine is enabled
+  # Otherwise just leave it empty
+  downloadCommand <- c()
+  
   if (!is.null(cloudCombine)) {
     assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
+    
+    downloadCommand <-
+      sprintf(
+        paste("alfpark/blobxfer:0.12.1 %s %s %s --download --saskey $BLOBXFER_SASKEY",
+              "--remoteresource . --include result/*.rds"),
+        accountName,
+        jobId,
+        "$AZ_BATCH_TASK_WORKING_DIR"
+      )
   }
 
   envFile <- paste0(taskId, ".rds")
@@ -32,18 +48,6 @@
   if (!is.null(args$dependsOn)) {
     dependsOn <- list(taskIds = dependsOn)
   }
-
-  resultFile <- paste0(taskId, "-result", ".rds")
-  accountName <- storageCredentials$name
-
-  downloadCommand <-
-    sprintf(
-      paste("/anaconda/envs/py35/bin/blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY",
-            "--remoteresource . --include result/*.rds"),
-      accountName,
-      jobId,
-      "$AZ_BATCH_TASK_WORKING_DIR"
-    )
 
   containerUrl <-
     rAzureBatch::createBlobUrl(
@@ -135,7 +139,7 @@
 
   poolInfo <- list("poolId" = poolId)
 
-  commands <- c("ls")
+  commands <- c("r-base:3.4.1 R --version")
   if (!is.null(packages)) {
     jobPackages <- getJobPackageInstallationCommand("cran", packages)
     commands <- c(commands, jobPackages)
@@ -172,7 +176,7 @@
   #   "export PATH=/anaconda/envs/py35/bin:$PATH",
   #   "env PATH=$PATH pip install --no-dependencies blobxfer"
   # )
-  commands <- c()
+  commands <- c("r-base:3.4.1 R --version")
 
   if (!is.null(args$commandLine)) {
     commands <- c(commands, args$commandLine)

@@ -39,13 +39,26 @@ getPoolPackageInstallationCommand <- function(type, packages) {
 }
 
 linuxWrapCommands <- function(commands = c()) {
+  
+  # Sanitize the vector and don't allow empty values
+  cleanCommands <- commands[lapply(commands, length)>0]
+  
+  # Set docker environment
+  dockerOptions <- paste("--rm",
+                         "-v /mnt/batch/tasks:/mnt/batch/tasks",
+                         "-e AZ_BATCH_JOB_PREP_WORKING_DIR=$AZ_BATCH_JOB_PREP_WORKING_DIR",
+                         "-e AZ_BATCH_TASK_WORKING_DIR=$AZ_BATCH_TASK_WORKING_DIR",
+                         "-e BLOBXFER_SASKEY=$BLOBXFER_SASKEY ",
+                         sep = " ")
+  
   # Do not allow absolute paths is enforced in lintr
+  actions <- paste(paste0("docker run ", dockerOptions), cleanCommands, sep="")
   commandLine <-
-    sprintf("/bin/bash -c \"set -e; set -o pipefail; docker run -rm -v /mnt/batch/tasks:/batch -e DOCKER_WORKING_DIR=/batch/startup/wd r-base:3.4.1 %s wait\"",
+    sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
             paste0(paste(
-              commands, sep = " ", collapse = "; "
+              actions, sep = " ", collapse = "; "
             ), ";"))
-
+  
   commandLine
 }
 
