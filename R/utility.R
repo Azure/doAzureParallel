@@ -328,8 +328,12 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
 #' getJobResult(jobId = "job-001")
 #' }
 #' @export
-getJobResult <- function(jobId = "") {
+getJobResult <- function(jobId) {
   cat("Getting job results...", fill = TRUE)
+
+  if (length(jobId) < 3) {
+    stop("jobId must contain at least 3 characters.")
+  }
 
   tempFile <- tempFile <- tempfile("getJobResult", fileext = ".rds")
 
