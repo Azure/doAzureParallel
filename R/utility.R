@@ -74,7 +74,8 @@ getJobList <- function(filter = NULL) {
   id <- character(length(jobs$value))
   state <- character(length(jobs$value))
   status <- character(length(jobs$value))
-  totalTasks <- character(length(jobs$value))
+  failedTasks <- integer(length(jobs$value))
+  totalTasks <- integer(length(jobs$value))
 
   if (length(jobs$value) > 0) {
     for (j in 1:length(jobs$value)) {
@@ -82,15 +83,17 @@ getJobList <- function(filter = NULL) {
       state[j] <- jobs$value[[j]]$state
       taskCounts <-
         rAzureBatch::getJobTaskCounts(jobId = jobs$value[[j]]$id)
-      total <-
+      failedTasks[j] <-
+        as.integer(taskCounts$failed)
+      totalTasks[j] <-
         as.integer(taskCounts$active + taskCounts$running + taskCounts$completed)
-      totalTasks[j] <- total
 
       completed <- as.integer(taskCounts$completed)
 
-      if (total > 0) {
+      if (totalTasks[j] > 0) {
         if (completed > 0) {
-          status[j] <- sprintf("%s %%", ceiling(completed / total * 100))
+          status[j] <-
+            sprintf("%s %%", ceiling(completed / totalTasks[j] * 100))
         } else {
           status[j] <- "No tasks were run"
         }
@@ -101,12 +104,15 @@ getJobList <- function(filter = NULL) {
     }
   }
 
-  return (data.frame(
-    Id = id,
-    State = state,
-    Status = status,
-    TotalTasks = totalTasks
-  ))
+  return (
+    data.frame(
+      Id = id,
+      State = state,
+      Status = status,
+      FailedTasks = failedTasks,
+      TotalTasks = totalTasks
+    )
+  )
 }
 
 #' Get a job for the given job id
@@ -314,10 +320,6 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
 }
 
 #' Download the results of the job
-#' @param ... Further named parameters
-#' \itemize{
-#'  \item{"container"}: {The container to download from.}
-#' }
 #' @param jobId The jobId to download from
 #'
 #' @return The results from the job.
@@ -326,24 +328,19 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
 #' getJobResult(jobId = "job-001")
 #' }
 #' @export
-getJobResult <- function(jobId = "", ...) {
-  args <- list(...)
+getJobResult <- function(jobId = "") {
+  cat("Getting job results...", fill = TRUE)
 
-  print("Getting job results...")
+  tempFile <- tempFile <- tempfile("getJobResult", fileext = ".rds")
 
-  if (!is.null(args$container)) {
-    results <-
-      rAzureBatch::downloadBlob(args$container,
-                                paste0("result/", jobId, "-merge-result.rds"))
-  }
-  else{
-    results <-
-      rAzureBatch::downloadBlob(jobId, paste0("result/", jobId, "-merge-result.rds"))
-  }
+  results <- rAzureBatch::downloadBlob(
+    jobId,
+    paste0("result/", jobId, "-merge-result.rds"),
+    downloadPath = tempFile,
+    overwrite = TRUE
+  )
 
   if (is.vector(results)) {
-    tempFile <- tempfile("getJobResult", fileext = ".rds")
-    writeBin(results, tempFile)
     results <- readRDS(tempFile)
   }
 
@@ -639,11 +636,13 @@ waitForJobPreparation <- function(jobId, poolId) {
     # Verify that all the job preparation tasks are not failing
     if (all(FALSE %in% statuses)) {
       cat("\n")
-      stop(paste(
-        sprintf("Job '%s' unable to install packages.", jobId),
-        "Use the 'getJobFile' function to get more information about",
-        "job package installation."
-      ))
+      stop(
+        paste(
+          sprintf("Job '%s' unable to install packages.", jobId),
+          "Use the 'getJobFile' function to get more information about",
+          "job package installation."
+        )
+      )
     }
 
     cat(".")
@@ -657,7 +656,7 @@ getXmlValues <- function(xmlResponse, xmlPath) {
   xml2::xml_text(xml2::xml_find_all(xmlResponse, xmlPath))
 }
 
-areShallowEqual <- function(a, b){
+areShallowEqual <- function(a, b) {
   !is.null(a) && !is.null(b) && a == b
 }
 
