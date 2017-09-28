@@ -2,15 +2,24 @@
 % Please edit documentation in R/utility.R
 \name{createOutputFile}
 \alias{createOutputFile}
+\alias{createOutputFile}
 \title{Utility function for creating an output file}
 \usage{
+createOutputFile(filePattern, url)
+
 createOutputFile(filePattern, url)
 }
 \arguments{
 \item{filePattern}{a pattern indicating which file(s) to upload}
 
 \item{url}{the destination blob or virtual directory within the Azure Storage container}
+
+\item{filePattern}{a pattern indicating which file(s) to upload}
+
+\item{url}{the destination blob or virtual directory within the Azure Storage container}
 }
 \description{
+Utility function for creating an output file
+
 Utility function for creating an output file
 }

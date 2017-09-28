@@ -225,8 +225,9 @@ doAzureParallel also helps you manage your jobs so that you can run many jobs at
 ```R 
 # List your jobs:
 getJobList()
+# Get your job by job id:
+getJob(jobId = 'unique_job_id', verbose = TRUE)
 ```
-
 This will also let you run *long running jobs* easily.
 
 With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
@@ -242,11 +243,14 @@ job_id <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar % { .
 results <- getJobResult(job_id)
 ```
 
-Finally, you may also want to track the status of jobs that you've name:
+Finally, you may also want to track the status of jobs by state (active/running/completed/failed/succeeded):
 
 ```R
-# List specific jobs:
-getJobList(c('unique_job_id', 'another_job_id'))
+# List jobs in running state:
+filter <- list()
+filter$state <- "running"
+jobList <- getJobList(filter)
+View(jobList)
 ```
 
 You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md). 
