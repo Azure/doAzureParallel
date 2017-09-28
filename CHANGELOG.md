@@ -1,4 +1,7 @@
 # Change Log
+## [0.4.3] 2017-09-28
+### Fixed
+- Allow merge task to run on task failures
 ## [0.4.2] 2017-09-08
 ### Added
 - Support for users to get files from nodes and tasks
