@@ -185,7 +185,6 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   pkgName <- if (exists("packageName", mode = "function"))
-
     packageName(envir)
   else
     NULL

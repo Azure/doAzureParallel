@@ -481,9 +481,7 @@ waitForTasksToComplete <-
 
     repeat {
       taskCounts <- rAzureBatch::getJobTaskCounts(jobId)
-
       setTxtProgressBar(pb, taskCounts$completed)
-
 
       validationFlag <-
         (taskCounts$validationStatus == "Validated" &&
@@ -537,7 +535,7 @@ waitForTasksToComplete <-
         stop(sprintf(paste("Timeout has occurred while waiting for tasks to complete.",
                    "Users will have to manually track the job '%s' and get the results.",
                    "Use the getJobResults function to obtain the results and getJobList for",
-                   "tracking job status. To change the timeout, user can set 'timeout' property in the",
+                   "tracking job status. To change the timeout, set 'timeout' property in the",
                    "foreach's options.azure.")),
              jobId)
       }
