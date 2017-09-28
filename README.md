@@ -228,6 +228,7 @@ getJobList()
 # Get your job by job id:
 getJob(jobId = 'unique_job_id', verbose = TRUE)
 ```
+
 This will also let you run *long running jobs* easily.
 
 With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
@@ -316,10 +317,10 @@ To debug your doAzureParallel jobs, you can set the package to operate on *verbo
 
 ```R
 # turn on verbose mode
-setVerbose(True)
+setVerbose(TRUE)
 
 # turn off verbose mode
-setVerbose(False)
+setVerbose(FALSE)
 ```
 ### Bypassing merge task 
 
@@ -334,27 +335,6 @@ foreach(i = 1:3, .options.azure = list(enableMerge = FALSE))
 ```
 Note: User defined functions for the merge task is on our list of features that we are planning on doing.
 
-```R
-# Pushing output files
-storageAccount <- "storageAccountName"
-outputFolder <- "outputs"
-
-createContainer(outputFolder)
-writeToken <- rAzureBatch::createSasToken("w", "c", outputFolder)
-containerUrl <- rAzureBatch::createBlobUrl(storageAccount = storageAccount,
-                                           containerName = outputFolder,
-                                           sasToken = writeToken)
-
-output <- createOutputFile("test-*.txt", containerUrl)
-
-foreach(i = 1:3, .options.azure = list(outputFiles = list(output))) %dopar% {
-  fileName <- paste0("test-", i, ".txt")
-  file.create(fileName) 
-  fileConn<-file(fileName)
-  close(fileConn)
-  NULL
-}
-```
 ## Next Steps
 
 For more information, please visit [our documentation](./docs/README.md).
