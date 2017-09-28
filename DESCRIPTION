@@ -19,7 +19,8 @@ Imports:
     rAzureBatch (>= 0.5.0),
     jsonlite,
     rjson,
-    xml2
+    xml2,
+    R6
 Suggests:
     testthat,
     caret,

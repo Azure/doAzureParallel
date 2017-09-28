@@ -196,6 +196,14 @@ makeCluster <-
       validateClusterConfig(clusterSetting)
     }
 
+    tryCatch({
+      Validators$isValidPoolName(poolConfig$name)
+    },
+    error = function(e){
+      stop(paste("Invalid pool name: \n",
+                 e))
+    })
+
     response <- .addPool(
       pool = poolConfig,
       packages = packages,
