@@ -197,7 +197,7 @@ makeCluster <-
     }
 
     tryCatch({
-      Validators$isValidPoolName(poolConfig$name)
+      `Validators`$isValidPoolName(poolConfig$name)
     },
     error = function(e){
       stop(paste("Invalid pool name: \n",

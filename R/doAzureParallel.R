@@ -186,7 +186,6 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   pkgName <- if (exists("packageName", mode = "function"))
-
     packageName(envir)
   else
     NULL
@@ -207,8 +206,8 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   tryCatch({
-    Validators$isValidStorageContainerName(id)
-    Validators$isValidJobName(id)
+    `Validators`$isValidStorageContainerName(id)
+    `Validators`$isValidJobName(id)
   },
   error = function(e){
     stop(paste("Invalid job name: \n",
