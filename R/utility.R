@@ -257,7 +257,8 @@ getJobResult <- function(jobId = "", ...) {
 
   if (!is.null(args$container)) {
     results <-
-      rAzureBatch::downloadBlob(args$container, paste0("result/", jobId, "-merge-result.rds"))
+      rAzureBatch::downloadBlob(args$container,
+                                paste0("result/", jobId, "-merge-result.rds"))
   }
   else{
     results <-
@@ -437,58 +438,25 @@ createOutputFile <- function(filePattern, url) {
   output
 }
 
+
 #' Wait for current tasks to complete
 #'
 #' @export
-waitForTasksToComplete <- function(jobId, timeout) {
-  cat("Waiting for tasks to complete. . .", fill = TRUE)
+waitForTasksToComplete <-
+  function(jobId, timeout, errorHandling = "stop") {
+    cat("Waiting for tasks to complete. . .", fill = TRUE)
 
-  numOfTasks <- 0
-  currentTasks <- rAzureBatch::listTask(jobId)
-
-  if (is.null(currentTasks$value)) {
-    stop(paste0("Error: ", currentTasks$message$value))
-    return()
-  }
-
-  numOfTasks <- numOfTasks + length(currentTasks$value)
-
-  # Getting the total count of tasks for progress bar
-  repeat {
-    if (is.null(currentTasks$odata.nextLink)) {
-      break
-    }
-
-    skipTokenParameter <-
-      strsplit(currentTasks$odata.nextLink, "&")[[1]][2]
-
-    skipTokenValue <-
-      substr(skipTokenParameter,
-             nchar("$skiptoken=") + 1,
-             nchar(skipTokenParameter))
-
-    currentTasks <-
-      rAzureBatch::listTask(jobId, skipToken = URLdecode(skipTokenValue))
-    numOfTasks <- numOfTasks + length(currentTasks$value)
-  }
-
-  pb <- txtProgressBar(min = 0, max = numOfTasks, style = 3)
-
-  timeToTimeout <- Sys.time() + timeout
-
-  while (Sys.time() < timeToTimeout) {
-    count <- 0
+    totalTasks <- 0
     currentTasks <- rAzureBatch::listTask(jobId)
 
-    taskStates <-
-      lapply(currentTasks$value, function(x)
-        x$state != "completed")
-    for (i in 1:length(taskStates)) {
-      if (taskStates[[i]] == FALSE) {
-        count <- count + 1
-      }
+    if (is.null(currentTasks$value)) {
+      stop(paste0("Error: ", currentTasks$message$value))
+      return()
     }
 
+    totalTasks <- totalTasks + length(currentTasks$value)
+
+    # Getting the total count of tasks for progress bar
     repeat {
       if (is.null(currentTasks$odata.nextLink)) {
         break
@@ -505,29 +473,83 @@ waitForTasksToComplete <- function(jobId, timeout) {
       currentTasks <-
         rAzureBatch::listTask(jobId, skipToken = URLdecode(skipTokenValue))
 
-      taskStates <-
-        lapply(currentTasks$value, function(x)
-          x$state != "completed")
+      totalTasks <- totalTasks + length(currentTasks$value)
+    }
 
-      for (i in 1:length(taskStates)) {
-        if (taskStates[[i]] == FALSE) {
-          count <- count + 1
+    pb <- txtProgressBar(min = 0, max = totalTasks, style = 3)
+    timeToTimeout <- Sys.time() + timeout
+
+    repeat {
+      taskCounts <- rAzureBatch::getJobTaskCounts(jobId)
+      setTxtProgressBar(pb, taskCounts$completed)
+
+      validationFlag <-
+        (taskCounts$validationStatus == "Validated" &&
+           totalTasks <= 200000) ||
+        totalTasks > 200000
+
+      if (taskCounts$failed > 0 &&
+          errorHandling == "stop" &&
+          validationFlag) {
+        cat("\n")
+
+        select <- "id, executionInfo"
+        failedTasks <-
+          rAzureBatch::listTask(jobId, select = select)
+
+        tasksFailureWarningLabel <-
+          sprintf(paste("%i task(s) failed while running the job.",
+                        "This caused the job to terminate automatically.",
+                        "To disable this behavior and continue on failure, set .errorHandling='remove | pass'",
+                        "in the foreach loop\n"), taskCounts$failed)
+
+
+        for (i in 1:length(failedTasks$value)) {
+          if (failedTasks$value[[i]]$executionInfo$result == "Failure") {
+            tasksFailureWarningLabel <-
+              paste0(tasksFailureWarningLabel,
+                     sprintf("%s\n", failedTasks$value[[i]]$id))
+          }
         }
+
+        warning(sprintf(tasksFailureWarningLabel,
+                        taskCounts$failed))
+
+        response <- rAzureBatch::terminateJob(jobId)
+        httr::stop_for_status(response)
+
+        stop(sprintf(
+          paste("Errors have occurred while running the job '%s'.",
+                "Error handling is set to 'stop' and has proceeded to terminate the job.",
+                "The user will have to handle deleting the job.",
+                "If this is not the correct behavior, change the errorHandling property to 'pass'",
+                " or 'remove' in the foreach object. Use the 'getJobFile' function to obtain the logs.",
+                "For more information about getting job logs, follow this link:",
+                paste0("https://github.com/Azure/doAzureParallel/blob/master/docs/",
+                       "40-troubleshooting.md#viewing-files-directly-from-compute-node")),
+          jobId
+        ))
       }
+
+      if (Sys.time() > timeToTimeout) {
+        stop(sprintf(paste("Timeout has occurred while waiting for tasks to complete.",
+                   "Users will have to manually track the job '%s' and get the results.",
+                   "Use the getJobResults function to obtain the results and getJobList for",
+                   "tracking job status. To change the timeout, set 'timeout' property in the",
+                   "foreach's options.azure.")),
+             jobId)
+      }
+
+      if (taskCounts$completed >= totalTasks &&
+          (taskCounts$validationStatus == "Validated" ||
+           totalTasks >= 200000)) {
+        cat("\n")
+        return(0)
+      }
+
+      Sys.sleep(10)
     }
-
-    setTxtProgressBar(pb, count)
-
-    if (all(taskStates == FALSE)) {
-      cat("\n")
-      return(0)
-    }
-
-    Sys.sleep(10)
   }
-
-  stop("A timeout has occurred when waiting for tasks to complete.")
-}
 
 waitForJobPreparation <- function(jobId, poolId) {
   cat("Job Preparation Status: Package(s) being installed")
@@ -556,11 +578,13 @@ waitForJobPreparation <- function(jobId, poolId) {
     # Verify that all the job preparation tasks are not failing
     if (all(FALSE %in% statuses)) {
       cat("\n")
-      stop(paste(
-        sprintf("Job '%s' unable to install packages.", jobId),
-        "Use the 'getJobFile' function to get more information about",
-        "job package installation."
-      ))
+      stop(
+        paste(
+          sprintf("Job '%s' unable to install packages.", jobId),
+          "Use the 'getJobFile' function to get more information about",
+          "job package installation."
+        )
+      )
     }
 
     cat(".")
@@ -574,6 +598,6 @@ getXmlValues <- function(xmlResponse, xmlPath) {
   xml2::xml_text(xml2::xml_find_all(xmlResponse, xmlPath))
 }
 
-areShallowEqual <- function(a, b){
+areShallowEqual <- function(a, b) {
   !is.null(a) && !is.null(b) && a == b
 }
