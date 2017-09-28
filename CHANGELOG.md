@@ -1,5 +1,5 @@
 # Change Log
-## [0.5.0] 2017-09-27
+## [0.5.1] 2017-09-28
 ### Added
 - Support for users to get job and job results for long running job
 ### Changed
