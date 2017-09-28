@@ -80,7 +80,7 @@ We recommend using the [script provided in the samples](../samples/package_manag
 Simply update your cluster configuration commandLine as follows:
 ```json
 "commandLine": [
-    "wget https://raw.githubusercontent.com/Azure/doAzureParallel/bioConductorDocs/samples/package_management/bioc_setup.sh",
+    "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/samples/package_management/bioc_setup.sh",
     "chmod u+x ./bioc_setup.sh",
     "./bioc_setup.sh"]
 ```

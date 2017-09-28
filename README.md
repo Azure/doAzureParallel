@@ -363,10 +363,10 @@ To debug your doAzureParallel jobs, you can set the package to operate on *verbo
 
 ```R
 # turn on verbose mode
-setVerbose(True)
+setVerbose(TRUE)
 
 # turn off verbose mode
-setVerbose(False)
+setVerbose(FALSE)
 ```
 ### Bypassing merge task 
 
