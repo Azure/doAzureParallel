@@ -195,14 +195,24 @@ setHttpTraffic <- function(value = FALSE) {
   assign("packages", obj$packages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
 
-  time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
-  id <-  sprintf("%s%s",
-                 "job",
-                 time)
-
   if (!is.null(obj$options$azure$job)) {
     id <- obj$options$azure$job
   }
+  else {
+    time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
+    id <-  sprintf("%s%s",
+                   "job",
+                   time)
+  }
+
+  tryCatch({
+    `Validators`$isValidStorageContainerName(id)
+    `Validators`$isValidJobName(id)
+  },
+  error = function(e){
+    stop(paste("Invalid job name: \n",
+               e))
+  })
 
   wait <- TRUE
   if (!is.null(obj$options$azure$wait)) {
