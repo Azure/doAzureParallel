@@ -343,13 +343,13 @@ setHttpTraffic <- function(value = FALSE) {
         chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
       }
 
-      chunkSizeValue <-
+      chunkSizeKeyValuePair <-
         list(name = "chunkSize", value = as.character(chunkSize))
 
       if (is.null(obj$packages)) {
         metadata <- list(enableCloudCombine, chunkSizeValue)
       } else {
-        metadata <- list(enableCloudCombine, chunkSizeValue, obj$packages)
+        metadata <- list(enableCloudCombine, chunkSizeKeyValuePair, obj$packages)
       }
 
       response <- .addJob(
