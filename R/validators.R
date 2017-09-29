@@ -1,4 +1,4 @@
-validators <- R6::R6Class(
+Validators <- R6::R6Class(
   "Validators",
   lock_objects = TRUE,
   public = list(
@@ -25,4 +25,4 @@ validators <- R6::R6Class(
   )
 )
 
-`Validators` <- validators$new()
+`Validators` <- Validators$new()
