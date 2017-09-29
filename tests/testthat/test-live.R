@@ -17,7 +17,7 @@ test_that("Scenario Test", {
   #cluster
   
   '%dopar%' <- foreach::'%dopar%'
-  res <- foreach::foreach(i = 1:2) %dopar% {
+  res <- foreach::foreach(i = 1:4) %dopar% {
     mean(1:3)
   }
 

@@ -1,3 +1,11 @@
+getLinuxAptGetSoftwardInstallationCommand <- function() {
+  command <- paste("apt-get -y upgrade;",
+                   "apt-get -y install libcurl4-openssl-dev;",
+                   "apt-get -y install libssl-dev",
+                   sep = " ")
+  command
+}
+
 getJobPackageInstallationCommand <- function(type, packages) {
   script <- ""
   if (type == "cran") {
@@ -19,13 +27,14 @@ getJobPackageInstallationCommand <- function(type, packages) {
 getPoolPackageInstallationCommand <- function(type, packages) {
   poolInstallationCommand <- character(length(packages))
   
+  # At this point we cannot use install_cran.R and install_github.R because they are not yet available.
   if (type == "cran") {
     script <-
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'install.packages(args[1])\' %s"
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'install.packages(args[1], lib=\"/mnt/batch/tasks/shared/R/packages\")\' %s"
   }
   else if (type == "github") {
     script <-
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'devtools::install_github(args[1])\' %s"
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'devtools::install_github(new = \"/mnt/batch/tasks/shared/R/packages\", args[1])\' %s"
   }
   else {
     stop("Using an incorrect package source")
@@ -41,6 +50,7 @@ getPoolPackageInstallationCommand <- function(type, packages) {
 dockerRunCommand <- function(containerName, containerImage, command, runAsDaemon = TRUE) {
   dockerOptions <- paste("--rm",
                          "-v /mnt/batch/tasks:/mnt/batch/tasks",
+                         "-e DOCKER_WORKING_DIR=/batch/startup/wd",
                          "-e AZ_BATCH_JOB_PREP_WORKING_DIR=$AZ_BATCH_JOB_PREP_WORKING_DIR",
                          "-e AZ_BATCH_TASK_WORKING_DIR=$AZ_BATCH_TASK_WORKING_DIR",
                          "-e BLOBXFER_SASKEY=$BLOBXFER_SASKEY",

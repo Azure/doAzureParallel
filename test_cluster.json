@@ -1,22 +1,26 @@
 {
-  "name": "r_docker_341",
+  "name": "r_docker_clusPak1",
   "vmSize": "Standard_A2_v2",
   "maxTasksPerNode": 1,
   "poolSize": {
     "dedicatedNodes": {
-      "min": 1,
-      "max": 1
-    },
-    "lowPriorityNodes": {
       "min": 0,
       "max": 0
+    },
+    "lowPriorityNodes": {
+      "min": 1,
+      "max": 1
     },
     "autoscaleFormula": "QUEUE"
   },
   "containerImage": "r-base:3.4.1",
   "rPackages": {
-    "cran": [],
-    "github": []
+    "cran": [
+      "xml2"
+    ],
+    "github": [
+      "azure/rAzureBatch"
+    ]
   },
   "commandLine": []
 }

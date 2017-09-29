@@ -4,7 +4,7 @@ args <- commandArgs(trailingOnly = TRUE)
 status <- tryCatch({
   for (package in args) {
     if (!require(package, character.only = TRUE)) {
-      install.packages(pkgs = package)
+      install.packages(pkgs = package, lib.loc="/mnt/batch/tasks/shared/R/packages")
       require(package, character.only = TRUE)
     }
   }

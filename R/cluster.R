@@ -148,7 +148,7 @@ makeCluster <-
         !is.null(poolConfig$rPackages$cran) &&
         length(poolConfig$rPackages$cran) > 0) {
       installCranCommand <-
-        getPoolPackageInstallationCommand("cran", poolConfig$rPackages$cran)
+       getPoolPackageInstallationCommand("cran", poolConfig$rPackages$cran)
     }
 
     if (!is.null(poolConfig$rPackages) &&
@@ -162,7 +162,6 @@ makeCluster <-
     if (!is.null(installCranCommand)) {
       packages <- installCranCommand
     }
-
     if (!is.null(installGithubCommand) && is.null(packages)) {
       packages <- installGithubCommand
     }
@@ -173,27 +172,54 @@ makeCluster <-
     commandLine <- NULL
 
     # install docker and create docker container
-    dockerImage = "r_base:3.4.1"
+    dockerImage = "r_base:latest"
     if (!is.null(poolConfig$containerImage)) {
       dockerImage = poolConfig$containerImage
     }
     
     config$containerImage <- dockerImage
     
-    install_and_start_container_command = paste("cluster_setup.sh",
+    # install_and_start_container_command = paste("cluster_setup.sh",
+    #                                             dockerImage, 
+    #                                             "'docker run --rm --name r-version -v /mnt/batch/tasks:/batch -e DOCKER_WORKING_DIR=/batch/startup/wd",
+    #                                             dockerImage, 
+    #                                             "R --version'",
+    #                                             sep = " ")
+    
+    install_and_start_container_command <- paste("cluster_setup.sh",
                                                 dockerImage, 
-                                                "'docker run --rm --name r-version -v /mnt/batch/tasks:/batch -e DOCKER_WORKING_DIR=/batch/startup/wd",
-                                                dockerImage, 
-                                                "R --version'",
                                                 sep = " ")
+    
     container_install_command <- c(
-      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container/R/cluster_setup.sh",
+      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container/inst/startup/cluster_setup.sh",
       "chmod u+x cluster_setup.sh",
       install_and_start_container_command)
 
+    container_install_command <- c(container_install_command, dockerRunCommand("startup", dockerImage, "tail -f /dev/null"))
+    
     if (!is.null(poolConfig$commandLine)) {
       commandLine <- c(container_install_command, poolConfig$commandLine)
     }
+    
+    # Print off version of R
+    commandLine <- c(commandLine, dockerExecCommand("startup", "R --version"))
+    
+    if (!is.null(poolConfig$rPackages)) {
+      # install required libs for pacakges
+      # TODO: uncomment this and make this a small installer script which is loaded into the container.
+      #commandLine <- c(commandLine, dockerExecCommand("startup", getLinuxAptGetSoftwardInstallationCommand()))
+      
+      commandLine <- c(commandLine, dockerExecCommand("startup", "apt-get -y upgrade"))
+      commandLine <- c(commandLine, dockerExecCommand("startup", "apt-get -y install libcurl4-openssl-dev"))
+      commandLine <- c(commandLine, dockerExecCommand("startup", "apt-get -y install libssl-dev"))
+      
+      # install packages
+      commandLine <- c(commandLine, dockerExecCommand("startup", packages))
+    }
+    
+    
+    # stop container
+    commandLine <- c(commandLine, "docker stop startup")
 
     environmentSettings <- NULL
     if (!is.null(poolConfig$rPackages) &&

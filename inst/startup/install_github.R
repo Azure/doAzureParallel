@@ -8,7 +8,7 @@ for (package in args) {
   packageName <- packageDirectory[length(packageDirectory)]
 
   if (!require(packageName, character.only = TRUE)) {
-    devtools::install_github(packageDirectory)
+    devtools::install_github(new = "/mnt/batch/tasks/shared/R/packages", packageDirectory)
     require(packageName, character.only = TRUE)
   }
 }
