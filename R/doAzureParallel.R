@@ -347,7 +347,7 @@ setHttpTraffic <- function(value = FALSE) {
         list(name = "chunkSize", value = as.character(chunkSize))
 
       if (is.null(obj$packages)) {
-        metadata <- list(enableCloudCombine, chunkSizeValue)
+        metadata <- list(enableCloudCombine, chunkSizeKeyValuePair)
       } else {
         metadata <- list(enableCloudCombine, chunkSizeKeyValuePair, obj$packages)
       }
