@@ -17,8 +17,10 @@
 
 # RStudio files
 .Rproj.user/
-*.json
 *.Rproj
+
+# doAzureParallel secrets file
+credentials.json
 
 # produced vignettes
 vignettes/*.html

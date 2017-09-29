@@ -37,7 +37,8 @@ workers <- function(data) {
   id <- data$poolId
   pool <- rAzureBatch::getPool(id)
 
-  if (getOption("verbose")) {
+  verboseFlag <- getOption("azureVerbose")
+  if (!is.null(verboseFlag) && verboseFlag) {
     getPoolWorkers(id)
   }
 
@@ -107,7 +108,21 @@ setVerbose <- function(value = FALSE) {
   if (!is.logical(value))
     stop("setVerbose requires a logical argument")
 
-  options(verbose = value)
+  options(azureVerbose = value)
+}
+
+#' Set the verbosity for calling httr rest api calls
+#'
+#' @param value Boolean value for turning on and off verbose mode
+#'
+#' @examples
+#' setVerbose(TRUE)
+#' @export
+setHttpTraffic <- function(value = FALSE) {
+  if (!is.logical(value))
+    stop("setVerbose requires a logical argument")
+
+  options(azureHttpTraffic = value)
 }
 
 .doAzureParallel <- function(obj, expr, envir, data) {
@@ -171,7 +186,6 @@ setVerbose <- function(value = FALSE) {
   }
 
   pkgName <- if (exists("packageName", mode = "function"))
-
     packageName(envir)
   else
     NULL
@@ -242,7 +256,7 @@ setVerbose <- function(value = FALSE) {
     tryCatch({
       retryCounter <- retryCounter + 1
 
-      response <- rAzureBatch::createContainer(id, raw = TRUE)
+      response <- rAzureBatch::createContainer(id, content = "text")
       if (grepl("ContainerAlreadyExists", response)) {
         if (!is.null(obj$options$azure$job)) {
           containerResponse <- grepl("ContainerAlreadyExists", response)
@@ -399,16 +413,10 @@ setVerbose <- function(value = FALSE) {
     taskId <- paste0(id, "-task", i)
 
     .addTask(
-      id,
+      jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %s %s %s %s > %s.txt",
-        "$AZ_BATCH_JOB_PREP_WORKING_DIR",
-        "$AZ_BATCH_TASK_WORKING_DIR",
-        jobFileName,
-        paste0(taskId, ".rds"),
-        taskId
-      ),
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R > $AZ_BATCH_TASK_ID.txt"),
       args = argsList[startIndex:endIndex],
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
@@ -421,17 +429,15 @@ setVerbose <- function(value = FALSE) {
   rAzureBatch::updateJob(id)
 
   if (enableCloudCombine) {
+    mergeTaskId <- paste0(id, "-merge")
     .addTask(
-      id,
-      taskId = paste0(id, "-merge"),
+      jobId = id,
+      taskId = mergeTaskId,
       rCommand = sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s %s %s > %s.txt",
-        "$AZ_BATCH_JOB_PREP_WORKING_DIR",
-        "$AZ_BATCH_TASK_WORKING_DIR",
-        id,
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
         length(tasks),
-        ntasks,
-        paste0(id, "-merge")
+        chunkSize,
+        as.character(obj$errorHandling)
       ),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
@@ -442,59 +448,71 @@ setVerbose <- function(value = FALSE) {
   }
 
   if (wait) {
-    waitForTasksToComplete(id, jobTimeout)
-
-    if (typeof(cloudCombine) == "list" && enableCloudCombine) {
-      response <-
-        rAzureBatch::downloadBlob(
-          id,
-          paste0("result/", id, "-merge-result.rds"),
-          sasToken = sasToken,
-          accountName = storageCredentials$name
-        )
-      tempFile <- tempfile("doAzureParallel", fileext = ".rds")
-      bin <- httr::content(response, "raw")
-      writeBin(bin, tempFile)
-      results <- readRDS(tempFile)
-
-      failTasks <- sapply(results, .isError)
-
-      numberOfFailedTasks <- sum(unlist(failTasks))
-
-      if (numberOfFailedTasks > 0) {
-        .createErrorViewerPane(id, failTasks)
-      }
-
-      accumulator <- foreach::makeAccum(it)
-
-      tryCatch(
-        accumulator(results, seq(along = results)),
-        error = function(e) {
-          cat("error calling combine function:\n")
-          print(e)
-        }
-      )
-
-      # check for errors
-      errorValue <- foreach::getErrorValue(it)
-      errorIndex <- foreach::getErrorIndex(it)
-
-      cat(sprintf("Number of errors: %i", numberOfFailedTasks),
-          fill = TRUE)
-
-      rAzureBatch::deleteJob(id)
-
-      if (identical(obj$errorHandling, "stop") &&
-          !is.null(errorValue)) {
-        msg <- sprintf("task %d failed - '%s'",
-                       errorIndex,
-                       conditionMessage(errorValue))
-        stop(simpleError(msg, call = expr))
-      }
-      else {
-        foreach::getResult(it)
-      }
+    if (!is.null(obj$packages)) {
+      waitForJobPreparation(id, data$poolId)
     }
+
+    tryCatch({
+        waitForTasksToComplete(id, jobTimeout, obj$errorHandling)
+
+        if (typeof(cloudCombine) == "list" && enableCloudCombine) {
+          tempFile <- tempfile("doAzureParallel", fileext = ".rds")
+
+          response <-
+            rAzureBatch::downloadBlob(
+              id,
+              paste0("result/", id, "-merge-result.rds"),
+              sasToken = sasToken,
+              accountName = storageCredentials$name,
+              downloadPath = tempFile,
+              overwrite = TRUE
+            )
+
+          results <- readRDS(tempFile)
+
+          failTasks <- sapply(results, .isError)
+
+          numberOfFailedTasks <- sum(unlist(failTasks))
+
+          if (numberOfFailedTasks > 0) {
+            .createErrorViewerPane(id, failTasks)
+          }
+
+          accumulator <- foreach::makeAccum(it)
+
+          tryCatch(
+            accumulator(results, seq(along = results)),
+            error = function(e) {
+              cat("error calling combine function:\n")
+              print(e)
+            }
+          )
+
+          # check for errors
+          errorValue <- foreach::getErrorValue(it)
+          errorIndex <- foreach::getErrorIndex(it)
+
+          cat(sprintf("Number of errors: %i", numberOfFailedTasks),
+              fill = TRUE)
+
+          rAzureBatch::deleteJob(id)
+
+          if (identical(obj$errorHandling, "stop") &&
+              !is.null(errorValue)) {
+            msg <- sprintf("task %d failed - '%s'",
+                           errorIndex,
+                           conditionMessage(errorValue))
+            stop(simpleError(msg, call = expr))
+          }
+          else {
+            foreach::getResult(it)
+          }
+        }
+      },
+      error = function(ex){
+        message(ex)
+      }
+    )
   }
   else{
     print(

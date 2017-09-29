@@ -1,4 +1,21 @@
 # Change Log
+## [0.4.3] 2017-09-28
+### Fixed
+- Allow merge task to run on task failures
+## [0.4.2] 2017-09-08
+### Added
+- Support for users to get files from nodes and tasks
+- Documentation on debugging and troubleshooting
+### Changed
+- Show the job preparation status
+### Fixed
+- Fix pool creation when a deleting pool has the same name
+- Fail faster when a broken installation happens
+
+## [0.4.1] 2017-08-29
+### Fixed
+- Change github authentication token type in cluster configuration file
+
 ## [0.4.0] 2017-08-22
 ### Added
 - Custom Scripts: Allows users to run commands on the command prompt when nodes boots up

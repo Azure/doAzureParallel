@@ -15,7 +15,6 @@ if (requireNamespace("lintr", quietly = TRUE)) {
       object_name_linter = lintr::object_name_linter(style = "lowerCamelCase"),
       object_length_linter = lintr::object_length_linter,
       open_curly_linter = lintr::open_curly_linter,
-      single_quotes_linter = lintr::single_quotes_linter,
       spaces_inside_linter = lintr::spaces_inside_linter,
       spaces_left_parentheses_linter = lintr::spaces_left_parentheses_linter,
       trailing_blank_lines_linter = lintr::trailing_blank_lines_linter,

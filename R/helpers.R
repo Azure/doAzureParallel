@@ -29,8 +29,16 @@
   resourceFiles <-
     list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
 
+  exitConditions <- NULL
   if (!is.null(args$dependsOn)) {
     dependsOn <- list(taskIds = dependsOn)
+  }
+  else {
+    exitConditions <- list(
+      default = list(
+        dependencyAction = "satisfy"
+      )
+    )
   }
 
   resultFile <- paste0(taskId, "-result", ".rds")
@@ -38,7 +46,8 @@
 
   downloadCommand <-
     sprintf(
-      "env PATH=$PATH blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds",
+      paste("/anaconda/envs/py35/bin/blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY",
+            "--remoteresource . --include result/*.rds"),
       accountName,
       jobId,
       "$AZ_BATCH_TASK_WORKING_DIR"
@@ -88,8 +97,7 @@
 
   outputFiles <- append(outputFiles, userOutputFiles)
   commands <-
-    c("export PATH=/anaconda/envs/py35/bin:$PATH",
-      downloadCommand,
+    c(downloadCommand,
       rCommand)
 
   commands <- linuxWrapCommands(commands)
@@ -122,7 +130,8 @@
     resourceFiles = resourceFiles,
     commandLine = commands,
     dependsOn = dependsOn,
-    outputFiles = outputFiles
+    outputFiles = outputFiles,
+    exitConditions = exitConditions
   )
 }
 
@@ -159,7 +168,7 @@
     poolInfo = poolInfo,
     jobPreparationTask = jobPreparationTask,
     usesTaskDependencies = usesTaskDependencies,
-    raw = TRUE
+    content = "text"
   )
 
   return(response)
@@ -169,8 +178,7 @@
   args <- list(...)
 
   commands <- c(
-    "export PATH=/anaconda/envs/py35/bin:$PATH",
-    "env PATH=$PATH pip install --no-dependencies blobxfer"
+    "/anaconda/envs/py35/bin/pip install --no-dependencies blobxfer"
   )
 
   if (!is.null(args$commandLine)) {
@@ -224,7 +232,7 @@
     ),
     autoScaleEvaluationInterval = "PT5M",
     maxTasksPerNode = pool$maxTasksPerNode,
-    raw = TRUE
+    content = "text"
   )
 
   return(response)
