@@ -49,64 +49,140 @@ linuxWrapCommands <- function(commands = c()) {
   commandLine
 }
 
-#' Get a list of job statuses from the given job ids
+#' Get a list of job statuses from the given filter
 #'
-#' @param jobIds A character vector of job ids
+#' @param filter A filter containing job state
 #'
 #' @examples
 #' \dontrun{
-#' getJobList(c("job-001", "job-002"))
+#' getJobList()
 #' }
 #' @export
-getJobList <- function(jobIds = c()) {
-  filter <- ""
+getJobList <- function(filter = NULL) {
+  filterClause <- ""
 
-  if (length(jobIds) > 1) {
-    for (i in 1:length(jobIds)) {
-      filter <- paste0(filter, sprintf("id eq '%s'", jobIds[i]), " or ")
+  if (!is.null(filter)) {
+    if (!is.null(filter$state)) {
+      filterClause <-
+        paste0(filterClause, sprintf("state eq '%s'", filter$state))
     }
-
-    filter <- substr(filter, 1, nchar(filter) - 3)
   }
 
   jobs <-
-    rAzureBatch::listJobs(query = list("$filter" = filter, "$select" = "id,state"))
-  print("Job List: ")
+    rAzureBatch::listJobs(query = list("$filter" = filterClause, "$select" = "id,state"))
 
-  for (j in 1:length(jobs$value)) {
-    tasks <- rAzureBatch::listTask(jobs$value[[j]]$id)
-    count <- 0
-    if (length(tasks$value) > 0) {
-      taskStates <-
-        lapply(tasks$value, function(x)
-          x$state == "completed")
+  id <- character(length(jobs$value))
+  state <- character(length(jobs$value))
+  status <- character(length(jobs$value))
+  failedTasks <- integer(length(jobs$value))
+  totalTasks <- integer(length(jobs$value))
 
-      for (i in 1:length(taskStates)) {
-        if (taskStates[[i]] == TRUE) {
-          count <- count + 1
-        }
+  if (length(jobs$value) > 0) {
+    for (j in 1:length(jobs$value)) {
+      id[j] <- jobs$value[[j]]$id
+      state[j] <- jobs$value[[j]]$state
+      taskCounts <-
+        rAzureBatch::getJobTaskCounts(jobId = jobs$value[[j]]$id)
+      failedTasks[j] <-
+        as.integer(taskCounts$failed)
+      totalTasks[j] <-
+        as.integer(taskCounts$active + taskCounts$running + taskCounts$completed)
+
+      completed <- as.integer(taskCounts$completed)
+
+      if (totalTasks[j] > 0) {
+        status[j] <-
+          sprintf("%s %%", ceiling(completed / totalTasks[j] * 100))
       }
-
-      summary <-
-        sprintf(
-          "[ id: %s, state: %s, status: %d",
-          jobs$value[[j]]$id,
-          jobs$value[[j]]$state,
-          ceiling(count / length(tasks$value) * 100)
-        )
-      print(paste0(summary,  "% ]"))
-    }
-    else {
-      print(
-        sprintf(
-          "[ id: %s, state: %s, status: %s ]",
-          jobs$value[[j]]$id,
-          jobs$value[[j]]$state,
-          "No tasks were run."
-        )
-      )
+      else {
+        status[j] <- "No tasks in the job"
+      }
     }
   }
+
+  return (
+    data.frame(
+      Id = id,
+      State = state,
+      Status = status,
+      FailedTasks = failedTasks,
+      TotalTasks = totalTasks
+    )
+  )
+}
+
+#' Get a job for the given job id
+#'
+#' @param jobId A job id
+#' @param verbose show verbose log output
+#'
+#' @examples
+#' \dontrun{
+#' getJob("job-001", FALSE)
+#' }
+#' @export
+getJob <- function(jobId, verbose = TRUE) {
+  if (is.null(jobId)) {
+    stop("must specify the jobId parameter")
+  }
+
+  job <- rAzureBatch::getJob(jobId = jobId)
+
+  metadata <-
+    list(
+      chunkSize = 1,
+      enableCloudCombine = "TRUE",
+      packages = ""
+    )
+
+  if (!is.null(job$metadata)) {
+    for (i in 1:length(job$metadata)) {
+      metadata[[job$metadata[[i]]$name]] <- job$metadata[[i]]$value
+    }
+  }
+
+  if (verbose == TRUE) {
+    cat(sprintf("Job Id: %s", job$id), fill = TRUE)
+    cat("\njob metadata:", fill = TRUE)
+    cat(sprintf("\tchunkSize: %s", metadata$chunkSize),
+        fill = TRUE)
+    cat(sprintf("\tenableCloudCombine: %s", metadata$enableCloudCombine),
+        fill = TRUE)
+    cat(sprintf("\tpackages: %s", metadata$packages),
+        fill = TRUE)
+  }
+
+  taskCounts <- rAzureBatch::getJobTaskCounts(jobId = jobId)
+
+  tasks <- list(
+    active = taskCounts$active,
+    running = taskCounts$running,
+    completed = taskCounts$completed,
+    succeeded = taskCounts$succeeded,
+    failed = taskCounts$failed
+  )
+
+  if (verbose == TRUE) {
+    cat("\ntasks:", fill = TRUE)
+    cat(sprintf("\tactive: %s", taskCounts$active), fill = TRUE)
+    cat(sprintf("\trunning: %s", taskCounts$running), fill = TRUE)
+    cat(sprintf("\tcompleted: %s", taskCounts$completed), fill = TRUE)
+    cat(sprintf("\t\tsucceeded: %s", taskCounts$succeeded), fill = TRUE)
+    cat(sprintf("\t\tfailed: %s", taskCounts$failed), fill = TRUE)
+    cat(
+      sprintf(
+        "\ttotal: %s",
+        taskCounts$active + taskCounts$running + taskCounts$completed
+      ),
+      fill = TRUE
+    )
+  }
+
+  jobObj <- list(jobId = job$id,
+                 metadata = metadata,
+                 tasks = tasks)
+
+  return(jobObj)
 }
 
 #' Polling method to check status of cluster boot up
@@ -240,10 +316,6 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
 }
 
 #' Download the results of the job
-#' @param ... Further named parameters
-#' \itemize{
-#'  \item{"container"}: {The container to download from.}
-#' }
 #' @param jobId The jobId to download from
 #'
 #' @return The results from the job.
@@ -252,142 +324,27 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
 #' getJobResult(jobId = "job-001")
 #' }
 #' @export
-getJobResult <- function(jobId = "", ...) {
-  args <- list(...)
+getJobResult <- function(jobId) {
+  cat("Getting job results...", fill = TRUE)
 
-  if (!is.null(args$container)) {
-    results <-
-      rAzureBatch::downloadBlob(args$container,
-                                paste0("result/", jobId, "-merge-result.rds"))
+  if (nchar(jobId) < 3) {
+    stop("jobId must contain at least 3 characters.")
   }
-  else{
-    results <-
-      rAzureBatch::downloadBlob(jobId, paste0("result/", jobId, "-merge-result.rds"))
+
+  tempFile <- tempFile <- tempfile("getJobResult", fileext = ".rds")
+
+  results <- rAzureBatch::downloadBlob(
+    jobId,
+    paste0("result/", jobId, "-merge-result.rds"),
+    downloadPath = tempFile,
+    overwrite = TRUE
+  )
+
+  if (is.vector(results)) {
+    results <- readRDS(tempFile)
   }
 
   return(results)
-}
-
-validateClusterConfig <- function(clusterFilePath) {
-  if (file.exists(clusterFilePath)) {
-    pool <- rjson::fromJSON(file = clusterFilePath)
-  }
-  else{
-    pool <- rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
-  }
-
-  if (is.null(pool$poolSize)) {
-    stop("Missing poolSize entry")
-  }
-
-  if (is.null(pool$poolSize$dedicatedNodes)) {
-    stop("Missing dedicatedNodes entry")
-  }
-
-  if (is.null(pool$poolSize$lowPriorityNodes)) {
-    stop("Missing lowPriorityNodes entry")
-  }
-
-  if (is.null(pool$poolSize$autoscaleFormula)) {
-    stop("Missing autoscaleFormula entry")
-  }
-
-  if (is.null(pool$poolSize$dedicatedNodes$min)) {
-    stop("Missing dedicatedNodes$min entry")
-  }
-
-  if (is.null(pool$poolSize$dedicatedNodes$max)) {
-    stop("Missing dedicatedNodes$max entry")
-  }
-
-  if (is.null(pool$poolSize$lowPriorityNodes$min)) {
-    stop("Missing lowPriorityNodes$min entry")
-  }
-
-  if (is.null(pool$poolSize$lowPriorityNodes$max)) {
-    stop("Missing lowPriorityNodes$max entry")
-  }
-
-  stopifnot(is.character(pool$name))
-  stopifnot(is.character(pool$vmSize))
-  stopifnot(is.character(pool$poolSize$autoscaleFormula))
-  stopifnot(pool$poolSize$autoscaleFormula %in% names(autoscaleFormula))
-
-  stopifnot(pool$poolSize$dedicatedNodes$min <= pool$poolSize$dedicatedNodes$max)
-  stopifnot(pool$poolSize$lowPriorityNodes$min <= pool$poolSize$lowPriorityNodes$max)
-  stopifnot(pool$maxTasksPerNode >= 1)
-
-  stopifnot(is.double(pool$poolSize$dedicatedNodes$min))
-  stopifnot(is.double(pool$poolSize$dedicatedNodes$max))
-  stopifnot(is.double(pool$poolSize$lowPriorityNodes$min))
-  stopifnot(is.double(pool$poolSize$lowPriorityNodes$max))
-  stopifnot(is.double(pool$maxTasksPerNode))
-
-  TRUE
-}
-
-# Validating cluster configuration files below doAzureParallel version 0.3.2
-validateDeprecatedClusterConfig <- function(clusterFilePath) {
-  if (file.exists(clusterFilePath)) {
-    poolConfig <- rjson::fromJSON(file = clusterFilePath)
-  }
-  else{
-    poolConfig <-
-      rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
-  }
-
-  if (is.null(poolConfig$pool$poolSize)) {
-    stop("Missing poolSize entry")
-  }
-
-  if (is.null(poolConfig$pool$poolSize$dedicatedNodes)) {
-    stop("Missing dedicatedNodes entry")
-  }
-
-  if (is.null(poolConfig$pool$poolSize$lowPriorityNodes)) {
-    stop("Missing lowPriorityNodes entry")
-  }
-
-  if (is.null(poolConfig$pool$poolSize$autoscaleFormula)) {
-    stop("Missing autoscaleFormula entry")
-  }
-
-  if (is.null(poolConfig$pool$poolSize$dedicatedNodes$min)) {
-    stop("Missing dedicatedNodes$min entry")
-  }
-
-  if (is.null(poolConfig$pool$poolSize$dedicatedNodes$max)) {
-    stop("Missing dedicatedNodes$max entry")
-  }
-
-  if (is.null(poolConfig$pool$poolSize$lowPriorityNodes$min)) {
-    stop("Missing lowPriorityNodes$min entry")
-  }
-
-  if (is.null(poolConfig$pool$poolSize$lowPriorityNodes$max)) {
-    stop("Missing lowPriorityNodes$max entry")
-  }
-
-  stopifnot(is.character(poolConfig$pool$name))
-  stopifnot(is.character(poolConfig$pool$vmSize))
-  stopifnot(is.character(poolConfig$pool$poolSize$autoscaleFormula))
-  stopifnot(poolConfig$pool$poolSize$autoscaleFormula %in% names(autoscaleFormula))
-
-  stopifnot(
-    poolConfig$pool$poolSize$dedicatedNodes$min <= poolConfig$pool$poolSize$dedicatedNodes$max
-  )
-  stopifnot(
-    poolConfig$pool$poolSize$lowPriorityNodes$min <= poolConfig$pool$poolSize$lowPriorityNodes$max
-  )
-  stopifnot(poolConfig$pool$maxTasksPerNode >= 1)
-
-  stopifnot(is.double(poolConfig$pool$poolSize$dedicatedNodes$min))
-  stopifnot(is.double(poolConfig$pool$poolSize$dedicatedNodes$max))
-  stopifnot(is.double(poolConfig$pool$poolSize$lowPriorityNodes$min))
-  stopifnot(is.double(poolConfig$pool$poolSize$lowPriorityNodes$max))
-  stopifnot(is.double(poolConfig$pool$maxTasksPerNode))
-
-  TRUE
 }
 
 #' Utility function for creating an output file

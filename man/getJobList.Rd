@@ -2,18 +2,18 @@
 % Please edit documentation in R/utility.R
 \name{getJobList}
 \alias{getJobList}
-\title{Get a list of job statuses from the given job ids}
+\title{Get a list of job statuses from the given filter}
 \usage{
-getJobList(jobIds = c())
+getJobList(filter = NULL)
 }
 \arguments{
-\item{jobIds}{A character vector of job ids}
+\item{filter}{A filter containing job state}
 }
 \description{
-Get a list of job statuses from the given job ids
+Get a list of job statuses from the given filter
 }
 \examples{
 \dontrun{
-getJobList(c("job-001", "job-002"))
+getJobList()
 }
 }

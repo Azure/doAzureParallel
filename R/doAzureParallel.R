@@ -321,13 +321,41 @@ setHttpTraffic <- function(value = FALSE) {
       )
 
       # We need to merge any files passed by the calling lib with the resource files specified here
+
       resourceFiles <-
         append(resourceFiles, requiredJobResourceFiles)
+
+      enableCloudCombine <-
+        list(name = "enableCloudCombine", value = "TRUE")
+
+      chunkSize <- 1
+
+      if (!is.null(obj$options$azure$chunkSize)) {
+        chunkSize <- obj$options$azure$chunkSize
+      }
+
+      if (!is.null(obj$options$azure$chunksize)) {
+        chunkSize <- obj$options$azure$chunksize
+      }
+
+      if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
+        chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
+      }
+
+      chunkSizeKeyValuePair <-
+        list(name = "chunkSize", value = as.character(chunkSize))
+
+      if (is.null(obj$packages)) {
+        metadata <- list(enableCloudCombine, chunkSizeKeyValuePair)
+      } else {
+        metadata <- list(enableCloudCombine, chunkSizeKeyValuePair, obj$packages)
+      }
 
       response <- .addJob(
         jobId = id,
         poolId = data$poolId,
         resourceFiles = resourceFiles,
+        metadata = metadata,
         packages = obj$packages
       )
 
@@ -375,20 +403,6 @@ setHttpTraffic <- function(value = FALSE) {
   cat("Job Summary: ", fill = TRUE)
   job <- rAzureBatch::getJob(id)
   cat(sprintf("Id: %s", job$id), fill = TRUE)
-
-  chunkSize <- 1
-
-  if (!is.null(obj$options$azure$chunkSize)) {
-    chunkSize <- obj$options$azure$chunkSize
-  }
-
-  if (!is.null(obj$options$azure$chunksize)) {
-    chunkSize <- obj$options$azure$chunksize
-  }
-
-  if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
-    chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
-  }
 
   ntasks <- length(argsList)
 
