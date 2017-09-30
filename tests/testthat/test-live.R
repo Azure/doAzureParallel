@@ -16,10 +16,13 @@ test_that("Scenario Test", {
 
   opt <- list(wait = FALSE)
   '%dopar%' <- foreach::'%dopar%'
-  res <- foreach::foreach(i = 1:4, .options.azure=opt) %dopar% {
+  res <- foreach::foreach(i = 1:4, .options.azure = opt) %dopar% {
     mean(1:3)
   }
 
+  getJob(res)
+  getJobList()
+  getJobResult(res)
   doAzureParallel::stopCluster(cluster)
 
   testthat::expect_equal(length(res),
