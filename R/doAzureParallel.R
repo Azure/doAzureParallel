@@ -335,8 +335,8 @@ setHttpTraffic <- function(value = FALSE) {
       resourceFiles <-
         append(resourceFiles, requiredJobResourceFiles)
 
-      enableCloudCombine <-
-        list(name = "enableCloudCombine", value = "TRUE")
+      enableCloudCombineKeyValuePair <-
+        list(name = "enableCloudCombine", value = as.character(enableCloudCombine))
 
       chunkSize <- 1
 
@@ -352,13 +352,22 @@ setHttpTraffic <- function(value = FALSE) {
         chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
       }
 
+
       chunkSizeKeyValuePair <-
         list(name = "chunkSize", value = as.character(chunkSize))
 
       if (is.null(obj$packages)) {
-        metadata <- list(enableCloudCombine, chunkSizeKeyValuePair)
+        metadata <-
+          list(enableCloudCombineKeyValuePair, chunkSizeKeyValuePair)
       } else {
-        metadata <- list(enableCloudCombine, chunkSizeKeyValuePair, obj$packages)
+        packagesKeyValuePair <-
+          list(name = "packages",
+               value = paste(obj$packages, collapse = ";"))
+
+        metadata <-
+          list(enableCloudCombineKeyValuePair,
+               chunkSizeKeyValuePair,
+               packagesKeyValuePair)
       }
 
       response <- .addJob(

@@ -14,8 +14,9 @@ test_that("Scenario Test", {
   cluster <- doAzureParallel::makeCluster(clusterFileName)
   doAzureParallel::registerDoAzureParallel(cluster)
 
+  opt <- list(wait = FALSE)
   '%dopar%' <- foreach::'%dopar%'
-  res <- foreach::foreach(i = 1:4) %dopar% {
+  res <- foreach::foreach(i = 1:4, .options.azure=opt) %dopar% {
     mean(1:3)
   }
 
