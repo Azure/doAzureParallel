@@ -63,8 +63,15 @@ getJobList <- function(filter = NULL) {
 
   if (!is.null(filter)) {
     if (!is.null(filter$state)) {
+      for (i in 1:length(filter$state)) {
+        filterClause <-
+          paste0(filterClause,
+                 sprintf("state eq '%s'", filter$state[i]),
+                 " or ")
+      }
+
       filterClause <-
-        paste0(filterClause, sprintf("state eq '%s'", filter$state))
+        substr(filterClause, 1, nchar(filterClause) - 3)
     }
   }
 
@@ -461,7 +468,7 @@ waitForTasksToComplete <-
           sprintf(paste("%i task(s) failed while running the job.",
               "This caused the job to terminate automatically.",
               "To disable this behavior and continue on failure, set .errorHandling='remove | pass'",
-                        "in the foreach loop\n"), taskCounts$failed)
+              "in the foreach loop\n"), taskCounts$failed)
 
 
         for (i in 1:length(failedTasks$value)) {

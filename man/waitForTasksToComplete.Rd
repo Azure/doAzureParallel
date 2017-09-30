@@ -2,13 +2,10 @@
 % Please edit documentation in R/utility.R
 \name{waitForTasksToComplete}
 \alias{waitForTasksToComplete}
-\alias{waitForTasksToComplete}
 \title{Wait for current tasks to complete}
 \usage{
-waitForTasksToComplete(jobId, timeout, errorhandling = "stop")
+waitForTasksToComplete(jobId, timeout, errorHandling = "stop")
 }
 \description{
-Wait for current tasks to complete
-
 Wait for current tasks to complete
 }
