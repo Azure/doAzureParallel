@@ -33,6 +33,9 @@ if [ $? -ne 0 ]; then
   exit 3
 fi
 
+# Create required directories
+mkdir -p /mnt/batch/tasks/shared/R/packages
+
 # If the container already exists just restart. Otherwise create it
 # if [ "$(docker ps -a -q -f name=$container_name)" ]; then
 #     echo "Docker container is already setup. Restarting it."
