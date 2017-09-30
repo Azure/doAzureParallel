@@ -226,5 +226,8 @@
     content = "text"
   )
 
+  print("add pool response:")
+  print(response)
+  
   return(response)
 }

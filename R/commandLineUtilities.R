@@ -30,11 +30,11 @@ getPoolPackageInstallationCommand <- function(type, packages) {
   # At this point we cannot use install_cran.R and install_github.R because they are not yet available.
   if (type == "cran") {
     script <-
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'install.packages(args[1], lib=\"/mnt/batch/tasks/shared/R/packages\")\' %s"
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'.libPaths( c( .libPaths(),\\\"/mnt/batch/tasks/shared/R/packages\\\") );install.packages(args[1], lib=\\\"/mnt/batch/tasks/shared/R/packages\\\")\' %s"
   }
   else if (type == "github") {
     script <-
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'devtools::install_github(new = \"/mnt/batch/tasks/shared/R/packages\", args[1])\' %s"
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'.libPaths( c( .libPaths(),\\\"/mnt/batch/tasks/shared/R/packages\\\") );devtools::install_github(new = \\\"/mnt/batch/tasks/shared/R/packages\\\", args[1])\' %s"
   }
   else {
     stop("Using an incorrect package source")

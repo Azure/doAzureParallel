@@ -178,21 +178,15 @@ makeCluster <-
     }
     
     config$containerImage <- dockerImage
-    
-    # install_and_start_container_command = paste("cluster_setup.sh",
-    #                                             dockerImage, 
-    #                                             "'docker run --rm --name r-version -v /mnt/batch/tasks:/batch -e DOCKER_WORKING_DIR=/batch/startup/wd",
-    #                                             dockerImage, 
-    #                                             "R --version'",
-    #                                             sep = " ")
-    
     install_and_start_container_command <- paste("cluster_setup.sh",
                                                 dockerImage, 
                                                 sep = " ")
     
     container_install_command <- c(
-      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container/inst/startup/cluster_setup.sh",
+      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container_wip/inst/startup/cluster_setup.sh",
       "chmod u+x cluster_setup.sh",
+      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container_wip/inst/startup/apt_install.sh",
+      "chmod u+x apt_install.sh",
       install_and_start_container_command)
 
     container_install_command <- c(container_install_command, dockerRunCommand("startup", dockerImage, "tail -f /dev/null"))
@@ -209,9 +203,13 @@ makeCluster <-
       # TODO: uncomment this and make this a small installer script which is loaded into the container.
       #commandLine <- c(commandLine, dockerExecCommand("startup", getLinuxAptGetSoftwardInstallationCommand()))
       
-      commandLine <- c(commandLine, dockerExecCommand("startup", "apt-get -y upgrade"))
-      commandLine <- c(commandLine, dockerExecCommand("startup", "apt-get -y install libcurl4-openssl-dev"))
-      commandLine <- c(commandLine, dockerExecCommand("startup", "apt-get -y install libssl-dev"))
+      # TODO: This can be part of the container going foward
+      commandLine <- c(commandLine, dockerExecCommand("startup", "/mnt/batch/tasks/startup/wd/apt_install.sh"))
+    
+      # Make sure devtools is installed
+      # TODO: This can be part of the container going foward
+      devtoolsCommandLine <- getPoolPackageInstallationCommand("cran", "devtools")
+      commandLine <- c(commandLine, dockerExecCommand("startup", devtoolsCommandLine))
       
       # install packages
       commandLine <- c(commandLine, dockerExecCommand("startup", packages))
@@ -249,6 +247,7 @@ makeCluster <-
       resourceFiles = resourceFiles,
       commandLine = commandLine
     )
+
 
     if (grepl("AuthenticationFailed", response)) {
       stop("Check your credentials and try again.")
