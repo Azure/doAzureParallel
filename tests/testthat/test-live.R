@@ -14,16 +14,10 @@ test_that("Scenario Test", {
   cluster <- doAzureParallel::makeCluster(clusterFileName)
   doAzureParallel::registerDoAzureParallel(cluster)
 
-  opt <- list(wait = FALSE)
   '%dopar%' <- foreach::'%dopar%'
-  res <- foreach::foreach(i = 1:4, .options.azure = opt) %dopar% {
+  res <- foreach::foreach(i = 1:4) %dopar% {
     mean(1:3)
   }
-
-  job = getJob(res)
-  getJobList()
-  Sys.sleep(120)
-  getJobResult(res)
 
   doAzureParallel::stopCluster(cluster)
 
