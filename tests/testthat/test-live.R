@@ -20,9 +20,11 @@ test_that("Scenario Test", {
     mean(1:3)
   }
 
-  getJob(res)
+  job = getJob(res)
   getJobList()
+  Sys.sleep(120)
   getJobResult(res)
+
   doAzureParallel::stopCluster(cluster)
 
   testthat::expect_equal(length(res),
