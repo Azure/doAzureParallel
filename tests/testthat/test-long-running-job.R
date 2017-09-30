@@ -25,7 +25,7 @@ test_that("Long Running Job Test", {
       mean(1:3)
     }
 
-  job = getJob(res)
+  job <- getJob(res)
 
   # get active/running job list
   filter <- filter <- list()
