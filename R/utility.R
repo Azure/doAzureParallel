@@ -63,8 +63,15 @@ getJobList <- function(filter = NULL) {
 
   if (!is.null(filter)) {
     if (!is.null(filter$state)) {
+      for (i in 1:length(filter$state)) {
+        filterClause <-
+          paste0(filterClause,
+                 sprintf("state eq '%s'", filter$state[i]),
+                 " or ")
+      }
+
       filterClause <-
-        paste0(filterClause, sprintf("state eq '%s'", filter$state))
+        substr(filterClause, 1, nchar(filterClause) - 3)
     }
   }
 
@@ -78,6 +85,9 @@ getJobList <- function(filter = NULL) {
   totalTasks <- integer(length(jobs$value))
 
   if (length(jobs$value) > 0) {
+    if (is.null(jobs$value[[1]]$id)) {
+      stop(jobs$value)
+    }
     for (j in 1:length(jobs$value)) {
       id[j] <- jobs$value[[j]]$id
       state[j] <- jobs$value[[j]]$state
@@ -456,9 +466,9 @@ waitForTasksToComplete <-
 
         tasksFailureWarningLabel <-
           sprintf(paste("%i task(s) failed while running the job.",
-                        "This caused the job to terminate automatically.",
-                        "To disable this behavior and continue on failure, set .errorHandling='remove | pass'",
-                        "in the foreach loop\n"), taskCounts$failed)
+              "This caused the job to terminate automatically.",
+              "To disable this behavior and continue on failure, set .errorHandling='remove | pass'",
+              "in the foreach loop\n"), taskCounts$failed)
 
 
         for (i in 1:length(failedTasks$value)) {
@@ -477,11 +487,11 @@ waitForTasksToComplete <-
 
         stop(sprintf(
           paste("Errors have occurred while running the job '%s'.",
-                "Error handling is set to 'stop' and has proceeded to terminate the job.",
-                "The user will have to handle deleting the job.",
-                "If this is not the correct behavior, change the errorHandling property to 'pass'",
-                " or 'remove' in the foreach object. Use the 'getJobFile' function to obtain the logs.",
-                "For more information about getting job logs, follow this link:",
+            "Error handling is set to 'stop' and has proceeded to terminate the job.",
+            "The user will have to handle deleting the job.",
+            "If this is not the correct behavior, change the errorHandling property to 'pass'",
+            " or 'remove' in the foreach object. Use the 'getJobFile' function to obtain the logs.",
+            "For more information about getting job logs, follow this link:",
                 paste0("https://github.com/Azure/doAzureParallel/blob/master/docs/",
                        "40-troubleshooting.md#viewing-files-directly-from-compute-node")),
           jobId
@@ -490,11 +500,11 @@ waitForTasksToComplete <-
 
       if (Sys.time() > timeToTimeout) {
         stop(sprintf(paste("Timeout has occurred while waiting for tasks to complete.",
-                   "Users will have to manually track the job '%s' and get the results.",
-                   "Use the getJobResults function to obtain the results and getJobList for",
-                   "tracking job status. To change the timeout, set 'timeout' property in the",
+            "Users will have to manually track the job '%s' and get the results.",
+            "Use the getJobResults function to obtain the results and getJobList for",
+            "tracking job status. To change the timeout, set 'timeout' property in the",
                    "foreach's options.azure.")),
-             jobId)
+        jobId)
       }
 
       if (taskCounts$completed >= totalTasks &&

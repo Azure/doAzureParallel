@@ -295,12 +295,12 @@ job_id <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar % { .
 results <- getJobResult(job_id)
 ```
 
-Finally, you may also want to track the status of jobs by state (active/running/completed/failed/succeeded):
+Finally, you may also want to track the status of jobs by state (active, completed etc):
 
 ```R
-# List jobs in running state:
+# List jobs in completed state:
 filter <- list()
-filter$state <- "running"
+filter$state <- list("active", "completed")
 jobList <- getJobList(filter)
 View(jobList)
 ```
