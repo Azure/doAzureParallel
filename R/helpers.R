@@ -32,9 +32,6 @@
     commands <- c(downloadCommand)
   }
 
-  # Install the required software to allow packages.install to work on Linux
-  commands <- c(commands, getLinuxAptGetSoftwardInstallationCommand())
-  
   envFile <- paste0(taskId, ".rds")
   saveRDS(argsList, file = envFile)
   rAzureBatch::uploadBlob(jobId, paste0(getwd(), "/", envFile))
@@ -96,7 +93,7 @@
 
   outputFiles <- append(outputFiles, userOutputFiles)
 
-  commands <- c(commands, dockerExecCommand(paste0(jobId, "_prep"), rCommand))
+  commands <- c(commands, dockerExecCommand(paste0(jobId), rCommand))
 
   commands <- linuxWrapCommands(commands)
 
@@ -143,6 +140,10 @@
   
   startRuntimeCommand <- dockerRunCommand(jobId, containerImage, "tail -f /dev/null", TRUE )
   commands <- c(startRuntimeCommand)
+  
+  # Install the required software to allow packages.install to work on Linux
+  commands <- c(commands, getLinuxAptGetSoftwardInstallationCommand())
+  
   if (!is.null(packages)) {
     jobPackages <- dockerExecCommand(jobId, getJobPackageInstallationCommand("cran", packages))
     commands <- c(commands, jobPackages)

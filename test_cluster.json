@@ -1,7 +1,7 @@
 {
-  "name": "r_docker_clusPak3",
+  "name": "r_docker_clusPak",
   "vmSize": "standard_d2_v2",
-  "maxTasksPerNode": 1,
+  "maxTasksPerNode": 2,
   "poolSize": {
     "dedicatedNodes": {
       "min": 0,
