@@ -90,17 +90,5 @@ Installing bioconductor packages within the _foreach_ code block is not supporte
 
 A [working sample](../samples/package_management/bioconductor_cluster.json) can be found in the samples directory.
 
-### Installing additional packages in your code
-
-If you have already configured BioConductor at the cluster level, you should have access to biocLite in your code. Within your foreach loop add the call to biocLite to install the packages:
-
-```r
-results <- foreach(i = 1:number_of_iterations) %dopar% { 
-    library(BiocInstaller)
-    biocLite(c('GenomicsFeatures', 'AnnotationDbi'))
-    ...
-    }
-```
-
 ## Uninstalling packages
 Uninstalling packages from your pool is not supported. However, you may consider rebuilding your pool.
