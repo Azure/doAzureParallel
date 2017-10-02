@@ -261,7 +261,7 @@ makeCluster <-
 
       clusterNodeMismatchWarning <-
         paste(
-          "There is a mismatched between the projected cluster %s",
+          "There is a mismatched between the requested cluster %s",
           "nodes min/max '%s'/'%s' and the existing cluster %s nodes '%s'.",
           "Use the 'resizeCluster' function to get the correct amount",
           "of workers."

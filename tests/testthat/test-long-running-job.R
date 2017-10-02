@@ -29,7 +29,7 @@ test_that("Long Running Job Test", {
 
   # get active/running job list
   filter <- filter <- list()
-  filter$state <- list("active")
+  filter$state <- c("active", "completed")
   getJobList(filter)
 
   # get job list for all jobs

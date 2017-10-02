@@ -300,7 +300,7 @@ Finally, you may also want to track the status of jobs by state (active, complet
 ```R
 # List jobs in completed state:
 filter <- list()
-filter$state <- list("active", "completed")
+filter$state <- c("active", "completed")
 jobList <- getJobList(filter)
 View(jobList)
 ```

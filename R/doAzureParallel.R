@@ -200,9 +200,7 @@ setHttpTraffic <- function(value = FALSE) {
   }
   else {
     time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
-    id <-  sprintf("%s%s",
-                   "job",
-                   time)
+    id <-  sprintf("%s%s", "job", time)
   }
 
   tryCatch({
@@ -351,7 +349,6 @@ setHttpTraffic <- function(value = FALSE) {
       if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
         chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
       }
-
 
       chunkSizeKeyValuePair <-
         list(name = "chunkSize", value = as.character(chunkSize))
