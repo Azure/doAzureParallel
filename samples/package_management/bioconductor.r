@@ -18,8 +18,7 @@ registerDoAzureParallel(cluster)
 getDoParWorkers()
 
 summary <- foreach(i = 1:1) %dopar% {
-  library(BiocInstaller)
-  biocLite()
+  library(GenomeInofDb) # Already installed as part of the cluster configuration
 
   # You algorithm
 }

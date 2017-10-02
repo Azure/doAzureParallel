@@ -21,5 +21,6 @@
   "commandLine": [
     "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/samples/package_management/bioc_setup.sh",
     "chmod u+x ./bioc_setup.sh",
-    "./bioc_setup.sh"]
+    "./bioc_setup.sh",
+    "Rscript -e 'library(BiocInstaller);biocLite(\\\"GenomeInfoDb\\\");'"]
 }

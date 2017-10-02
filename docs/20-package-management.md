@@ -77,13 +77,16 @@ Currently there is no native support for Bioconductor package installation, but 
 
 We recommend using the [script provided in the samples](../samples/package_management/bioc_setup.sh) section of this project which will install the required pre-requisites for BioConductor as well as BioConductor itself.
 
-Simply update your cluster configuration commandLine as follows:
+In the example below, the script will install BioConductor and install the GenomeInfoDB package. Simply update your cluster configuration commandLine as follows:
 ```json
 "commandLine": [
-    "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/samples/package_management/bioc_setup.sh",
-    "chmod u+x ./bioc_setup.sh",
-    "./bioc_setup.sh"]
+        "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/samples/package_management/bioc_setup.sh",
+        "chmod u+x ./bioc_setup.sh",
+        "./bioc_setup.sh",
+        "Rscript -e 'library(BiocInstaller);biocLite(\\\"GenomeInfoDb\\\");'"]
 ```
+
+Installing bioconductor packages 'on the fly' is not supported, and should be specified and installed during the cluster creation. Note that the \\\" characters are required to correctly escaple the quotes in the command line.
 
 A [working sample](../samples/package_management/bioconductor_cluster.json) can be found in the samples directory.
 
