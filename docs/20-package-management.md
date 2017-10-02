@@ -86,7 +86,7 @@ In the example below, the script will install BioConductor and install the Genom
         "Rscript -e 'library(BiocInstaller);biocLite(\\\"GenomeInfoDb\\\");'"]
 ```
 
-Installing bioconductor packages 'on the fly' is not supported, and should be specified and installed during the cluster creation. Note that the \\\" characters are required to correctly escaple the quotes in the command line.
+Installing bioconductor packages within the _foreach_ code block is not supported, and should be specified and installed in the cluster config. Note that the \\\" characters are required to correctly escaple the quotes in the command line.
 
 A [working sample](../samples/package_management/bioconductor_cluster.json) can be found in the samples directory.
 
