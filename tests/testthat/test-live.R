@@ -17,7 +17,9 @@ test_that("Scenario Test", {
   #cluster
   
   '%dopar%' <- foreach::'%dopar%'
-  res <- foreach::foreach(i = 1:4) %dopar% {
+  res <- foreach::foreach(i = 1:4, .packages = c("stringr")) %dopar% {
+    library(xml2)
+    library(rAzureBatch)
     mean(1:3)
   }
 

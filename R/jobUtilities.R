@@ -179,7 +179,7 @@ waitForTasksToComplete <- function(jobId, timeout) {
 }
 
 waitForJobPreparation <- function(jobId, poolId) {
-  cat("Job Preparation Status: Package(s) being installed")
+  cat(sprintf("Job Preparation Status for job %s: Package(s) being installed", jobId))
   
   filter <- paste(
     sprintf("poolId eq '%s' and", poolId),
@@ -196,7 +196,14 @@ waitForJobPreparation <- function(jobId, poolId) {
     
     statuses <- sapply(statuses$value, function(x) {
       x$jobPreparationTaskExecutionInfo$result == "Success"
+      print("job prep object")
+      print(x)
+      print("result")
+      print(x$jobPreparationTaskExecutionInfo$result)
     })
+    
+    print("statuses")
+    print(statuses)
     
     if (TRUE %in% statuses) {
       break

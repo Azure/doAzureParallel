@@ -7,6 +7,7 @@
   dependsOn <- args$dependsOn
   cloudCombine <- args$cloudCombine
   userOutputFiles <- args$outputFiles
+  containerImage <- args$containerImage
 
   resultFile <- paste0(taskId, "-result", ".rds")
   accountName <- storageCredentials$name
@@ -28,7 +29,7 @@
       "$AZ_BATCH_TASK_WORKING_DIR"
     )
   
-    downloadCommand <- dockerRunCommand("blobxfer", "alfpark/blobxfer:0.12.1", copyCommand, FALSE)
+    downloadCommand <- dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
     commands <- c(downloadCommand)
   }
 
@@ -93,7 +94,7 @@
 
   outputFiles <- append(outputFiles, userOutputFiles)
 
-  commands <- c(commands, dockerExecCommand(paste0(jobId), rCommand))
+  commands <- c(commands, dockerRunCommand(containerImage, rCommand, taskId))
 
   commands <- linuxWrapCommands(commands)
 
@@ -138,14 +139,9 @@
   containerImage <- args$containerImage
   poolInfo <- list("poolId" = poolId)
   
-  startRuntimeCommand <- dockerRunCommand(jobId, containerImage, "tail -f /dev/null", TRUE )
-  commands <- c(startRuntimeCommand)
-  
-  # Install the required software to allow packages.install to work on Linux
-  commands <- c(commands, getLinuxAptGetSoftwardInstallationCommand())
-  
+  commands <- c()
   if (!is.null(packages)) {
-    jobPackages <- dockerExecCommand(jobId, getJobPackageInstallationCommand("cran", packages))
+    jobPackages <- dockerRunCommand(containerImage, getJobPackageInstallationCommand("cran", packages), jobId)
     commands <- c(commands, jobPackages)
   }
 
@@ -227,8 +223,5 @@
     content = "text"
   )
 
-  print("add pool response:")
-  print(response)
-  
   return(response)
 }

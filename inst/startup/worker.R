@@ -1,6 +1,9 @@
 #!/usr/bin/Rscript
 args <- commandArgs(trailingOnly = TRUE)
 
+jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
+.libPaths(c(jobPrepDirectory, "/mnt/batch/tasks/shared/R/packages", .libPaths()))
+
 # test if there is at least one argument: if not, return an error
 if (length(args) == 0) {
   stop("At least one argument must be supplied (input file).n", call. = FALSE)

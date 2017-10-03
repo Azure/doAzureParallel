@@ -30,11 +30,11 @@ getPoolPackageInstallationCommand <- function(type, packages) {
   # At this point we cannot use install_cran.R and install_github.R because they are not yet available.
   if (type == "cran") {
     script <-
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'.libPaths( c( .libPaths(),\\\"/mnt/batch/tasks/shared/R/packages\\\") );install.packages(args[1], lib=\\\"/mnt/batch/tasks/shared/R/packages\\\")\' %s"
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()) );install.packages(args[1])\' %s"
   }
   else if (type == "github") {
     script <-
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'.libPaths( c( .libPaths(),\\\"/mnt/batch/tasks/shared/R/packages\\\") );devtools::install_github(new = \\\"/mnt/batch/tasks/shared/R/packages\\\", args[1])\' %s"
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()) );devtools::install_github(args[1])\' %s"
   }
   else {
     stop("Using an incorrect package source")
@@ -47,7 +47,7 @@ getPoolPackageInstallationCommand <- function(type, packages) {
   poolInstallationCommand
 }
 
-dockerRunCommand <- function(containerName, containerImage, command, runAsDaemon = TRUE) {
+dockerRunCommand <- function(containerImage, command, containerName = NULL, runAsDaemon = FALSE) {
   dockerOptions <- paste("--rm",
                          "-v /mnt/batch/tasks:/mnt/batch/tasks",
                          "-e DOCKER_WORKING_DIR=/batch/startup/wd",
@@ -60,31 +60,38 @@ dockerRunCommand <- function(containerName, containerImage, command, runAsDaemon
     dockerOptions <- paste("-d", dockerOptions, sep = " ")
   }
   
-  dockerRunCommand <- paste("docker run", dockerOptions, "--name", containerName, containerImage, command, sep = " ")
+  if (!is.null(containerName)) {
+    dockerOptions <- paste("--name", containerName, dockerOptions, sep = " ")
+  }
+  
+  dockerRunCommand <- paste("docker run", dockerOptions, containerImage, command, sep = " ")
   dockerRunCommand
 }
 
-dockerExecCommand <- function(containerName, command) {
-  dockerExecCommand <- paste("docker exec", containerName, command, sep = " ")
-  dockerExecCommand
-}
-
-dockerStopCommand <- function(containerName) {
-  dockerStopCommand <- paste("docker stop", containerName, sep = " ")
-  dockerStopCommand
-}
+# dockerExecCommand <- function(containerName, command) {
+#   dockerExecCommand <- paste("docker exec", containerName, command, sep = " ")
+#   dockerExecCommand
+# }
+# 
+# dockerStopCommand <- function(containerName) {
+#   dockerStopCommand <- paste("docker stop", containerName, sep = " ")
+#   dockerStopCommand
+# }
 
 linuxWrapCommands <- function(commands = c()) {
   
   # Sanitize the vector and don't allow empty values
   cleanCommands <- commands[lapply(commands, length)>0]
   
-  # Do not allow absolute paths is enforced in lintr
-  commandLine <-
-    sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
-            paste0(paste(
-              cleanCommands, sep = " ", collapse = "; "
-            ), ";"))
+  commandLine <-"ls"
+  if (length(cleanCommands) > 0){
+    # Do not allow absolute paths is enforced in lintr
+    commandLine <-
+      sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
+              paste0(paste(
+                cleanCommands, sep = " ", collapse = "; "
+              ), ";"))
+  }
   
   commandLine
 }

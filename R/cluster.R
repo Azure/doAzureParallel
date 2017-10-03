@@ -172,7 +172,7 @@ makeCluster <-
     commandLine <- NULL
 
     # install docker and create docker container
-    dockerImage = "r_base:latest"
+    dockerImage = "rocker/tidyverse:latest"
     if (!is.null(poolConfig$containerImage)) {
       dockerImage = poolConfig$containerImage
     }
@@ -185,40 +185,20 @@ makeCluster <-
     container_install_command <- c(
       "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container_wip/inst/startup/cluster_setup.sh",
       "chmod u+x cluster_setup.sh",
-      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container_wip/inst/startup/apt_install.sh",
-      "chmod u+x apt_install.sh",
       install_and_start_container_command)
 
-    container_install_command <- c(container_install_command, dockerRunCommand("startup", dockerImage, "tail -f /dev/null"))
+    # Print off version of R
+    container_install_command <- c(container_install_command, dockerRunCommand(dockerImage, "R --version", "startup_version"))
     
     if (!is.null(poolConfig$commandLine)) {
       commandLine <- c(container_install_command, poolConfig$commandLine)
     }
     
-    # Print off version of R
-    commandLine <- c(commandLine, dockerExecCommand("startup", "R --version"))
-    
     if (!is.null(poolConfig$rPackages)) {
-      # install required libs for pacakges
-      # TODO: uncomment this and make this a small installer script which is loaded into the container.
-      #commandLine <- c(commandLine, dockerExecCommand("startup", getLinuxAptGetSoftwardInstallationCommand()))
-      
-      # TODO: This can be part of the container going foward
-      commandLine <- c(commandLine, dockerExecCommand("startup", "/mnt/batch/tasks/startup/wd/apt_install.sh"))
-    
-      # Make sure devtools is installed
-      # TODO: This can be part of the container going foward
-      devtoolsCommandLine <- getPoolPackageInstallationCommand("cran", "devtools")
-      commandLine <- c(commandLine, dockerExecCommand("startup", devtoolsCommandLine))
-      
       # install packages
-      commandLine <- c(commandLine, dockerExecCommand("startup", packages))
+      commandLine <- c(commandLine, dockerRunCommand(dockerImage, packages))
     }
     
-    
-    # stop container
-    commandLine <- c(commandLine, "docker stop startup")
-
     environmentSettings <- NULL
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$githubAuthenticationToken) &&

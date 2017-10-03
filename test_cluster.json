@@ -1,6 +1,6 @@
 {
-  "name": "r_docker_clusPak",
-  "vmSize": "standard_d2_v2",
+  "name": "r_docker",
+  "vmSize": "standard_f2",
   "maxTasksPerNode": 2,
   "poolSize": {
     "dedicatedNodes": {
@@ -13,7 +13,7 @@
     },
     "autoscaleFormula": "QUEUE"
   },
-  "containerImage": "r-base:3.4.1",
+  "containerImage": "rocker/tidyverse:3.4.1",
   "rPackages": {
     "cran": [
       "xml2"

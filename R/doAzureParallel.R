@@ -429,7 +429,8 @@ setHttpTraffic <- function(value = FALSE) {
       args = argsList[startIndex:endIndex],
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
-      outputFiles = obj$options$azure$outputFiles
+      outputFiles = obj$options$azure$outputFiles,
+      containerImage = data$containerImage
     )
 
     return(taskId)
@@ -454,7 +455,8 @@ setHttpTraffic <- function(value = FALSE) {
       packages = obj$packages,
       dependsOn = tasks,
       cloudCombine = cloudCombine,
-      outputFiles = obj$options$azure$outputFiles
+      outputFiles = obj$options$azure$outputFiles,
+      containerImage = data$containerImage
     )
   }
 

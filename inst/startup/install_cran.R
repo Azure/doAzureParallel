@@ -2,9 +2,11 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 status <- tryCatch({
+  jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
+  .libPaths(c(jobPrepDirectory, "/mnt/batch/tasks/shared/R/packages", .libPaths()))
   for (package in args) {
     if (!require(package, character.only = TRUE)) {
-      install.packages(pkgs = package, lib.loc="/mnt/batch/tasks/shared/R/packages")
+      install.packages(pkgs = package)
       require(package, character.only = TRUE)
     }
   }
