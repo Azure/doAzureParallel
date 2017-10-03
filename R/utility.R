@@ -6,6 +6,9 @@ getJobPackageInstallationCommand <- function(type, packages) {
   else if (type == "github") {
     script <- "Rscript $AZ_BATCH_JOB_PREP_WORKING_DIR/install_github.R"
   }
+  else if (type == "bioconductor") {
+    script <- "Rscript $AZ_BATCH_JOB_PREP_WORKING_DIR/install_bioconductor.R"
+  }
   else {
     stop("Using an incorrect package source")
   }
@@ -26,6 +29,10 @@ getPoolPackageInstallationCommand <- function(type, packages) {
   else if (type == "github") {
     script <-
       "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'devtools::install_github(args[1])\' %s"
+  }
+  else if (type == "bioconductor") {
+    script <-
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e \'options(warn=2)\' -e \'BiocInstaller::biocLite(args[1])\' %s"
   }
   else {
     stop("Using an incorrect package source")

@@ -71,33 +71,26 @@ results <- foreach(i = 1:number_of_iterations, .packages=c('package_1', 'package
 Installing packages from github using this method is not yet supported.
 
 ## Installing Packages from BioConductor
-Currently there is no native support for Bioconductor package installation, but it can be achieved by installing the packages directly in your environment or using the 'commandLine' feature in the cluster configuration. We recommend using the 'commandLine' to install the base BioConductor package and then install additional packages either through the 'commandLine' as well, or directly in your code.
+Currently there is no native support for Bioconductor package installation, but it can be achieved by installing the packages directly in your environment or using the 'commandLine' feature in the cluster configuration. We recommend using the 'commandLine' to install the base BioConductor package and then install additional packages through the 'commandLine'.
 
 ### Installing BioConductor using the 'commandLine'
 
 We recommend using the [script provided in the samples](../samples/package_management/bioc_setup.sh) section of this project which will install the required pre-requisites for BioConductor as well as BioConductor itself.
 
-Simply update your cluster configuration commandLine as follows:
+In the example below, the script will install BioConductor and install the GenomeInfoDB and IRanges packages. Simply update your cluster configuration commandLine as follows:
 ```json
 "commandLine": [
-    "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/samples/package_management/bioc_setup.sh",
-    "chmod u+x ./bioc_setup.sh",
-    "./bioc_setup.sh"]
+  "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/samples/package_management/bioc_setup.sh",
+  "chmod u+x ./bioc_setup.sh",
+  "./bioc_setup.sh",
+  "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/inst/startup/install_bioconductor.R",
+  "chmod u+x ./install_bioconductor.R",
+  "Rscript install_bioconductor.R GenomeInfoDb IRange"]
 ```
+
+Installing bioconductor packages within the _foreach_ code block is not supported, and should be specified and installed in the cluster config.
 
 A [working sample](../samples/package_management/bioconductor_cluster.json) can be found in the samples directory.
-
-### Installing additional packages in your code
-
-If you have already configured BioConductor at the cluster level, you should have access to biocLite in your code. Within your foreach loop add the call to biocLite to install the packages:
-
-```r
-results <- foreach(i = 1:number_of_iterations) %dopar% { 
-    library(BiocInstaller)
-    biocLite(c('GenomicsFeatures', 'AnnotationDbi'))
-    ...
-    }
-```
 
 ## Uninstalling packages
 Uninstalling packages from your pool is not supported. However, you may consider rebuilding your pool.
