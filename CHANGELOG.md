@@ -1,7 +1,14 @@
 # Change Log
+## [0.5.1] 2017-09-28
+### Added
+- Support for users to get job and job results for long running job
+### Changed
+- [BREAKING CHANGE] Update get job list to take state filter and return job status in a data frame
+
 ## [0.4.3] 2017-09-28
 ### Fixed
 - Allow merge task to run on task failures
+
 ## [0.4.2] 2017-09-08
 ### Added
 - Support for users to get files from nodes and tasks

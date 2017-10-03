@@ -196,6 +196,14 @@ makeCluster <-
       validateClusterConfig(clusterSetting)
     }
 
+    tryCatch({
+      `Validators`$isValidPoolName(poolConfig$name)
+    },
+    error = function(e){
+      stop(paste("Invalid pool name: \n",
+                 e))
+    })
+
     response <- .addPool(
       pool = poolConfig,
       packages = packages,
@@ -253,7 +261,7 @@ makeCluster <-
 
       clusterNodeMismatchWarning <-
         paste(
-          "There is a mismatched between the projected cluster %s",
+          "There is a mismatched between the requested cluster %s",
           "nodes min/max '%s'/'%s' and the existing cluster %s nodes '%s'.",
           "Use the 'resizeCluster' function to get the correct amount",
           "of workers."
