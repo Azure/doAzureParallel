@@ -405,7 +405,6 @@ createOutputFile <- function(filePattern, url) {
   output
 }
 
-
 #' Wait for current tasks to complete
 #'
 #' @export
@@ -469,7 +468,6 @@ waitForTasksToComplete <-
               "This caused the job to terminate automatically.",
               "To disable this behavior and continue on failure, set .errorHandling='remove | pass'",
               "in the foreach loop\n"), taskCounts$failed)
-
 
         for (i in 1:length(failedTasks$value)) {
           if (failedTasks$value[[i]]$executionInfo$result == "Failure") {
