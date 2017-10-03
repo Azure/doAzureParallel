@@ -46,8 +46,16 @@
   resourceFiles <-
     list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
 
+  exitConditions <- NULL
   if (!is.null(args$dependsOn)) {
     dependsOn <- list(taskIds = dependsOn)
+  }
+  else {
+    exitConditions <- list(
+      default = list(
+        dependencyAction = "satisfy"
+      )
+    )
   }
 
   containerUrl <-
@@ -126,13 +134,15 @@
     resourceFiles = resourceFiles,
     commandLine = commands,
     dependsOn = dependsOn,
-    outputFiles = outputFiles
+    outputFiles = outputFiles,
+    exitConditions = exitConditions
   )
 }
 
 .addJob <- function(jobId,
                     poolId,
                     resourceFiles,
+                    metadata,
                     ...) {
   args <- list(...)
   packages <- args$packages
@@ -163,7 +173,8 @@
     poolInfo = poolInfo,
     jobPreparationTask = jobPreparationTask,
     usesTaskDependencies = usesTaskDependencies,
-    content = "text"
+    content = "text",
+    metadata = metadata
   )
 
   return(response)

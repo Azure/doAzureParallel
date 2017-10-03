@@ -187,7 +187,6 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   pkgName <- if (exists("packageName", mode = "function"))
-
     packageName(envir)
   else
     NULL
@@ -197,14 +196,24 @@ setHttpTraffic <- function(value = FALSE) {
   assign("packages", obj$packages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
 
-  time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
-  id <-  sprintf("%s%s",
-                 "job",
-                 time)
-
   if (!is.null(obj$options$azure$job)) {
     id <- obj$options$azure$job
   }
+  else {
+    time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
+    id <-  sprintf("%s%s",
+                   "job",
+                   time)
+  }
+
+  tryCatch({
+    `Validators`$isValidStorageContainerName(id)
+    `Validators`$isValidJobName(id)
+  },
+  error = function(e){
+    stop(paste("Invalid job name: \n",
+               e))
+  })
 
   wait <- TRUE
   if (!is.null(obj$options$azure$wait)) {
@@ -323,14 +332,51 @@ setHttpTraffic <- function(value = FALSE) {
       )
 
       # We need to merge any files passed by the calling lib with the resource files specified here
+
       resourceFiles <-
         append(resourceFiles, requiredJobResourceFiles)
+
+      enableCloudCombineKeyValuePair <-
+        list(name = "enableCloudCombine", value = as.character(enableCloudCombine))
+
+      chunkSize <- 1
+
+      if (!is.null(obj$options$azure$chunkSize)) {
+        chunkSize <- obj$options$azure$chunkSize
+      }
+
+      if (!is.null(obj$options$azure$chunksize)) {
+        chunkSize <- obj$options$azure$chunksize
+      }
+
+      if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
+        chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
+      }
+
+
+      chunkSizeKeyValuePair <-
+        list(name = "chunkSize", value = as.character(chunkSize))
+
+      if (is.null(obj$packages)) {
+        metadata <-
+          list(enableCloudCombineKeyValuePair, chunkSizeKeyValuePair)
+      } else {
+        packagesKeyValuePair <-
+          list(name = "packages",
+               value = paste(obj$packages, collapse = ";"))
+
+        metadata <-
+          list(enableCloudCombineKeyValuePair,
+               chunkSizeKeyValuePair,
+               packagesKeyValuePair)
+      }
 
       response <- .addJob(
         jobId = id,
         poolId = data$poolId,
         resourceFiles = resourceFiles,
         packages = obj$packages,
+        metadata = metadata,
         containerImage = data$containerImage
       )
 
@@ -379,20 +425,6 @@ setHttpTraffic <- function(value = FALSE) {
   job <- rAzureBatch::getJob(id)
   cat(sprintf("Id: %s", job$id), fill = TRUE)
 
-  chunkSize <- 1
-
-  if (!is.null(obj$options$azure$chunkSize)) {
-    chunkSize <- obj$options$azure$chunkSize
-  }
-
-  if (!is.null(obj$options$azure$chunksize)) {
-    chunkSize <- obj$options$azure$chunksize
-  }
-
-  if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
-    chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
-  }
-
   ntasks <- length(argsList)
 
   startIndices <- seq(1, length(argsList), chunkSize)
@@ -416,16 +448,10 @@ setHttpTraffic <- function(value = FALSE) {
     taskId <- paste0(id, "-task", i)
 
     .addTask(
-      id,
+      jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %s %s %s %s > %s.txt",
-        "$AZ_BATCH_JOB_PREP_WORKING_DIR",
-        "$AZ_BATCH_TASK_WORKING_DIR",
-        jobFileName,
-        paste0(taskId, ".rds"),
-        taskId
-      ),
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R > $AZ_BATCH_TASK_ID.txt"),
       args = argsList[startIndex:endIndex],
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
@@ -439,17 +465,15 @@ setHttpTraffic <- function(value = FALSE) {
   rAzureBatch::updateJob(id)
 
   if (enableCloudCombine) {
+    mergeTaskId <- paste0(id, "-merge")
     .addTask(
-      id,
-      taskId = paste0(id, "-merge"),
+      jobId = id,
+      taskId = mergeTaskId,
       rCommand = sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s %s %s > %s.txt",
-        "$AZ_BATCH_JOB_PREP_WORKING_DIR",
-        "$AZ_BATCH_TASK_WORKING_DIR",
-        id,
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
         length(tasks),
-        ntasks,
-        paste0(id, "-merge")
+        chunkSize,
+        as.character(obj$errorHandling)
       ),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
@@ -465,61 +489,67 @@ setHttpTraffic <- function(value = FALSE) {
       waitForJobPreparation(id, data$poolId)
     }
 
-    waitForTasksToComplete(id, jobTimeout)
+    tryCatch({
+        waitForTasksToComplete(id, jobTimeout, obj$errorHandling)
 
-    if (typeof(cloudCombine) == "list" && enableCloudCombine) {
-      tempFile <- tempfile("doAzureParallel", fileext = ".rds")
+        if (typeof(cloudCombine) == "list" && enableCloudCombine) {
+          tempFile <- tempfile("doAzureParallel", fileext = ".rds")
 
-      response <-
-        rAzureBatch::downloadBlob(
-          id,
-          paste0("result/", id, "-merge-result.rds"),
-          sasToken = sasToken,
-          accountName = storageCredentials$name,
-          downloadPath = tempFile,
-          overwrite = TRUE
-        )
+          response <-
+            rAzureBatch::downloadBlob(
+              id,
+              paste0("result/", id, "-merge-result.rds"),
+              sasToken = sasToken,
+              accountName = storageCredentials$name,
+              downloadPath = tempFile,
+              overwrite = TRUE
+            )
 
-      results <- readRDS(tempFile)
+          results <- readRDS(tempFile)
 
-      failTasks <- sapply(results, .isError)
+          failTasks <- sapply(results, .isError)
 
-      numberOfFailedTasks <- sum(unlist(failTasks))
+          numberOfFailedTasks <- sum(unlist(failTasks))
 
-      if (numberOfFailedTasks > 0) {
-        .createErrorViewerPane(id, failTasks)
-      }
+          if (numberOfFailedTasks > 0) {
+            .createErrorViewerPane(id, failTasks)
+          }
 
-      accumulator <- foreach::makeAccum(it)
+          accumulator <- foreach::makeAccum(it)
 
-      tryCatch(
-        accumulator(results, seq(along = results)),
-        error = function(e) {
-          cat("error calling combine function:\n")
-          print(e)
+          tryCatch(
+            accumulator(results, seq(along = results)),
+            error = function(e) {
+              cat("error calling combine function:\n")
+              print(e)
+            }
+          )
+
+          # check for errors
+          errorValue <- foreach::getErrorValue(it)
+          errorIndex <- foreach::getErrorIndex(it)
+
+          cat(sprintf("Number of errors: %i", numberOfFailedTasks),
+              fill = TRUE)
+
+          rAzureBatch::deleteJob(id)
+
+          if (identical(obj$errorHandling, "stop") &&
+              !is.null(errorValue)) {
+            msg <- sprintf("task %d failed - '%s'",
+                           errorIndex,
+                           conditionMessage(errorValue))
+            stop(simpleError(msg, call = expr))
+          }
+          else {
+            foreach::getResult(it)
+          }
         }
-      )
-
-      # check for errors
-      errorValue <- foreach::getErrorValue(it)
-      errorIndex <- foreach::getErrorIndex(it)
-
-      cat(sprintf("Number of errors: %i", numberOfFailedTasks),
-          fill = TRUE)
-
-      rAzureBatch::deleteJob(id)
-
-      if (identical(obj$errorHandling, "stop") &&
-          !is.null(errorValue)) {
-        msg <- sprintf("task %d failed - '%s'",
-                       errorIndex,
-                       conditionMessage(errorValue))
-        stop(simpleError(msg, call = expr))
+      },
+      error = function(ex){
+        message(ex)
       }
-      else {
-        foreach::getResult(it)
-      }
-    }
+    )
   }
   else{
     print(

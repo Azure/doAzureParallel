@@ -41,4 +41,4 @@ This section will provide information about how Azure works, how best to take ad
 Take a look at our [**Troubleshooting Guide**](./40-troubleshooting.md) for information on how to diagnose common issues.
 
 Read our [**FAQ**](./42-faq.md) for known issues and common questions.
-   
+

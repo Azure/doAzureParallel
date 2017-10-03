@@ -217,6 +217,57 @@ results <- foreach(i = 1:number_of_iterations) %do% { ... }
 results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
 ```
 
+### Error Handling
+The errorhandling option specifies how failed tasks should be evaluated. By default, the error handling is 'stop' to ensure users' can have reproducible results. If a combine function is assigned, it must be able to handle error objects.
+
+Error Handling Type | Description
+--- | ---
+stop | The execution of the foreach will stop if an error occurs
+pass | The error object of the task is included the results
+remove | The result of a failed task will not be returned 
+
+```R 
+# Remove R error objects from the results
+res <- foreach::foreach(i = 1:4, .errorhandling = "remove") %dopar% {
+  if (i == 2 || i == 4) {
+    randomObject
+  }
+  
+  mean(1:3)
+}
+
+#> res
+#[[1]]
+#[1] 2
+#
+#[[2]]
+#[1] 2
+```
+
+```R 
+# Passing R error objects into the results 
+res <- foreach::foreach(i = 1:4, .errorhandling = "pass") %dopar% {
+  if (i == 2|| i == 4) {
+    randomObject
+  }
+  
+  sum(i, 1)
+}
+
+#> res
+#[[1]]
+#[1] 2
+#
+#[[2]]
+#<simpleError in eval(expr, envir, enclos): object 'randomObject' not found>
+#
+#[[3]]
+#[1] 4
+#
+#[[4]]
+#<simpleError in eval(expr, envir, enclos): object 'randomObject' not found>
+```
+
 ### Long-running Jobs + Job Management
 
 doAzureParallel also helps you manage your jobs so that you can run many jobs at once while managing it through a few simple methods.
@@ -225,6 +276,8 @@ doAzureParallel also helps you manage your jobs so that you can run many jobs at
 ```R 
 # List your jobs:
 getJobList()
+# Get your job by job id:
+getJob(jobId = 'unique_job_id', verbose = TRUE)
 ```
 
 This will also let you run *long running jobs* easily.
@@ -242,11 +295,14 @@ job_id <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar % { .
 results <- getJobResult(job_id)
 ```
 
-Finally, you may also want to track the status of jobs that you've name:
+Finally, you may also want to track the status of jobs by state (active, completed etc):
 
 ```R
-# List specific jobs:
-getJobList(c('unique_job_id', 'another_job_id'))
+# List jobs in completed state:
+filter <- list()
+filter$state <- list("active", "completed")
+jobList <- getJobList(filter)
+View(jobList)
 ```
 
 You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md). 
@@ -312,10 +368,10 @@ To debug your doAzureParallel jobs, you can set the package to operate on *verbo
 
 ```R
 # turn on verbose mode
-setVerbose(True)
+setVerbose(TRUE)
 
 # turn off verbose mode
-setVerbose(False)
+setVerbose(FALSE)
 ```
 ### Bypassing merge task 
 
