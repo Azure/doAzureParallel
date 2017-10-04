@@ -71,16 +71,6 @@ dockerRunCommand <- function(containerImage, command, containerName = NULL, runA
   dockerRunCommand
 }
 
-# dockerExecCommand <- function(containerName, command) {
-#   dockerExecCommand <- paste("docker exec", containerName, command, sep = " ")
-#   dockerExecCommand
-# }
-# 
-# dockerStopCommand <- function(containerName) {
-#   dockerStopCommand <- paste("docker stop", containerName, sep = " ")
-#   dockerStopCommand
-# }
-
 linuxWrapCommands <- function(commands = c()) {
   
   # Sanitize the vector and don't allow empty values
