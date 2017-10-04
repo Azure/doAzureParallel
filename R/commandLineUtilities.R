@@ -1,11 +1,3 @@
-getLinuxAptGetSoftwardInstallationCommand <- function() {
-  command <- paste("apt-get -y upgrade;",
-                   "apt-get -y install libcurl4-openssl-dev;",
-                   "apt-get -y install libssl-dev",
-                   sep = " ")
-  command
-}
-
 getJobPackageInstallationCommand <- function(type, packages) {
   script <- ""
   if (type == "cran") {
