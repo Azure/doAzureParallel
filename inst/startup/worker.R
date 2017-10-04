@@ -3,11 +3,15 @@ args <- commandArgs(trailingOnly = TRUE)
 workerErrorStatus <- 0
 
 jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
-.libPaths(c(jobPrepDirectory, "/mnt/batch/tasks/shared/R/packages", .libPaths()))
+.libPaths(c(
+  jobPrepDirectory,
+  "/mnt/batch/tasks/shared/R/packages",
+  .libPaths()
+))
 
 getparentenv <- function(pkgname) {
   parenv <- NULL
-
+  
   # if anything goes wrong, print the error object and return
   # the global environment
   tryCatch({
@@ -43,7 +47,7 @@ getparentenv <- function(pkgname) {
       conditionMessage(e)
     ))
   })
-
+  
   # return the global environment by default
   if (is.null(parenv))
     globalenv()
@@ -53,7 +57,8 @@ getparentenv <- function(pkgname) {
 
 batchJobId <- Sys.getenv("AZ_BATCH_JOB_ID")
 batchTaskId <- Sys.getenv("AZ_BATCH_TASK_ID")
-batchJobPreparationDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
+batchJobPreparationDirectory <-
+  Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 batchTaskWorkingDirectory <- Sys.getenv("AZ_BATCH_TASK_WORKING_DIR")
 
 batchJobEnvironment <- paste0(batchJobId, ".rds")
@@ -82,7 +87,7 @@ result <- lapply(taskArgs, function(args) {
   tryCatch({
     lapply(names(args), function(n)
       assign(n, args[[n]], pos = azbatchenv$exportenv))
-
+    
     eval(azbatchenv$expr, azbatchenv$exportenv)
   },
   error = function(e) {

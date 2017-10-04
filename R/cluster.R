@@ -19,7 +19,7 @@
 #' @export
 generateCredentialsConfig <- function(fileName, ...) {
   args <- list(...)
-
+  
   batchAccount <-
     ifelse(is.null(args$batchAccount),
            "batch_account_name",
@@ -28,7 +28,7 @@ generateCredentialsConfig <- function(fileName, ...) {
     ifelse(is.null(args$batchKey), "batch_account_key", args$batchKey)
   batchUrl <-
     ifelse(is.null(args$batchUrl), "batch_account_url", args$batchUrl)
-
+  
   storageName <-
     ifelse(is.null(args$storageAccount),
            "storage_account_name",
@@ -37,7 +37,7 @@ generateCredentialsConfig <- function(fileName, ...) {
     ifelse(is.null(args$storageKey),
            "storage_account_key",
            args$storageKey)
-
+  
   if (!file.exists(paste0(getwd(), "/", fileName))) {
     config <- list(
       batchAccount = list(
@@ -48,11 +48,11 @@ generateCredentialsConfig <- function(fileName, ...) {
       storageAccount = list(name = storageName,
                             key = storageKey)
     )
-
+    
     configJson <-
       jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
     write(configJson, file = paste0(getwd(), "/", fileName))
-
+    
     print(
       sprintf(
         "A config file has been generated %s. Please enter your Batch credentials.",
@@ -93,11 +93,11 @@ generateClusterConfig <- function(fileName) {
       ),
       commandLine = vector()
     )
-
+    
     configJson <-
       jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
     write(configJson, file = paste0(getwd(), "/", fileName))
-
+    
     print(
       sprintf(
         "A cluster settings has been generated %s. Please enter your cluster specification.",
@@ -135,29 +135,29 @@ makeCluster <-
       poolConfig <-
         rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
     }
-
+    
     config <- getOption("az_config")
     if (is.null(config)) {
       stop("Credentials were not set.")
     }
-
+    
     installCranCommand <- NULL
     installGithubCommand <- NULL
-
+    
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$cran) &&
         length(poolConfig$rPackages$cran) > 0) {
       installCranCommand <-
-       getPoolPackageInstallationCommand("cran", poolConfig$rPackages$cran)
+        getPoolPackageInstallationCommand("cran", poolConfig$rPackages$cran)
     }
-
+    
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$github) &&
         length(poolConfig$rPackages$github) > 0) {
       installGithubCommand <-
         getPoolPackageInstallationCommand("github", poolConfig$rPackages$github)
     }
-
+    
     packages <- NULL
     if (!is.null(installCranCommand)) {
       packages <- installCranCommand
@@ -168,35 +168,40 @@ makeCluster <-
     else if (!is.null(installGithubCommand) && !is.null(packages)) {
       packages <- c(installCranCommand, installGithubCommand)
     }
-
+    
     commandLine <- NULL
-
+    
     # install docker and create docker container
-    dockerImage = "rocker/tidyverse:latest"
+    dockerImage <- "rocker/tidyverse:latest"
     if (!is.null(poolConfig$containerImage)) {
-      dockerImage = poolConfig$containerImage
+      dockerImage <- poolConfig$containerImage
     }
     
     config$containerImage <- dockerImage
-    install_and_start_container_command <- paste("cluster_setup.sh",
-                                                dockerImage, 
-                                                sep = " ")
+    installAndStartContainerCommand <- paste("cluster_setup.sh",
+                                             dockerImage,
+                                             sep = " ")
     
-    container_install_command <- c(
-      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container_wip/inst/startup/cluster_setup.sh",
+    containerInstallCommand <- c(
+      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/inst/startup/cluster_setup.sh",
       "chmod u+x cluster_setup.sh",
-      install_and_start_container_command)
-
+      installAndStartContainerCommand
+    )
+    
     # Print off version of R
-    container_install_command <- c(container_install_command, dockerRunCommand(dockerImage, "R --version", "startup_version"))
+    containerInstallCommand <- c(
+      containerInstallCommand,
+      dockerRunCommand(dockerImage, "R --version", "startup_version")
+    )
     
     if (!is.null(poolConfig$commandLine)) {
-      commandLine <- c(container_install_command, poolConfig$commandLine)
+      commandLine <- c(containerInstallCommand, poolConfig$commandLine)
     }
     
     if (!is.null(poolConfig$rPackages)) {
       # install packages
-      commandLine <- c(commandLine, dockerRunCommand(dockerImage, packages))
+      commandLine <-
+        c(commandLine, dockerRunCommand(dockerImage, packages))
     }
     
     environmentSettings <- NULL
@@ -211,7 +216,7 @@ makeCluster <-
           )
         )
     }
-
+    
     if (!is.null(poolConfig[["pool"]])) {
       validateDeprecatedClusterConfig(clusterSetting)
       poolConfig <- poolConfig[["pool"]]
@@ -219,15 +224,15 @@ makeCluster <-
     else {
       validateClusterConfig(clusterSetting)
     }
-
+    
     tryCatch({
       `Validators`$isValidPoolName(poolConfig$name)
     },
-    error = function(e){
+    error = function(e) {
       stop(paste("Invalid pool name: \n",
                  e))
     })
-
+    
     response <- .addPool(
       pool = poolConfig,
       packages = packages,
@@ -235,34 +240,34 @@ makeCluster <-
       resourceFiles = resourceFiles,
       commandLine = commandLine
     )
-
-
+    
+    
     if (grepl("AuthenticationFailed", response)) {
       stop("Check your credentials and try again.")
     }
-
+    
     if (grepl("PoolBeingDeleted", response)) {
       pool <- rAzureBatch::getPool(poolConfig$name)
-
-      cat(
-        sprintf(
-          paste("Cluster '%s' already exists and is being deleted.",
-                "Another cluster with the same name cannot be created",
-                "until it is deleted. Please wait for the cluster to be deleted",
-                "or create one with a different name"),
-          poolConfig$name
+      
+      cat(sprintf(
+        paste(
+          "Cluster '%s' already exists and is being deleted.",
+          "Another cluster with the same name cannot be created",
+          "until it is deleted. Please wait for the cluster to be deleted",
+          "or create one with a different name"
         ),
-        fill = TRUE
-      )
-
+        poolConfig$name
+      ),
+      fill = TRUE)
+      
       while (areShallowEqual(rAzureBatch::getPool(poolConfig$name)$state,
-                      "deleting")) {
+                             "deleting")) {
         cat(".")
         Sys.sleep(10)
       }
-
+      
       cat("\n")
-
+      
       response <- .addPool(
         pool = poolConfig,
         packages = packages,
@@ -271,9 +276,9 @@ makeCluster <-
         commandLine = commandLine
       )
     }
-
+    
     pool <- rAzureBatch::getPool(poolConfig$name)
-
+    
     if (grepl("PoolExists", response)) {
       cat(
         sprintf(
@@ -283,7 +288,7 @@ makeCluster <-
         ),
         fill = TRUE
       )
-
+      
       clusterNodeMismatchWarning <-
         paste(
           "There is a mismatched between the projected cluster %s",
@@ -291,7 +296,7 @@ makeCluster <-
           "Use the 'resizeCluster' function to get the correct amount",
           "of workers."
         )
-
+      
       if (!(
         poolConfig$poolSize$dedicatedNodes$min <= pool$targetDedicatedNodes &&
         pool$targetDedicatedNodes <= poolConfig$poolSize$dedicatedNodes$max
@@ -308,13 +313,13 @@ makeCluster <-
           )
         )
       }
-
+      
       if (!(
         poolConfig$poolSize$lowPriorityNodes$min <= pool$targetLowPriorityNodes &&
         pool$targetLowPriorityNodes <= poolConfig$poolSize$lowPriorityNodes$max
       )) {
         lowPriorityLabel <- "low priority"
-
+        
         warning(
           sprintf(
             clusterNodeMismatchWarning,
@@ -327,17 +332,17 @@ makeCluster <-
         )
       }
     }
-
+    
     if (wait && !grepl("PoolExists", response)) {
       waitForNodesToComplete(poolConfig$name, 60000)
     }
-
+    
     cat("Your cluster has been registered.", fill = TRUE)
     cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
         fill = TRUE)
     cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
         fill = TRUE)
-
+    
     config$poolId <- poolConfig$name
     options("az_config" = config)
     return(getOption("az_config"))
@@ -355,7 +360,7 @@ makeCluster <-
 #' @export
 stopCluster <- function(cluster) {
   rAzureBatch::deletePool(cluster$poolId)
-
+  
   print(sprintf("Your %s cluster has been destroyed.", cluster$poolId))
 }
 
@@ -371,7 +376,7 @@ setCredentials <- function(fileName = "az_config.json") {
   else{
     config <- rjson::fromJSON(file = paste0(getwd(), "/", fileName))
   }
-
+  
   options("az_config" = config)
   print("Your azure credentials have been set.")
 }
@@ -379,9 +384,9 @@ setCredentials <- function(fileName = "az_config.json") {
 getPoolWorkers <- function(poolId, ...) {
   args <- list(...)
   raw <- !is.null(args$RAW)
-
+  
   nodes <- rAzureBatch::listPoolNodes(poolId)
-
+  
   if (length(nodes$value) > 0) {
     for (i in 1:length(nodes$value)) {
       print(
@@ -397,7 +402,7 @@ getPoolWorkers <- function(poolId, ...) {
   else{
     print("There are currently no nodes in the pool.")
   }
-
+  
   if (raw) {
     return(nodes)
   }
