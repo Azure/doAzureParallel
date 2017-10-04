@@ -59,7 +59,7 @@ You can use getJobList() to get a summary of all jobs.
 9  job20170714223236 completed               100 %           0          6  
 ```
 
-You can also filter job list by job state such as Active or Completed
+You can also filter job list by job state such as active or completed
 ```R
   filter <- filter <- list()
   filter$state <- c("active", "completed")
