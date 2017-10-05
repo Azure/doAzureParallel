@@ -13,11 +13,17 @@ You can configure a job to run asynchronously by specifying wait = FALSE in job 
   options <- list(wait = FALSE)
   jobId <- foreach(i = 1:number_of_iterations, .options.azure = options) %dopar% { ... }
 ```
-The returned value is the job ID associated with the foreach loop. Use this returned value you can get job status and job result.
+The returned value is the job Id associated with the foreach loop. Use this returned value you can get job status and job result.
+
+You can optionally specify the job Id in options as shown below:
+```R
+  options <- list(wait = FALSE, job = 'myjob')
+  foreach(i = 1:number_of_iterations, .options.azure = options) %dopar% { ... }
+```
 
 ## Get job status
 
-getJob returns job metadata, such as chunk size, whether cloud combine is enabled, and packages specified for the job, it also returns task acount in different state
+getJob returns job metadata, such as chunk size, whether cloud combine is enabled, and packages specified for the job, it also returns task counts in different state
 
 ```R
   getJob(jobId)
