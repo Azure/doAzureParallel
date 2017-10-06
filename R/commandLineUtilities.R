@@ -22,18 +22,20 @@ getPoolPackageInstallationCommand <- function(type, packages) {
   # At this point we cannot use install_cran.R and install_github.R because they are not yet available.
   if (type == "cran") {
     script <-
-      paste0(
+      paste(
         "Rscript -e \'args <- commandArgs(TRUE)\'",
         "-e \'options(warn=2)\'",
-        "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()) );install.packages(args[1])\' %s"
+        "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()) );install.packages(args[1])\' %s",
+        sep = " "
       )
   }
   else if (type == "github") {
     script <-
-      paste0(
+      paste(
         "Rscript -e \'args <- commandArgs(TRUE)\'",
         "-e \'options(warn=2)\'",
-        "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()) );devtools::install_github(args[1])\' %s"
+        "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()) );devtools::install_github(args[1])\' %s",
+        sep = " "
       )
   }
   else {
