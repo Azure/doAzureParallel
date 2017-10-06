@@ -3,7 +3,11 @@ args <- commandArgs(trailingOnly = TRUE)
 status <- 0
 
 jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
-.libPaths(c(jobPrepDirectory, "/mnt/batch/tasks/shared/R/packages", .libPaths()))
+.libPaths(c(
+  jobPrepDirectory,
+  "/mnt/batch/tasks/shared/R/packages",
+  .libPaths()
+))
 
 isError <- function(x) {
   inherits(x, "simpleError") || inherits(x, "try-error")
@@ -36,26 +40,31 @@ cloudCombine <- azbatchenv$cloudCombine
 if (typeof(cloudCombine) == "list" && enableCloudCombine) {
   results <- vector("list", batchTasksCount * chunkSize)
   count <- 1
-
+  
   status <- tryCatch({
     if (errorHandling == "remove" || errorHandling == "stop") {
       files <- list.files(file.path(batchTaskWorkingDirectory,
                                     "result"),
                           full.names = TRUE)
-
-      if (errorHandling == "stop" && length(files) != batchTasksCount) {
-        stop(paste("Error handling is set to 'stop' and there are missing results due to",
-                   "task failures. If this is not the correct behavior, change the errorHandling",
-                   "property to 'pass' or 'remove' in the foreach object.",
-                   "For more information on troubleshooting, check",
-                   "https://github.com/Azure/doAzureParallel/blob/master/docs/40-troubleshooting.md"))
+      
+      if (errorHandling == "stop" &&
+          length(files) != batchTasksCount) {
+        stop(
+          paste(
+            "Error handling is set to 'stop' and there are missing results due to",
+            "task failures. If this is not the correct behavior, change the errorHandling",
+            "property to 'pass' or 'remove' in the foreach object.",
+            "For more information on troubleshooting, check",
+            "https://github.com/Azure/doAzureParallel/blob/master/docs/40-troubleshooting.md"
+          )
+        )
       }
-
+      
       results <- vector("list", length(files) * chunkSize)
-
+      
       for (i in 1:length(files)) {
         task <- readRDS(files[i])
-
+        
         if (isError(task)) {
           if (errorHandling == "stop") {
             stop("Error found")
@@ -64,13 +73,13 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
             next
           }
         }
-
+        
         for (t in 1:length(chunkSize)) {
           results[count] <- task[t]
           count <- count + 1
         }
       }
-
+      
       saveRDS(results, file = file.path(
         batchTaskWorkingDirectory,
         paste0(batchJobId, "-merge-result.rds")
@@ -84,7 +93,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
             "result",
             paste0(batchJobId, "-task", i, "-result.rds")
           )
-
+        
         if (file.exists(taskResult)) {
           task <- readRDS(taskResult)
           for (t in 1:length(chunkSize)) {
@@ -99,13 +108,13 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           }
         }
       }
-
+      
       saveRDS(results, file = file.path(
         batchTaskWorkingDirectory,
         paste0(batchJobId, "-merge-result.rds")
       ))
     }
-
+    
     0
   },
   error = function(e) {
