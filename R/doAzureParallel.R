@@ -201,9 +201,7 @@ setHttpTraffic <- function(value = FALSE) {
   }
   else {
     time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
-    id <-  sprintf("%s%s",
-                   "job",
-                   time)
+    id <-  sprintf("%s%s", "job", time)
   }
 
   tryCatch({
@@ -290,6 +288,10 @@ setHttpTraffic <- function(value = FALSE) {
         id,
         system.file(startupFolderName, "install_cran.R", package = "doAzureParallel")
       )
+      rAzureBatch::uploadBlob(
+        id,
+        system.file(startupFolderName, "install_bioconductor.R", package = "doAzureParallel")
+      )
 
       # Setting up common job environment for all tasks
       jobFileName <- paste0(id, ".rds")
@@ -320,6 +322,8 @@ setHttpTraffic <- function(value = FALSE) {
                                    sasToken)
       installCranScriptUrl <-
         rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_cran.R", sasToken)
+        installBioConductorScriptUrl <-
+        rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_bioconductor.R", sasToken)
       jobCommonFileUrl <-
         rAzureBatch::createBlobUrl(storageCredentials$name, id, jobFileName, sasToken)
 
@@ -328,6 +332,7 @@ setHttpTraffic <- function(value = FALSE) {
         rAzureBatch::createResourceFile(url = mergerScriptUrl, fileName = "merger.R"),
         rAzureBatch::createResourceFile(url = installGithubScriptUrl, fileName = "install_github.R"),
         rAzureBatch::createResourceFile(url = installCranScriptUrl, fileName = "install_cran.R"),
+        rAzureBatch::createResourceFile(url = installBioConductorScriptUrl, fileName = "install_bioconductor.R"),
         rAzureBatch::createResourceFile(url = jobCommonFileUrl, fileName = jobFileName)
       )
 
@@ -352,7 +357,6 @@ setHttpTraffic <- function(value = FALSE) {
       if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
         chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
       }
-
 
       chunkSizeKeyValuePair <-
         list(name = "chunkSize", value = as.character(chunkSize))

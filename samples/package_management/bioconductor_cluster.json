@@ -21,5 +21,8 @@
   "commandLine": [
     "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/samples/package_management/bioc_setup.sh",
     "chmod u+x ./bioc_setup.sh",
-    "./bioc_setup.sh"]
+    "./bioc_setup.sh",
+    "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/inst/startup/install_bioconductor.R",
+    "chmod u+x ./install_bioconductor.R",
+    "Rscript install_bioconductor.R GenomeInfoDb IRange"]
 }
