@@ -183,7 +183,7 @@ makeCluster <-
                                              sep = " ")
     
     containerInstallCommand <- c(
-      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/inst/startup/cluster_setup.sh",
+      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container_wip/inst/startup/cluster_setup.sh",
       "chmod u+x cluster_setup.sh",
       installAndStartContainerCommand
     )
