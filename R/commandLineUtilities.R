@@ -19,6 +19,14 @@ getJobPackageInstallationCommand <- function(type, packages) {
 getPoolPackageInstallationCommand <- function(type, packages) {
   poolInstallationCommand <- character(length(packages))
   
+  #TODO: Plumb this in.
+  sharedPackagesDirectory <- paste(
+    Sys.getenv("AZ_BATCH_NODE_ROOT_DIR"),
+    "shared",
+    "R",
+    "packages",
+    sep = "/")
+  
   # At this point we cannot use install_cran.R and install_github.R because they are not yet available.
   if (type == "cran") {
     script <-
@@ -35,6 +43,13 @@ getPoolPackageInstallationCommand <- function(type, packages) {
         "Rscript -e \'args <- commandArgs(TRUE)\'",
         "-e \'options(warn=2)\'",
         "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()) );devtools::install_github(args[1])\' %s",
+        sep = " "
+      )
+  }
+  else if (type == "bioconductor") {
+    script <-
+      paste(
+        "Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R %s",
         sep = " "
       )
   }
@@ -56,8 +71,8 @@ dockerRunCommand <-
            runAsDaemon = FALSE) {
     dockerOptions <- paste(
       "--rm",
-      "-v /mnt/batch/tasks:/mnt/batch/tasks",
-      "-e DOCKER_WORKING_DIR=/batch/startup/wd",
+      "-v $AZ_BATCH_NODE_ROOT_DIR:$AZ_BATCH_NODE_ROOT_DIR",
+      "-e AZ_BATCH_NODE_ROOT_DIR=$AZ_BATCH_NODE_ROOT_DIR",
       "-e AZ_BATCH_TASK_ID=$AZ_BATCH_TASK_ID",
       "-e AZ_BATCH_JOB_ID=$AZ_BATCH_JOB_ID",
       "-e AZ_BATCH_TASK_WORKING_DIR=$AZ_BATCH_TASK_WORKING_DIR",

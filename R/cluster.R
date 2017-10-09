@@ -158,15 +158,26 @@ makeCluster <-
         getPoolPackageInstallationCommand("github", poolConfig$rPackages$github)
     }
     
-    packages <- NULL
+    if (!is.null(poolConfig$rPackages) &&
+        !is.null(poolConfig$rPackages$bioconductor) &&
+        length(poolConfig$rPackages$bioconductor) > 0) {
+      installBioconductorCommand <-
+        getPoolPackageInstallationCommand("bioconductor", poolConfig$rPackages$bioconductor)
+    }
+    
+    packages <- c()
     if (!is.null(installCranCommand)) {
-      packages <- installCranCommand
+      packages <- c(installCranCommand, packages)
     }
     if (!is.null(installGithubCommand) && is.null(packages)) {
-      packages <- installGithubCommand
+      packages <- c(installGithubCommand, packages)
     }
-    else if (!is.null(installGithubCommand) && !is.null(packages)) {
-      packages <- c(installCranCommand, installGithubCommand)
+    if (!is.null(installBioconductorCommand) && is.null(packages)) {
+      packages <- c(installBioconductorCommand, packages)
+    }
+    
+    if (length(packages) == 0) {
+      packages <- NULL
     }
     
     commandLine <- NULL
@@ -183,15 +194,12 @@ makeCluster <-
                                              sep = " ")
     
     containerInstallCommand <- c(
+      #TODO: Updates branch to point at master!
       "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container_wip/inst/startup/cluster_setup.sh",
       "chmod u+x cluster_setup.sh",
+      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container_wip/inst/startup/install_bioconductor.R",
+      "chmod u+x install_bioconductor.R",
       installAndStartContainerCommand
-    )
-    
-    # Print off version of R
-    containerInstallCommand <- c(
-      containerInstallCommand,
-      dockerRunCommand(dockerImage, "R --version", "startup_version")
     )
     
     if (!is.null(poolConfig$commandLine)) {
