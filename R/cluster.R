@@ -169,10 +169,10 @@ makeCluster <-
     if (!is.null(installCranCommand)) {
       packages <- c(installCranCommand, packages)
     }
-    if (!is.null(installGithubCommand) && is.null(packages)) {
+    if (!is.null(installGithubCommand)) {
       packages <- c(installGithubCommand, packages)
     }
-    if (!is.null(installBioconductorCommand) && is.null(packages)) {
+    if (!is.null(installBioconductorCommand)) {
       packages <- c(installBioconductorCommand, packages)
     }
     
