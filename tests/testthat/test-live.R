@@ -4,7 +4,7 @@ context("live scenario test")
 test_that("Scenario Test", {
   testthat::skip_on_travis()
   credentialsFileName <- "credentials.json"
-  clusterFileName <- "test_cluster.json"
+  clusterFileName <- "cluster.json"
 
   #doAzureParallel::generateCredentialsConfig(credentialsFileName)
   #doAzureParallel::generateClusterConfig(clusterFileName)
@@ -24,6 +24,29 @@ test_that("Scenario Test", {
   }
 
   res
+  
+  getDoParWorkers()
+  
+  
+  '%dopar%' <- foreach::'%dopar%'
+  res <- foreach::foreach(i = 1:4) %dopar% {
+    mean(1:i)
+  }
+  
+  res
+  
+  results <- foreach(i = 1:1) %dopar% {
+    x <- try(library(IRanges),silent=TRUE)
+    x <- try(library(GenomeInfoDb),silent=TRUE)
+    x <- try(library(DESeq2),silent=TRUE)
+    #x <- sessionInfo()
+    return(x)
+  }
+  
+  results
+  
+  
+  #pragma message ("WARNING: use of OpenMP disabled; this compiler doesn't support OpenMP 3.0+")
   
   # doAzureParallel::stopCluster(cluster)
   # 
