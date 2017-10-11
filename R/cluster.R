@@ -143,6 +143,7 @@ makeCluster <-
     
     installCranCommand <- NULL
     installGithubCommand <- NULL
+    installBioconductorCommand <- NULL
     
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$cran) &&
@@ -158,13 +159,15 @@ makeCluster <-
         getPoolPackageInstallationCommand("github", poolConfig$rPackages$github)
     }
     
+    print('hello -01')
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$bioconductor) &&
         length(poolConfig$rPackages$bioconductor) > 0) {
+      print('hello 0')
       installBioconductorCommand <-
         getPoolPackageInstallationCommand("bioconductor", poolConfig$rPackages$bioconductor)
     }
-    
+    print('hello 1')
     packages <- c()
     if (!is.null(installCranCommand)) {
       packages <- c(installCranCommand, packages)
@@ -176,6 +179,7 @@ makeCluster <-
       packages <- c(installBioconductorCommand, packages)
     }
     
+    print('hello 3')
     if (length(packages) == 0) {
       packages <- NULL
     }
