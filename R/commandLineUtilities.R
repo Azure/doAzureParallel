@@ -49,7 +49,9 @@ getPoolPackageInstallationCommand <- function(type, packages) {
   else if (type == "bioconductor") {
     script <-
       paste(
-        "Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R %s",
+        "Rscript -e \'args <- commandArgs(TRUE)\'",
+        "-e \'options(warn=2)\'",
+        "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()) );devtools::install_github(args[1])\' %s",
         sep = " "
       )
   }
