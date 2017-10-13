@@ -207,7 +207,7 @@ makeCluster <-
       commandLine <- c(containerInstallCommand, poolConfig$commandLine)
     }
     
-    if (!is.null(poolConfig$rPackages)) {
+    if (!is.null(packages)) {
       # install packages
       commandLine <-
         c(commandLine, dockerRunCommand(dockerImage, packages))
