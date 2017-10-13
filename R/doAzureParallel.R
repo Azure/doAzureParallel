@@ -360,18 +360,15 @@ setHttpTraffic <- function(value = FALSE) {
       chunkSizeKeyValuePair <-
         list(name = "chunkSize", value = as.character(chunkSize))
 
-      if (is.null(obj$packages)) {
-        metadata <-
-          list(enableCloudCombineKeyValuePair, chunkSizeKeyValuePair)
-      } else {
+      metadata <-
+        list(enableCloudCombineKeyValuePair, chunkSizeKeyValuePair)
+
+      if (!is.null(obj$packages)) {
         packagesKeyValuePair <-
           list(name = "packages",
                value = paste(obj$packages, collapse = ";"))
 
-        metadata <-
-          list(enableCloudCombineKeyValuePair,
-               chunkSizeKeyValuePair,
-               packagesKeyValuePair)
+        metadata[[3]] <-packagesKeyValuePair
       }
 
       response <- .addJob(
