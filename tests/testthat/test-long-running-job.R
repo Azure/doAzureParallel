@@ -14,12 +14,14 @@ test_that("Long Running Job Test", {
   cluster <- doAzureParallel::makeCluster(clusterFileName)
   doAzureParallel::registerDoAzureParallel(cluster)
 
-  options <- list(wait = FALSE, job = 'myjob')
+  #options <- list(wait = FALSE, job = 'myjob')
+  options <- list(wait = FALSE)
   '%dopar%' <- foreach::'%dopar%'
   jobId <-
     foreach::foreach(
       i = 1:4,
       .packages = c('httr'),
+      .errorhandling = "stop",
       .options.azure = options
     ) %dopar% {
       mean(1:3)

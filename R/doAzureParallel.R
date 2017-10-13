@@ -363,12 +363,23 @@ setHttpTraffic <- function(value = FALSE) {
       metadata <-
         list(enableCloudCombineKeyValuePair, chunkSizeKeyValuePair)
 
+      metadataCount <- 3
       if (!is.null(obj$packages)) {
         packagesKeyValuePair <-
           list(name = "packages",
                value = paste(obj$packages, collapse = ";"))
 
-        metadata[[3]] <-packagesKeyValuePair
+        metadata[[metadataCount]] <-packagesKeyValuePair
+        metadataCount <- metadataCount + 1
+      }
+
+      if (!is.null(obj$errorHandling)) {
+        errorHandlingKeyValuePair <-
+          list(name = "errorHandling",
+               value = as.character(obj$errorHandling))
+
+        metadata[[metadataCount]] <- errorHandlingKeyValuePair
+        metadataCount <- metadataCount + 1
       }
 
       response <- .addJob(

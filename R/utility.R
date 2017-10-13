@@ -149,7 +149,8 @@ getJob <- function(jobId, verbose = TRUE) {
     list(
       chunkSize = 1,
       enableCloudCombine = "TRUE",
-      packages = ""
+      packages = "",
+      errorHandling = "stop"
     )
 
   if (!is.null(job$metadata)) {
@@ -166,6 +167,8 @@ getJob <- function(jobId, verbose = TRUE) {
     cat(sprintf("\tenableCloudCombine: %s", metadata$enableCloudCombine),
         fill = TRUE)
     cat(sprintf("\tpackages: %s", metadata$packages),
+        fill = TRUE)
+    cat(sprintf("\terrorHandling: %s", metadata$errorHandling),
         fill = TRUE)
   }
 
