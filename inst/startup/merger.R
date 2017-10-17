@@ -40,13 +40,13 @@ cloudCombine <- azbatchenv$cloudCombine
 if (typeof(cloudCombine) == "list" && enableCloudCombine) {
   results <- vector("list", batchTasksCount * chunkSize)
   count <- 1
-  
+
   status <- tryCatch({
     if (errorHandling == "remove" || errorHandling == "stop") {
       files <- list.files(file.path(batchTaskWorkingDirectory,
                                     "result"),
                           full.names = TRUE)
-      
+
       if (errorHandling == "stop" &&
           length(files) != batchTasksCount) {
         stop(
@@ -59,12 +59,12 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           )
         )
       }
-      
+
       results <- vector("list", length(files) * chunkSize)
-      
+
       for (i in 1:length(files)) {
         task <- readRDS(files[i])
-        
+
         if (isError(task)) {
           if (errorHandling == "stop") {
             stop("Error found")
@@ -73,13 +73,13 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
             next
           }
         }
-        
+
         for (t in 1:length(chunkSize)) {
           results[count] <- task[t]
           count <- count + 1
         }
       }
-      
+
       saveRDS(results, file = file.path(
         batchTaskWorkingDirectory,
         paste0(batchJobId, "-merge-result.rds")
@@ -93,7 +93,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
             "result",
             paste0(batchJobId, "-task", i, "-result.rds")
           )
-        
+
         if (file.exists(taskResult)) {
           task <- readRDS(taskResult)
           for (t in 1:length(chunkSize)) {
@@ -108,13 +108,13 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           }
         }
       }
-      
+
       saveRDS(results, file = file.path(
         batchTaskWorkingDirectory,
         paste0(batchJobId, "-merge-result.rds")
       ))
     }
-    
+
     0
   },
   error = function(e) {

@@ -11,7 +11,7 @@ jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 
 getparentenv <- function(pkgname) {
   parenv <- NULL
-  
+
   # if anything goes wrong, print the error object and return
   # the global environment
   tryCatch({
@@ -47,7 +47,7 @@ getparentenv <- function(pkgname) {
       conditionMessage(e)
     ))
   })
-  
+
   # return the global environment by default
   if (is.null(parenv))
     globalenv()
@@ -87,7 +87,7 @@ result <- lapply(taskArgs, function(args) {
   tryCatch({
     lapply(names(args), function(n)
       assign(n, args[[n]], pos = azbatchenv$exportenv))
-    
+
     eval(azbatchenv$expr, azbatchenv$exportenv)
   },
   error = function(e) {
