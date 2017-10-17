@@ -23,12 +23,7 @@ getJobPackageInstallationCommand <- function(type, packages) {
 getPoolPackageInstallationCommand <- function(type, packages) {
   poolInstallationCommand <- character(length(packages))
 
-  sharedPackagesDirectory <-
-    paste("Sys.getenv(\\\"AZ_BATCH_NODE_ROOT_DIR\\\")",
-          "shared",
-          "R",
-          "packages",
-          sep = "/")
+  sharedPackagesDirectory <- "/mnt/batch/tasks/shared/R/packages"
 
   libPathsCommand <- paste0('.libPaths( c( \\\"',
                             sharedPackagesDirectory,
