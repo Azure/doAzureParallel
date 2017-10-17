@@ -85,17 +85,18 @@ dockerRunCommand <-
     )
 
     if (runAsDaemon) {
-      dockerOptions <- paste("-d", dockerOptions, sep = " ")
+      dockerOptions <- paste(dockerOptions, "-d", dockerOptions, sep = " ")
     }
 
     if (!is.null(containerName)) {
       dockerOptions <-
-        paste("--name", containerName, dockerOptions, sep = " ")
+        paste(dockerOptions, "--name", containerName, dockerOptions, sep = " ")
     }
 
     if (includeEnvironmentVariables) {
       dockerOptions <-
         paste(
+          dockerOptions,
           "-e AZ_BATCH_TASK_ID=$AZ_BATCH_TASK_ID",
           "-e AZ_BATCH_JOB_ID=$AZ_BATCH_JOB_ID",
           "-e AZ_BATCH_TASK_WORKING_DIR=$AZ_BATCH_TASK_WORKING_DIR",
