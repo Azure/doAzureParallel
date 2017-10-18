@@ -16,7 +16,7 @@ generateCredentialsConfig("credentials.json")
 setCredentials("credentials.json")
 
 # Create your cluster if not exist
-cluster <- makeCluster("sample_cluster.json")
+cluster <- makeCluster("azure_files_cluster.json")
 
 # register your parallel backend
 registerDoAzureParallel(cluster)
