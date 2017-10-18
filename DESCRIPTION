@@ -10,7 +10,8 @@ Description: The project is for data experts who use R at scale. The project
     maintained by Azure Batch and, for the initial version, will be a public/
     communal pool. The orchestration for each job that needs to be parallelized in
     the cluster will be done by a middle layer that schedules each request.
-License: Microsoft Corporation
+Copyright: Microsoft
+License: MIT + file LICENSE
 LazyData: TRUE
 Depends:
     foreach (>= 1.4.3),
