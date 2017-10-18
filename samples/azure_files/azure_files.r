@@ -33,11 +33,11 @@ getDoParWorkers()
 # run on a different node. The output should be that both tasks outpu
 # the same file list for each node.
 files <- foreach(i = 1:2, .combine='rbind') %dopar% {
-  setwd('/mnt/data')
-  list.files()
+  setwd('/mnt/batch/tasks/shared/data')
+
+  x <- list.files()
+  return (x)
 }
 
 # Print result
 files
-
-
