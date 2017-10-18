@@ -33,7 +33,7 @@ getDoParWorkers()
 # ======================================
 
 # set the parameters for the monte carlo simulation
-mean_change = 1.001
+mean_change = 1.0011
 volatility = 0.01
 opening_price = 100
 
@@ -45,7 +45,7 @@ simulateMovement <- function() {
   return(path)
 }
 
-# run and plot 30 simulations 
+# run and plot 30 simulations
 simulations <- replicate(30, simulateMovement())
 matplot(simulations, type='l')
 
@@ -58,11 +58,19 @@ getClosingPrice <- function() {
   return(closingPrice)
 }
 
-# Run 5 million simulations with doAzureParallel - we will run 50 iterations where each iteration executes 100000 simulations
-closingPrices <- foreach(i = 1:50, .combine='c') %dopar% {
+
+# We will run 100 iterations where each iteration executes 100,000 simulations
+opt <- list(chunkSize = 2) # optimizie runtime
+
+start_p <- Sys.time()
+closingPrices_p <- foreach(i = 1:8, .combine='c', .options.azure = opt) %dopar% {
   replicate(100000, getClosingPrice())
 }
+end_p <- Sys.time()
 
-# plot the 5 million closing prices in a histogram to show the distribution of outcomes
-hist(closingPrices)
+# How long did it take?
+difftime(end_p, start_p, unit = "min")
+
+# plot the 10 million closing prices in a histogram to show the distribution of outcomes
+hist(closingPrices_p)
 
