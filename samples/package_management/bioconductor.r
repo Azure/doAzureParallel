@@ -18,7 +18,12 @@ registerDoAzureParallel(cluster)
 getDoParWorkers()
 
 summary <- foreach(i = 1:1) %dopar% {
-  library(GenomeInofDb) # Already installed as part of the cluster configuration
+  library(GenomeInfoDb) # Already installed as part of the cluster configuration
+  library(IRanges) # Already installed as part of the cluster configuration
 
-  # You algorithm
+  sessionInfo()
+  # Your algorithm
+
 }
+
+summary
