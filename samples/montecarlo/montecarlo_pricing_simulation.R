@@ -4,23 +4,16 @@
 
 # install packages
 library(devtools)
-#install_github("azure/razurebatch")
 install_github("azure/doazureparallel")
 
 # import the doAzureParallel library and its dependencies
 library(doAzureParallel)
 
-# generate a credentials json file
-generateCredentialsConfig("credentials.template.json")
-
-# generate a cluster config file
-generateClusterConfig("cluster.template.json")
-
 # set your credentials
 setCredentials("credentials.json")
 
 # Create your cluster if not exist
-cluster <- makeCluster("cluster.json")
+cluster <- makeCluster("montecarlo_cluster.json")
 
 # register your parallel backend
 registerDoAzureParallel(cluster)
@@ -65,7 +58,7 @@ difftime(end_s, start_s)
 # Run 10 million simulations with doAzureParallel
 
 # We will run 100 iterations where each iteration executes 100,000 simulations
-opt <- list(chunkSize = 2) # optimizie runtime. Chunking allows us to run multiple iterations on a single instance of R.
+opt <- list(chunkSize = 13) # optimizie runtime. Chunking allows us to run multiple iterations on a single instance of R.
 
 start_p <- Sys.time()
 closingPrices_p <- foreach(i = 1:100, .combine='c', .options.azure = opt) %dopar% {
