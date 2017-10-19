@@ -6,8 +6,8 @@ test_that("Scenario Test", {
   credentialsFileName <- "credentials.json"
   clusterFileName <- "cluster.json"
 
-  #doAzureParallel::generateCredentialsConfig(credentialsFileName)
-  #doAzureParallel::generateClusterConfig(clusterFileName)
+  doAzureParallel::generateCredentialsConfig(credentialsFileName)
+  doAzureParallel::generateClusterConfig(clusterFileName)
 
   # set your credentials
   doAzureParallel::setCredentials(credentialsFileName)
@@ -15,7 +15,7 @@ test_that("Scenario Test", {
   doAzureParallel::registerDoAzureParallel(cluster)
 
   #cluster
-  
+
   '%dopar%' <- foreach::'%dopar%'
   res <- foreach::foreach(i = 1:4, .packages = c("stringr")) %dopar% {
     library(xml2)
@@ -24,38 +24,38 @@ test_that("Scenario Test", {
   }
 
   res
-  
+
   getDoParWorkers()
-  
-  
+
+
   '%dopar%' <- foreach::'%dopar%'
   res <- foreach::foreach(i = 1:4) %dopar% {
     mean(1:i)
   }
-  
+
   res
-  
+
   results <- foreach(i = 1:1) %dopar% {
-    x <- try(library(IRanges),silent=TRUE)
-    x <- try(library(GenomeInfoDb),silent=TRUE)
-    x <- try(library(DESeq2),silent=TRUE)
+    x <- try(library(IRanges), silent = TRUE)
+    x <- try(library(GenomeInfoDb), silent = TRUE)
+    x <- try(library(DESeq2), silent = TRUE)
     #x <- sessionInfo()
     return(x)
   }
-  
+
   results
-  
-  
+
+
   #pragma message ("WARNING: use of OpenMP disabled; this compiler doesn't support OpenMP 3.0+")
-  
+
   # doAzureParallel::stopCluster(cluster)
-  # 
+  #
   # testthat::expect_equal(length(res),
   #                        4)
-  # 
+  #
   # testthat::expect_equal(res,
   #                        list(2, 2, 2, 2))
-})''
+})
 
 dockerOptions <- "-e V=$V "
 cleanCommands <- c("rbase:3.4.1 R --version", "alfpark/blobxfer blobxfer --download")
