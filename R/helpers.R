@@ -145,6 +145,8 @@
                     ...) {
   args <- list(...)
   packages <- args$packages
+  github <- args$github
+  bioconductor <- args$bioconductor
   containerImage <- args$containerImage
   poolInfo <- list("poolId" = poolId)
 
@@ -154,6 +156,23 @@
       dockerRunCommand(containerImage,
                        getJobPackageInstallationCommand("cran", packages),
                        jobId)
+    commands <- c(commands, jobPackages)
+  }
+
+  if (!is.null(github) && length(github) > 0) {
+    jobPackages <-
+      dockerRunCommand(containerImage,
+                        getJobPackageInstallationCommand("github", github),
+                        jobId)
+    commands <- c(commands, jobPackages)
+  }
+
+  if (!is.null(bioconductor) &&
+      length(bioconductor) > 0) {
+    jobPackages <-
+      dockerRunCommand(containerImage,
+                        getJobPackageInstallationCommand("bioconductor", bioconductor),
+                        jobId)
     commands <- c(commands, jobPackages)
   }
 
