@@ -1,0 +1,22 @@
+{
+  "name": "plyr",
+  "vmSize": "Standard_A2_v2",
+  "maxTasksPerNode": 2,
+  "poolSize": {
+    "dedicatedNodes": {
+      "min": 0,
+      "max": 0
+    },
+    "lowPriorityNodes": {
+      "min": 2,
+      "max": 2
+    },
+    "autoscaleFormula": "QUEUE"
+  },
+  "rPackages": {
+    "cran": [],
+    "github": [],
+    "bioconductor": []
+  },
+  "commandLine": []
+}

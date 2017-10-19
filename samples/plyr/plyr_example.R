@@ -10,17 +10,11 @@ install_github("azure/doazureparallel")
 # import packages
 library(doAzureParallel)
 
-# create credentials config files
-generateCredentialsConfig("credentials.json")
-
 # set azure credentials
 setCredentials("credentials.json")
 
-# generate cluster config json file
-generateClusterConfig("cluster.json")
-
 # Creating an Azure parallel backend
-cluster <- makeCluster(clusterSetting = "cluster.json")
+cluster <- makeCluster(clusterSetting = "plyr_cluster.json")
 
 # Register your Azure parallel backend to the foreach implementation
 registerDoAzureParallel(cluster)
