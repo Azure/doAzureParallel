@@ -1,21 +1,21 @@
 {
-  "name": "plyr",
-  "vmSize": "Standard_A2_v2",
-  "maxTasksPerNode": 2,
+  "name": "resource_files",
+  "vmSize": "Standard_D11_v2",
+  "maxTasksPerNode": 1,
   "poolSize": {
     "dedicatedNodes": {
       "min": 0,
       "max": 0
     },
     "lowPriorityNodes": {
-      "min": 2,
-      "max": 2
+      "min": 3,
+      "max": 3
     },
     "autoscaleFormula": "QUEUE"
   },
   "rPackages": {
-    "cran": [],
-    "github": [],
+    "cran": ["data.table", "ggplot2"],
+    "github": ["azure/rAzureBatch"],
     "bioconductor": []
   },
   "commandLine": []

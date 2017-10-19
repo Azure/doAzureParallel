@@ -81,6 +81,7 @@ dockerRunCommand <-
       "--rm",
       "-v $AZ_BATCH_NODE_ROOT_DIR:$AZ_BATCH_NODE_ROOT_DIR",
       "-e AZ_BATCH_NODE_ROOT_DIR=$AZ_BATCH_NODE_ROOT_DIR",
+      "-e AZ_BATCH_NODE_ROOT_DIR=$AZ_BATCH_NODE_STARTUP_DIR",
       sep = " "
     )
 

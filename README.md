@@ -44,10 +44,9 @@ Install doAzureParallel directly from Github.
 ```R
 # install the package devtools
 install.packages("devtools")
-library(devtools)
 
 # install the doAzureParallel and rAzureBatch package
-install_github(c("Azure/rAzureBatch", "Azure/doAzureParallel"))
+devtools::install_github("Azure/doAzureParallel")
 ```
 
 ## Azure Requirements
