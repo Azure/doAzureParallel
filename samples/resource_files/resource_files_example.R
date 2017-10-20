@@ -1,16 +1,15 @@
 # =======================================
 # === Setup / Install and Credentials ===
 # =======================================
-
 # install packages from github
 library(devtools)
-install_github("azure/doazureparallel")
+devtools::install_github("azure/doAzureParallel")
 
 # import packages
 library(doAzureParallel)
 
 # set azure credentials
-setCredentials("credentials.json")
+doAzureParallel::setCredentials("credentials.json")
 
 # Add data.table package to the CRAN packages and Azure/rAzureBatch to the Github packages
 # in order to install the packages to all of the nodes
@@ -68,10 +67,12 @@ registerDoAzureParallel(cluster)
 #   4. Notice the parameter 'sr = "c"' in the createSasToken method, this
 #      simply means that the token is created for that entire container in storage
 #
-storageAccountName <- "prodtest333"
+storageAccountName <- "mystorageaccount"
 outputsContainer <- "nyc-taxi-graphs"
 rAzureBatch::createContainer(outputsContainer)
-outputSas <- rAzureBatch::createSasToken(permission = "w", sr = "c", outputsContainer)
+
+# permissions: r = read, w = write.
+outputSas <- rAzureBatch::createSasToken(permission = "rw", sr = "c", outputsContainer)
 
 # =======================================================
 # === Foreach with resourceFiles & writing to storage ===
@@ -113,12 +114,16 @@ results <- foreach(i = 1:12) %dopar% {
   ggsave(image)
 
   # save image to the storage account using the Sas token we created above
-  rAzureBatch::uploadBlob(containerName = outputsContainer,
+  blob <- rAzureBatch::uploadBlob(containerName = outputsContainer,
              image,
              sasToken = outputSas,
              accountName = storageAccountName)
-  NULL
+
+  # return the blob url
+  blob$url
 }
 
+results
+
 # deprovision your cluster after your work is complete
-#stopCluster(cluster)
+stopCluster(cluster)
