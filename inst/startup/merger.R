@@ -84,7 +84,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
 
         if (file.exists(taskResult)) {
           task <- readRDS(taskResult)
-          for (t in 1:length(chunkSize)) {
+          for (t in 1:length(task)) {
             results[count] <- task[t]
             count <- count + 1
           }
