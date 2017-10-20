@@ -56,7 +56,7 @@ test_that("successfully create bioconductor pool package command line", {
     getPoolPackageInstallationCommand("bioconductor", c("IRanges", "a4"))
   cat(poolInstallation)
   expect_equal(length(poolInstallation), 2)
-  
+
   expected <-
     c(
       paste("Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R",
@@ -66,6 +66,6 @@ test_that("successfully create bioconductor pool package command line", {
             "a4",
             sep = " ")
     )
-  
+
   expect_equal(poolInstallation, expected)
 })
