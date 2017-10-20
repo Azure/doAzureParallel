@@ -1,0 +1,23 @@
+{
+  "name": "package_management",
+  "vmSize": "Standard_A2_v2",
+  "maxTasksPerNode": 1,
+  "poolSize": {
+    "dedicatedNodes": {
+      "min": 0,
+      "max": 0
+    },
+    "lowPriorityNodes": {
+      "min": 1,
+      "max": 1
+    },
+    "autoscaleFormula": "QUEUE"
+  },
+  "rPackages": {
+    "cran": ["xml2"],
+    "github": ["azure/rAzureBatch"],
+    "bioconductor": ["GenomeInfoDb", "IRange"],
+    "githubAuthenticationToken": ""
+  },
+  "commandLine": []
+}
