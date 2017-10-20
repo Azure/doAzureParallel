@@ -196,9 +196,13 @@ makeCluster <-
 
     containerInstallCommand <- c(
       #TODO: Updates branch to point at master!
-      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container_wip/inst/startup/cluster_setup.sh",
+      paste0(
+        "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
+        "feature/container_wip/inst/startup/cluster_setup.sh"),
       "chmod u+x cluster_setup.sh",
-      "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/container_wip/inst/startup/install_bioconductor.R",
+      paste0(
+        "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
+        "feature/container_wip/inst/startup/install_bioconductor.R"),
       "chmod u+x install_bioconductor.R",
       installAndStartContainerCommand
     )
