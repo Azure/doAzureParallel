@@ -24,29 +24,35 @@ test_that("Scenario Test", {
 
   res
 
-
-  '%dopar%' <- foreach::'%dopar%'
-  results <- foreach::foreach(i = 1:3) %dopar% {
-    x <- library(DESeq2)
-    return(x)
-  }
-
-  results
-
   doAzureParallel::stopCluster(cluster)
 
 })
 
-dockerOptions <- "-e V=$V "
-cleanCommands <-
-  c("rbase:3.4.1 R --version",
-    "alfpark/blobxfer blobxfer --download")
-actions <-
-  paste(paste0("docker run ", dockerOptions), cleanCommands, sep = "")
-commandLine <-
-  sprintf("/bin/bash -c \"set -e; set -o pipefail; %s wait\"",
-          paste0(paste(
-            actions, sep = " ", collapse = "; "
-          ), ";"))
+test_that("Chunksize Test", {
+  testthat::skip_on_travis()
+  credentialsFileName <- "credentials.json"
+  clusterFileName <- "cluster.json"
 
-commandLine
+  doAzureParallel::generateCredentialsConfig(credentialsFileName)
+  doAzureParallel::generateClusterConfig(clusterFileName)
+
+  doAzureParallel::setCredentials(credentialsFileName)
+  cluster <- doAzureParallel::makeCluster(clusterFileName)
+  doAzureParallel::registerDoAzureParallel(cluster)
+
+  '%dopar%' <- foreach::'%dopar%'
+  res <-
+    foreach::foreach(i = 1:10, .options.azure = list(chunkSize = 3)) %dopar% {
+      i
+    }
+
+  doAzureParallel::stopCluster(cluster)
+
+  testthat::expect_equal(length(res),
+                         10)
+
+  for (i in 1:10) {
+    testthat::expect_equal(res[[i]],
+                           i)
+  }
+})

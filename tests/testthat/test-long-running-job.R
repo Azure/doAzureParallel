@@ -14,18 +14,18 @@ test_that("Long Running Job Test", {
   cluster <- doAzureParallel::makeCluster(clusterFileName)
   doAzureParallel::registerDoAzureParallel(cluster)
 
-  opt <- list(wait = FALSE)
+  options <- list(wait = FALSE, job = 'myjob')
   '%dopar%' <- foreach::'%dopar%'
-  res <-
+  jobId <-
     foreach::foreach(
       i = 1:4,
       .packages = c('httr'),
-      .options.azure = opt
+      .options.azure = options
     ) %dopar% {
       mean(1:3)
     }
 
-  job <- getJob(res)
+  job <- getJob(jobId)
 
   # get active/running job list
   filter <- filter <- list()
@@ -39,7 +39,7 @@ test_that("Long Running Job Test", {
   Sys.sleep(120)
 
   # get job result
-  jobResult <- getJobResult(res)
+  jobResult <- getJobResult(jobId)
 
   doAzureParallel::stopCluster(cluster)
 
@@ -51,5 +51,5 @@ test_that("Long Running Job Test", {
                          list(2, 2, 2, 2))
 
   # delete the job
-  rAzureBatch::deleteJob(res)
+  rAzureBatch::deleteJob(jobId)
 })
