@@ -38,10 +38,14 @@ test_that("successfully create github pool package command line", {
 
   expected <-
     c(
-      paste0("Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' ",
-        "-e \'devtools::install_github(args[1])\' Azure/doAzureParallel"),
-      paste0("Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' ",
-        "-e \'devtools::install_github(args[1])\' Azure/rAzureBatch")
+      paste0(
+        "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' ",
+        "-e \'devtools::install_github(args[1])\' Azure/doAzureParallel"
+      ),
+      paste0(
+        "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' ",
+        "-e \'devtools::install_github(args[1])\' Azure/rAzureBatch"
+      )
     )
 
   expect_equal(poolInstallation, expected)
