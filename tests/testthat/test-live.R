@@ -6,15 +6,13 @@ test_that("Scenario Test", {
   credentialsFileName <- "credentials.json"
   clusterFileName <- "test_cluster.json"
 
-  #doAzureParallel::generateCredentialsConfig(credentialsFileName)
-  #doAzureParallel::generateClusterConfig(clusterFileName)
+  doAzureParallel::generateCredentialsConfig(credentialsFileName)
+  doAzureParallel::generateClusterConfig(clusterFileName)
 
   # set your credentials
   doAzureParallel::setCredentials(credentialsFileName)
   cluster <- doAzureParallel::makeCluster(clusterFileName)
   doAzureParallel::registerDoAzureParallel(cluster)
-
-  #cluster
 
   '%dopar%' <- foreach::'%dopar%'
   res <-
@@ -35,14 +33,9 @@ test_that("Scenario Test", {
 
   results
 
-  # doAzureParallel::stopCluster(cluster)
-  #
-  # testthat::expect_equal(length(res),
-  #                        4)
-  #
-  # testthat::expect_equal(res,
-  #                        list(2, 2, 2, 2))
-})''
+  doAzureParallel::stopCluster(cluster)
+
+})
 
 dockerOptions <- "-e V=$V "
 cleanCommands <-
