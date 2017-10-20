@@ -1,0 +1,5 @@
+# Montecarlo
+
+Using the Montecarlo algorithm is a popular option for doing many financial modelling scenarios. In this sample we do a multiple pricing simulations for the closing price of a security. Part of the sample is to show the speed up of running locally without a parallel backend, and then using the cloud to leverage a cluster to do the same work.
+
+To speed up the algorithm significantly play around with the number of nodes in the cluster, and the chunk size for the foreach loop. Currently it is set to 13 because we have 2 nodes, with 4 cores each (total of 8 cores) and we want to run 100 iterations of the loop. 100 / 8 ~= 13 so we set the chunk size to 13. If we have 32 cores, we may want to set the chunk size to 4 to spead out the work as evenly as possible across all the nodes and improve the total execution time.

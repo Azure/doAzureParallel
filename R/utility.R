@@ -10,8 +10,6 @@
 #' @export
 waitForNodesToComplete <- function(poolId, timeout = 86400) {
   cat("Booting compute nodes. . . ", fill = TRUE)
-
-  cat(poolId)
   pool <- rAzureBatch::getPool(poolId)
 
   # Validate the getPool request first, before setting the progress bar

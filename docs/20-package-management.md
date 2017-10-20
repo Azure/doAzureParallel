@@ -12,7 +12,8 @@ You can install packages by specifying the package(s) in your JSON pool configur
   ...
   "rPackages": {
     "cran": ["some_cran_package_name", "some_other_cran_package_name"],
-    "github": ["github_username/github_package_name", "another_github_username/another_github_package_name"]
+    "github": ["github_username/github_package_name", "another_github_username/another_github_package_name"],
+    "bioconductor": ["IRanges"]
   },
   ...
 }
@@ -44,7 +45,7 @@ When the cluster is created the token is passed in as an environment variable ca
     "rPackages": {
         "cran": [],
         "github": ["<project/some_private_repository>"],
-        "githubAuthenticationToken": "<github_authentication_token>"
+        "bioconductor": []
     },
     "commandLine": []
     }
@@ -71,26 +72,38 @@ results <- foreach(i = 1:number_of_iterations, .packages=c('package_1', 'package
 Installing packages from github using this method is not yet supported.
 
 ## Installing Packages from BioConductor
-Currently there is no native support for Bioconductor package installation, but it can be achieved by installing the packages directly in your environment or using the 'commandLine' feature in the cluster configuration. We recommend using the 'commandLine' to install the base BioConductor package and then install additional packages through the 'commandLine'.
+The default deployment of R used in the cluster (see [Customizing the cluster](./30-customize-cluster.md) for more information) includes the Bioconductor installer by default. Simply add packages to the cluster by adding packages in the array.
 
-### Installing BioConductor using the 'commandLine'
-
-We recommend using the [script provided in the samples](../samples/package_management/bioc_setup.sh) section of this project which will install the required pre-requisites for BioConductor as well as BioConductor itself.
-
-In the example below, the script will install BioConductor and install the GenomeInfoDB and IRanges packages. Simply update your cluster configuration commandLine as follows:
 ```json
-"commandLine": [
-  "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/samples/package_management/bioc_setup.sh",
-  "chmod u+x ./bioc_setup.sh",
-  "./bioc_setup.sh",
-  "wget https://raw.githubusercontent.com/Azure/doAzureParallel/master/inst/startup/install_bioconductor.R",
-  "chmod u+x ./install_bioconductor.R",
-  "Rscript install_bioconductor.R GenomeInfoDb IRange"]
+{
+    {
+    "name": <your pool name>,
+    "vmSize": <your pool VM size name>,
+    "maxTasksPerNode": <num tasks to allocate to each node>,
+    "poolSize": {
+        "dedicatedNodes": {
+            "min": 2,
+            "max": 2
+        },
+        "lowPriorityNodes": {
+            "min": 1,
+            "max": 10
+        },
+        "autoscaleFormula": "QUEUE"
+    },
+    "rPackages": {
+        "cran": [],
+        "github": [],
+        "bioconductor": ["IRanges"]
+    },
+    "commandLine": []
+    }
+}
 ```
 
-Installing bioconductor packages within the _foreach_ code block is not supported, and should be specified and installed in the cluster config.
+Note: Installing Bioconductor packages per-*foreach* loop is not currently supported.
 
-A [working sample](../samples/package_management/bioconductor_cluster.json) can be found in the samples directory.
+Note: Container references that are not provided by tidyverse do not support Bioconductor installs. If you choose another container, you must make sure that Biocondunctor is installed.
 
 ## Uninstalling packages
 Uninstalling packages from your pool is not supported. However, you may consider rebuilding your pool.
