@@ -1,54 +1,38 @@
-# Run this test for users to make sure the long running job feature
-# of doAzureParallel are still working
-context("long running job scenario test")
-test_that("Long Running Job Test", {
+# Run this test for users to make sure the github package
+# install feature of doAzureParallel are still working
+context("github package install scenario test")
+test_that("github package install Test", {
   testthat::skip_on_travis()
   credentialsFileName <- "credentials.json"
   clusterFileName <- "cluster.json"
-
+  
   doAzureParallel::generateCredentialsConfig(credentialsFileName)
   doAzureParallel::generateClusterConfig(clusterFileName)
-
+  
   # set your credentials
   doAzureParallel::setCredentials(credentialsFileName)
   cluster <- doAzureParallel::makeCluster(clusterFileName)
   doAzureParallel::registerDoAzureParallel(cluster)
-
-  opt <- list(wait = FALSE)
+  
+  opt <- list(wait = TRUE)
   '%dopar%' <- foreach::'%dopar%'
   github <- c('azure/rAzureBatch', 'azure/doAzureParallel')
   res <-
     foreach::foreach(
       i = 1:4,
       .packages = c('httr'),
-      #github = github,
+      github = github,
       .options.azure = opt
     ) %dopar% {
-      mean(1:3)
+      "doAzureParallel" %in% rownames(installed.packages())
     }
-
-  job <- getJob(res)
-
-  # get active/running job list
-  filter <- filter <- list()
-  filter$state <- c("active", "completed")
-  getJobList(filter)
-
-  # get job list for all jobs
-  getJobList()
-
-  # wait 2 minutes for job to finish
-  Sys.sleep(120)
-
-  # get job result
-  jobResult <- getJobResult(res)
-
+  
   doAzureParallel::stopCluster(cluster)
-
+  
   # verify the job result is correct
-  testthat::expect_equal(length(jobResult),
+  testthat::expect_equal(length(res),
                          4)
-
-  testthat::expect_equal(jobResult,
-                         list(2, 2, 2, 2))
+  
+  testthat::expect_equal(res,
+                         list(TRUE, TRUE, TRUE, TRUE))
 })
