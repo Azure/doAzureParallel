@@ -194,7 +194,7 @@
     poolInfo = poolInfo,
     jobPreparationTask = jobPreparationTask,
     usesTaskDependencies = usesTaskDependencies,
-    content = "text",
+    content = "response",
     metadata = metadata
   )
 
