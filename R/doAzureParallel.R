@@ -398,6 +398,8 @@ setHttpTraffic <- function(value = FALSE) {
       resourceFiles = resourceFiles,
       metadata = metadata,
       packages = obj$packages,
+      github = eval(obj$args$github),
+      bioconductor = eval(obj$args$bioconductor),
       containerImage = data$containerImage
     )
 

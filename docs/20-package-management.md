@@ -55,21 +55,45 @@ When the cluster is created the token is passed in as an environment variable ca
 _More information regarding github authentication tokens can be found [here](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)_
 
 ## Installing Packages per-*foreach* Loop
-You can also install packages by using the **.packages** option in the *foreach* loop. Instead of installing packages during pool creation, packages (and it's dependencies) can be installed before each iteration in the loop is run on your Azure cluster.
+You can also install cran packages by using the **.packages** option in the *foreach* loop. You can also install github/bioconductor packages by using the **github** and **bioconductor" option in the *foreach* loop. Instead of installing packages during pool creation, packages (and its dependencies) can be installed before each iteration in the loop is run on your Azure cluster.
 
-To install a single package:
+To install a single cran package:
 ```R
 number_of_iterations <- 10
 results <- foreach(i = 1:number_of_iterations, .packages='some_package') %dopar% { ... }
 ```
 
-To install multiple packages:
+To install multiple cran packages:
 ```R
 number_of_iterations <- 10
 results <- foreach(i = 1:number_of_iterations, .packages=c('package_1', 'package_2')) %dopar% { ... }
 ```
 
-Installing packages from github using this method is not yet supported.
+To install a single github package:
+```R
+number_of_iterations <- 10
+results <- foreach(i = 1:number_of_iterations, github='azure/rAzureBatch') %dopar% { ... }
+```
+
+Please do not use "https://github.com/" as prefix for the github package name above.
+
+To install multiple github packages:
+```R
+number_of_iterations <- 10
+results <- foreach(i = 1:number_of_iterations, github=c('package_1', 'package_2')) %dopar% { ... }
+```
+
+To install a single bioconductor package:
+```R
+number_of_iterations <- 10
+results <- foreach(i = 1:number_of_iterations, bioconductor='some_package') %dopar% { ... }
+```
+
+To install multiple bioconductor packages:
+```R
+number_of_iterations <- 10
+results <- foreach(i = 1:number_of_iterations, bioconductor=c('package_1', 'package_2')) %dopar% { ... }
+```
 
 ## Installing Packages from BioConductor
 The default deployment of R used in the cluster (see [Customizing the cluster](./30-customize-cluster.md) for more information) includes the Bioconductor installer by default. Simply add packages to the cluster by adding packages in the array.
@@ -100,8 +124,6 @@ The default deployment of R used in the cluster (see [Customizing the cluster](.
     }
 }
 ```
-
-Note: Installing Bioconductor packages per-*foreach* loop is not currently supported.
 
 Note: Container references that are not provided by tidyverse do not support Bioconductor installs. If you choose another container, you must make sure that Biocondunctor is installed.
 

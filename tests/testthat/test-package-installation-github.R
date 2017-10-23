@@ -16,7 +16,7 @@ test_that("github package install Test", {
 
   opt <- list(wait = TRUE)
   '%dopar%' <- foreach::'%dopar%'
-  github <- c('azure/rAzureBatch', 'azure/doAzureParallel')
+  github <- 'azure/doAzureParallel'
   res <-
     foreach::foreach(
       i = 1:4,
@@ -24,7 +24,8 @@ test_that("github package install Test", {
       github = github,
       .options.azure = opt
     ) %dopar% {
-      "doAzureParallel" %in% rownames(installed.packages())
+      "doAzureParallel" %in% rownames(installed.packages()) &&
+      "rAzureBatch" %in% rownames(installed.packages())
     }
 
   doAzureParallel::stopCluster(cluster)
