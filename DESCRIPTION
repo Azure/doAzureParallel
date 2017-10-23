@@ -27,5 +27,5 @@ Suggests:
     caret,
     plyr,
     lintr
-Remotes: Azure/rAzureBatch@v0.5.1
+Remotes: Azure/rAzureBatch@v0.5.2
 RoxygenNote: 6.0.1
