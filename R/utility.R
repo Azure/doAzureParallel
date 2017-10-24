@@ -56,6 +56,34 @@ linuxWrapCommands <- function(commands = c()) {
   commandLine
 }
 
+#' Delete a job
+#'
+#' @param jobId A job id
+#' @param deleteResult TRUE to delete job result in storage blob
+#' container, FALSE to keep the result in storage blob container.
+#'
+#' @examples
+#' \dontrun{
+#' deleteJob("job-001")
+#' deleteJob("job-001", deleteResult = FALSE)
+#' }
+#' @export
+deleteJob <- function(jobId, deleteResult = TRUE) {
+  if (deleteResult == TRUE) {
+    deleteStorageContainer(jobId)
+  }
+
+  response <- rAzureBatch::deleteJob(jobId, content = "response")
+
+  if (response$status_code == 202) {
+    cat(sprintf("Your job '%s' has been deleted.", jobId),
+        fill = TRUE)
+  } else if (response$status_code == 404) {
+    cat(sprintf("Job '%s' does not exist.", jobId),
+        fill = TRUE)
+  }
+}
+
 #' Get a list of job statuses from the given filter
 #'
 #' @param filter A filter containing job state
@@ -351,7 +379,14 @@ getJobResult <- function(jobId) {
     stop("jobId must contain at least 3 characters.")
   }
 
-  tempFile <- tempFile <- tempfile("getJobResult", fileext = ".rds")
+  metadata <- readMetadataBlob(jobId)
+
+  if (metadata$enableCloudCombine == "FALSE" ) {
+    cat("enalbeCloudCombine is set to FALSE, no job merge result is available", fill = TRUE)
+    return()
+  }
+
+  tempFile <- tempfile("getJobResult", fileext = ".rds")
 
   results <- rAzureBatch::downloadBlob(
     jobId,
@@ -571,6 +606,48 @@ waitForJobPreparation <- function(jobId, poolId) {
 
 getXmlValues <- function(xmlResponse, xmlPath) {
   xml2::xml_text(xml2::xml_find_all(xmlResponse, xmlPath))
+}
+
+saveMetadataBlob <- function(jobId, metadata) {
+  xmlNode <- "<metadata>"
+  if (length(metadata) > 0) {
+    for (i in 1:length(metadata)) {
+      xmlNode <-
+        paste0(xmlNode,
+               sprintf("<%s>%s</%s>", metadata[[i]]$name, metadata[[i]]$value, metadata[[i]]$name))
+    }
+  }
+  xmlNode <- paste0(xmlNode, "</metadata>")
+  saveXmlBlob(jobId, xmlNode, "metadata")
+}
+
+saveXmlBlob <- function(jobId, xmlBlock, name) {
+  xmlFile <- paste0(jobId, "-", name, ".rds")
+  saveRDS(xmlBlock, file = xmlFile)
+  rAzureBatch::uploadBlob(jobId, paste0(getwd(), "/", xmlFile))
+  file.remove(xmlFile)
+}
+
+readMetadataBlob <- function(jobId) {
+  # xmlResponse <-
+  #   rAzureBatch::listBlobs(jobId , paste0(jobId, "-metadata.rds"), content = "parsed")
+  tempFile <- tempfile(paste0(jobId, "-metadata"), fileext = ".rds")
+  result <- rAzureBatch::downloadBlob(
+    jobId,
+    paste0(jobId, "-metadata.rds"),
+    downloadPath = tempFile,
+    overwrite = TRUE
+  )
+  result <- readRDS(tempFile)
+  result <- xml2::as_xml_document(result)
+  chunkSize <- getXmlValues(result, ".//chunkSize")
+  packages <- getXmlValues(result, ".//packages")
+  errorHandling <- getXmlValues(result, ".//errorHandling")
+  enableCloudCombine <- getXmlValues(result, ".//enableCloudCombine")
+
+  metadata <- list(chunkSize = chunkSize, packages = packages, errorHandling = errorHandling, enableCloudCombine = enableCloudCombine)
+
+  metadata
 }
 
 areShallowEqual <- function(a, b) {

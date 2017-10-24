@@ -83,7 +83,12 @@ Once job is completed successfully, you can call getJobResult to retrieve the jo
 
 Once you get the job result, you can delete the job.
 ```R
-  rAzureBatch::deleteJob(jobId)
+  deleteJob(jobId)
+```
+
+Please note deleteJob will delete the job at batch service, by default, it also deletes the storage container holding the job result. If you want to keep the job result around, you can set deleteResult parameter to FALSE
+```R
+  deleteJob(jobId, deleteResult = FALSE)
 ```
 
 A [working sample](../samples/long_running_job/long_running_job.R) can be found in the samples directory.

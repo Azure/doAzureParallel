@@ -399,6 +399,8 @@ setHttpTraffic <- function(value = FALSE) {
         stop("The specified job already exists.")
       }
 
+      saveMetadataBlob(id, metadata)
+
       break
 
     },
