@@ -4,11 +4,14 @@ doAzureParallel supports installing packages at either the cluster level or duri
 
 ## Cluster level packages
 
-Cluster level packages support CRAN, GitHub and BioConductor packages. The packages are installed in a shared directory on the node. It is important to note that it is required to explicitly load any packages installed at the cluster level within the foreach loop. For example, if you installed ggplot2 on the cluster, you must explicityly load it before using it.
+Cluster level packages support CRAN, GitHub and BioConductor packages. The packages are installed in a shared directory on the node. It is important to note that it is required to explicitly load any packages installed at the cluster level within the foreach loop. For example, if you installed xml2 on the cluster, you must explicityly load it before using it.
 
 ```R
-# Load the libraries you want to use.
-library(ggplot2)
+foreach (i = 1:4) %dopar% {
+  # Load the libraries you want to use.
+  library(xml2)
+  xml2::as_list(...)
+}
 ```
 
 ### CRAN
