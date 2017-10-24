@@ -16,7 +16,7 @@ test_that("Scenario Test", {
 
   '%dopar%' <- foreach::'%dopar%'
   res <-
-    foreach::foreach(i = 1:4, .packages = c("stringr")) %dopar% {
+    foreach::foreach(i = 1:4) %dopar% {
       library(xml2)
       library(rAzureBatch)
       mean(1:3)
@@ -25,6 +25,9 @@ test_that("Scenario Test", {
   res
 
   doAzureParallel::stopCluster(cluster)
+
+  testthat::expect_equal(length(res), 4)
+  testthat::expect_equal(res, list(2, 2, 2, 2))
 
 })
 

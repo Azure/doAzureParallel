@@ -53,7 +53,7 @@ FROM ubuntu:16.04
 CMD ["R"]
 ```
 
-There is no requirement to be debian based. For consistence with other pacakges it is recommeneded though. Please note though that the container **must be based off a Linux distribution as Windows is not supported**.
+There is no requirement to be debian based. For consistency with other pacakges it is recommeneded though. Please note though that the container **must be based off a Linux distribution as Windows is not supported**.
 
 ### List of tested container images
 

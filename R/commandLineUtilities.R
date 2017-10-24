@@ -116,7 +116,7 @@ linuxWrapCommands <- function(commands = c()) {
   # Sanitize the vector and don't allow empty values
   cleanCommands <- commands[lapply(commands, length) > 0]
 
-  commandLine <- "ls"
+  commandLine <- ""
   if (length(cleanCommands) > 0) {
     # Do not allow absolute paths is enforced in lintr
     commandLine <-
