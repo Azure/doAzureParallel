@@ -31,7 +31,7 @@ enableCloudCombine <- azbatchenv$enableCloudCombine
 cloudCombine <- azbatchenv$cloudCombine
 
 if (typeof(cloudCombine) == "list" && enableCloudCombine) {
-  results <- vector("list", batchTasksCount * chunkSize)
+  results <- vector("list", batchTasksCount)
   count <- 1
 
   status <- tryCatch({
@@ -48,7 +48,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
                    "https://github.com/Azure/doAzureParallel/blob/master/docs/40-troubleshooting.md"))
       }
 
-      results <- vector("list", length(files) * chunkSize)
+      results <- vector("list", length(files))
 
       for (i in 1:length(files)) {
         task <- readRDS(files[i])
@@ -62,7 +62,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           }
         }
 
-        for (t in 1:length(chunkSize)) {
+        for (t in 1:length(task)) {
           results[count] <- task[t]
           count <- count + 1
         }
@@ -84,7 +84,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
 
         if (file.exists(taskResult)) {
           task <- readRDS(taskResult)
-          for (t in 1:length(chunkSize)) {
+          for (t in 1:length(task)) {
             results[count] <- task[t]
             count <- count + 1
           }
