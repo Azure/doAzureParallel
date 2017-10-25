@@ -9,8 +9,8 @@ deleteJob(jobId, deleteResult = TRUE)
 \arguments{
 \item{jobId}{A job id}
 
-\item{deleteResult}{TRUE to delete job result in storage blob,
-FALSE to keep the result in storage blob}
+\item{deleteResult}{TRUE to delete job result in storage blob
+container, FALSE to keep the result in storage blob container.}
 }
 \description{
 Delete a job

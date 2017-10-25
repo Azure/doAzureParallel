@@ -84,6 +84,30 @@ deleteJob <- function(jobId, deleteResult = TRUE) {
   }
 }
 
+#' Terminate a job
+#'
+#' @param jobId A job id
+#'
+#' @examples
+#' \dontrun{
+#' terminateJob("job-001")
+#' }
+#' @export
+terminateJob <- function(jobId) {
+  response <- rAzureBatch::terminateJob(jobId, content = "response")
+
+  if (response$status_code == 202) {
+    cat(sprintf("Your job '%s' has been terminated.", jobId),
+        fill = TRUE)
+  } else if (response$status_code == 404) {
+    cat(sprintf("Job '%s' does not exist.", jobId),
+        fill = TRUE)
+  } else if (response$status_code == 409) {
+    cat(sprintf("Job '%s' has already completed.", jobId),
+        fill = TRUE)
+  }
+}
+
 #' Get a list of job statuses from the given filter
 #'
 #' @param filter A filter containing job state
