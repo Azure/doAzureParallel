@@ -22,14 +22,17 @@ test_that("successfully create cran pool package command line", {
     getPoolPackageInstallationCommand("cran", c("hts", "lubridate", "tidyr"))
   expect_equal(length(poolInstallation), 3)
 
-  startScript <- paste0("Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)'",
-                   "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()));")
+  libPathCommand <-
+    paste(
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)'",
+      "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()));"
+    )
 
   expected <-
     c(
-      paste(startScript,"install.packages(args[1])\' hts"),
-      paste(startScript,"install.packages(args[1])\' lubridate"),
-      paste(startScript,"install.packages(args[1])\' tidyr")
+      paste(libPathCommand, "install.packages(args[1])\' hts"),
+      paste(libPathCommand, "install.packages(args[1])\' lubridate"),
+      paste(libPathCommand, "install.packages(args[1])\' tidyr")
     )
 
   expect_equal(poolInstallation, expected)
@@ -40,16 +43,16 @@ test_that("successfully create github pool package command line", {
     getPoolPackageInstallationCommand("github", c("Azure/doAzureParallel", "Azure/rAzureBatch"))
   expect_equal(length(poolInstallation), 2)
 
+  libPathCommand <-
+    paste(
+      "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)'",
+      "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()));"
+    )
+
   expected <-
     c(
-      paste0(
-        "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' ",
-        "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()));devtools::install_github(args[1])\' Azure/doAzureParallel"
-      ),
-      paste0(
-        "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' ",
-        "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()));devtools::install_github(args[1])\' Azure/rAzureBatch"
-      )
+      paste(libPathCommand, "devtools::install_github(args[1])\' Azure/doAzureParallel"),
+      paste(libPathCommand, "devtools::install_github(args[1])\' Azure/rAzureBatch")
     )
 
   expect_equal(poolInstallation, expected)
