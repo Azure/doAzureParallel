@@ -9,7 +9,7 @@ Specifying a docker container is done by updating your cluster.json file. Simply
 ```json
 {
   "name": "myPool",
-  "vmSize": "Standard\_F2",
+  "vmSize": "Standard_F2",
   "maxTasksPerNode": 1,
   "poolSize": {
     "dedicatedNodes": {
