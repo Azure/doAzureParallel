@@ -387,20 +387,62 @@ getJobResult <- function(jobId) {
   if (metadata$enableCloudCombine == "FALSE") {
     cat("enalbeCloudCombine is set to FALSE, no job merge result is available",
         fill = TRUE)
+
     return()
+  }
+
+  if (metadata$wait == "FALSE") {
+    job <- getJob(jobId, verbose = FALSE)
+
+    if (job$tasks$active != 0 && job$tasks$running != 0) {
+      stop(sprintf(
+        "job %s is not finished yet, please try again later",
+        job$jobId
+      ))
+    }
+
+    # if the job has failed task
+    if (job$tasks$failed > 0 && metadata$errorHandling == "stop") {
+      stop(
+        sprintf(
+          "job %s has failed tasks and error handling is set to 'stop', no result will be avaialble",
+          job$jobId
+        )
+      )
+    }
   }
 
   tempFile <- tempfile("getJobResult", fileext = ".rds")
 
-  results <- rAzureBatch::downloadBlob(
-    jobId,
-    paste0("result/", jobId, "-merge-result.rds"),
-    downloadPath = tempFile,
-    overwrite = TRUE
-  )
+  retryCounter <- 0
+  maxRetryCount <- 3
+  repeat {
+    if (retryCounter > maxRetryCount) {
+      stop(
+        sprintf(
+          "Error getting job result: Maxmium number of retries (%d) reached",
+          maxRetryCount
+        )
+      )
+    } else {
+      retryCounter <- retryCounter + 1
+    }
 
-  if (is.vector(results)) {
-    results <- readRDS(tempFile)
+    results <- rAzureBatch::downloadBlob(
+      jobId,
+      paste0("result/", jobId, "-merge-result.rds"),
+      downloadPath = tempFile,
+      overwrite = TRUE
+    )
+
+    if (is.vector(results)) {
+      results <- readRDS(tempFile)
+      break
+
+    }
+
+    # wait for 10 seconds for the result to be available
+    Sys.sleep(10)
   }
 
   return(results)
