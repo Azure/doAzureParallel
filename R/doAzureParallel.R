@@ -304,6 +304,15 @@ setHttpTraffic <- function(value = FALSE) {
     metadataCount <- metadataCount + 1
   }
 
+  if (!is.null(obj$options$azure$wait)) {
+    waitKeyValuePair <-
+      list(name = "wait",
+           value = as.character(obj$options$azure$wait))
+
+    metadata[[metadataCount]] <- waitKeyValuePair
+    metadataCount <- metadataCount + 1
+  }
+
   retryCounter <- 0
   maxRetryCount <- 5
   startupFolderName <- "startup"

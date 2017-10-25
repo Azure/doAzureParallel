@@ -178,7 +178,8 @@ getJob <- function(jobId, verbose = TRUE) {
       chunkSize = 1,
       enableCloudCombine = "TRUE",
       packages = "",
-      errorHandling = "stop"
+      errorHandling = "stop",
+      wait = "TRUE"
     )
 
   if (!is.null(job$metadata)) {
@@ -197,6 +198,8 @@ getJob <- function(jobId, verbose = TRUE) {
     cat(sprintf("\tpackages: %s", metadata$packages),
         fill = TRUE)
     cat(sprintf("\terrorHandling: %s", metadata$errorHandling),
+        fill = TRUE)
+    cat(sprintf("\twait: %s", metadata$wait),
         fill = TRUE)
   }
 
@@ -649,6 +652,7 @@ readMetadataBlob <- function(jobId) {
   chunkSize <- getXmlValues(result, ".//chunkSize")
   packages <- getXmlValues(result, ".//packages")
   errorHandling <- getXmlValues(result, ".//errorHandling")
+  wait <- getXmlValues(result, ".//wait")
   enableCloudCombine <-
     getXmlValues(result, ".//enableCloudCombine")
 
@@ -657,7 +661,8 @@ readMetadataBlob <- function(jobId) {
       chunkSize = chunkSize,
       packages = packages,
       errorHandling = errorHandling,
-      enableCloudCombine = enableCloudCombine
+      enableCloudCombine = enableCloudCombine,
+      wait = wait
     )
 
   metadata
