@@ -21,11 +21,15 @@ test_that("successfully create cran pool package command line", {
   poolInstallation <-
     getPoolPackageInstallationCommand("cran", c("hts", "lubridate", "tidyr"))
   expect_equal(length(poolInstallation), 3)
+
+  startScript <- paste0("Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)'",
+                   "-e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()));")
+
   expected <-
     c(
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' -e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()));install.packages(args[1])\' hts",
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' -e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()));install.packages(args[1])\' lubridate",
-      "Rscript -e \'args <- commandArgs(TRUE)\' -e 'options(warn=2)' -e \'.libPaths( c( \\\"/mnt/batch/tasks/shared/R/packages\\\", .libPaths()));install.packages(args[1])\' tidyr"
+      paste(startScript,"install.packages(args[1])\' hts"),
+      paste(startScript,"install.packages(args[1])\' lubridate"),
+      paste(startScript,"install.packages(args[1])\' tidyr")
     )
 
   expect_equal(poolInstallation, expected)
