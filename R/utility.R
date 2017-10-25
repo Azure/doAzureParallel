@@ -381,8 +381,9 @@ getJobResult <- function(jobId) {
 
   metadata <- readMetadataBlob(jobId)
 
-  if (metadata$enableCloudCombine == "FALSE" ) {
-    cat("enalbeCloudCombine is set to FALSE, no job merge result is available", fill = TRUE)
+  if (metadata$enableCloudCombine == "FALSE") {
+    cat("enalbeCloudCombine is set to FALSE, no job merge result is available",
+        fill = TRUE)
     return()
   }
 
@@ -613,8 +614,15 @@ saveMetadataBlob <- function(jobId, metadata) {
   if (length(metadata) > 0) {
     for (i in 1:length(metadata)) {
       xmlNode <-
-        paste0(xmlNode,
-               sprintf("<%s>%s</%s>", metadata[[i]]$name, metadata[[i]]$value, metadata[[i]]$name))
+        paste0(
+          xmlNode,
+          sprintf(
+            "<%s>%s</%s>",
+            metadata[[i]]$name,
+            metadata[[i]]$value,
+            metadata[[i]]$name
+          )
+        )
     }
   }
   xmlNode <- paste0(xmlNode, "</metadata>")
@@ -629,8 +637,6 @@ saveXmlBlob <- function(jobId, xmlBlock, name) {
 }
 
 readMetadataBlob <- function(jobId) {
-  # xmlResponse <-
-  #   rAzureBatch::listBlobs(jobId , paste0(jobId, "-metadata.rds"), content = "parsed")
   tempFile <- tempfile(paste0(jobId, "-metadata"), fileext = ".rds")
   result <- rAzureBatch::downloadBlob(
     jobId,
@@ -643,9 +649,16 @@ readMetadataBlob <- function(jobId) {
   chunkSize <- getXmlValues(result, ".//chunkSize")
   packages <- getXmlValues(result, ".//packages")
   errorHandling <- getXmlValues(result, ".//errorHandling")
-  enableCloudCombine <- getXmlValues(result, ".//enableCloudCombine")
+  enableCloudCombine <-
+    getXmlValues(result, ".//enableCloudCombine")
 
-  metadata <- list(chunkSize = chunkSize, packages = packages, errorHandling = errorHandling, enableCloudCombine = enableCloudCombine)
+  metadata <-
+    list(
+      chunkSize = chunkSize,
+      packages = packages,
+      errorHandling = errorHandling,
+      enableCloudCombine = enableCloudCombine
+    )
 
   metadata
 }

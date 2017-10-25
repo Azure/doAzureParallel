@@ -291,7 +291,7 @@ setHttpTraffic <- function(value = FALSE) {
       list(name = "packages",
            value = paste(obj$packages, collapse = ";"))
 
-    metadata[[metadataCount]] <-packagesKeyValuePair
+    metadata[[metadataCount]] <- packagesKeyValuePair
     metadataCount <- metadataCount + 1
   }
 
