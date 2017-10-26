@@ -89,6 +89,7 @@ generateClusterConfig <- function(fileName) {
       rPackages = list(
         cran = vector(),
         github = vector(),
+        bioconductor = vector(),
         githubAuthenticationToken = ""
       ),
       commandLine = vector()
@@ -254,7 +255,6 @@ makeCluster <-
       resourceFiles = resourceFiles,
       commandLine = commandLine
     )
-
 
     if (grepl("AuthenticationFailed", response)) {
       stop("Check your credentials and try again.")

@@ -1,15 +1,15 @@
 # Customizing the cluster
 
-There are several ways to control what gets deployed to a cluster. The most flexible and powerful method is to manage the docker conatiner image that is used to provision the cluster. By default doAzureParallel uses containers to provision the R environement. Anything within the container will be available on all nodes in the cluster. The default container used in doAzureParallel is [rocker/tidyverse:latest](https://hub.docker.com/r/rocker/tidyverse/) developed and maintained by the rocker organization.
+There are several ways to control what gets deployed to a cluster. The most flexible and powerful method is to manage the docker container image that is used to provision the cluster. By default doAzureParallel uses containers to provision the R environement. Anything within the container will be available on all nodes in the cluster. The default container used in doAzureParallel is [rocker/tidyverse:latest](https://hub.docker.com/r/rocker/tidyverse/) developed and maintained by the rocker organization.
 
 ## Modifying the default docker container
 
-Speficying a docker container is done by updating your cluster.json file. Simply adding a reference to the docker container in the cluster.json file 'containerImage' property will cause all new clusters to deploy that conatiner to your cluster. doAzureParallel will use the version of R specified in the container.
+Specifying a docker container is done by updating your cluster.json file. Simply adding a reference to the docker container in the cluster.json file 'containerImage' property will cause all new clusters to deploy that container to your cluster. doAzureParallel will use the version of R specified in the container.
 
 ```json
 {
   "name": "myPool",
-  "vmSize": "Standard\_F2",
+  "vmSize": "Standard_F2",
   "maxTasksPerNode": 1,
   "poolSize": {
     "dedicatedNodes": {
@@ -53,11 +53,11 @@ FROM ubuntu:16.04
 CMD ["R"]
 ```
 
-There is no requirement to be debian based. For consistence with other pacakges it is recommeneded though. Please note though that the container **must be based off a Linux distribution as Windows is not supported**.
+There is no requirement to be debian based. For consistency with other pacakges it is recommeneded though. Please note though that the container **must be based off a Linux distribution as Windows is not supported**.
 
 ### List of tested container images
 
-The following containers were tested and hopefully cover the most common cases for end users.
+The following containers were tested and cover the most common cases for end users.
 
 Container Image | R type | Description
 --- | --- | ---
@@ -87,7 +87,10 @@ Note: All commands are run on the host node, not from within the container. This
 ```
 
 ### Environment variables for containers
-Environement Variable | Description
+
+The following Azure Batch environment variables are exposed into the container.
+
+Environment Variable | Description
 --- | ---
 AZ\_BATCH\_NODE\_ROOT\_DIR | Root directory for all files on the node
 AZ\_BATCH\_JOB\_ID | Job ID for the foreach loop
@@ -95,7 +98,9 @@ AZ\_BATCH\_TASK\_ID | Task ID for the task running the R loop instance
 AZ\_BATCH\_TASK\_WORKING\_DIR | Working directory where all files for the R process are logged
 AZ\_BATCH\_JOB\_PREP\_WORKING | Working directory where all files for packages in the foreach loop are logged
 
-### Directories for conatiners
+### Directories for containers
+
+The following directories are mounted into the container.
 
 Directory | Description
 --- | ---
@@ -119,4 +124,4 @@ Configuring the host node is not a common operation but sometimes required. This
 }
 ```
 
-Within th container, you can now access that directory using the environment variable **AZ\_BATCH\_ROOT\_DIR**, for example $AZ\_BATCH\_ROOT\_DIR\shared\fileshare
+Within the container, you can now access that directory using the environment variable **AZ\_BATCH\_ROOT\_DIR**, for example $AZ\_BATCH\_ROOT\_DIR\shared\fileshare

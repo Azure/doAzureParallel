@@ -25,36 +25,32 @@ getPoolPackageInstallationCommand <- function(type, packages) {
 
   sharedPackagesDirectory <- "/mnt/batch/tasks/shared/R/packages"
 
-  libPathsCommand <- paste0('.libPaths( c( \\\"',
+  libPathsCommand <- paste0('\'.libPaths( c( \\\"',
                             sharedPackagesDirectory,
                             '\\\", .libPaths()));')
 
   installCommand <-
     paste("Rscript -e \'args <- commandArgs(TRUE)\'",
-          "-e \'options(warn=2)\'",
-          sep = " ")
+          "-e \'options(warn=2)\'")
 
   # At this point we cannot use install_cran.R and install_github.R because they are not yet available.
   if (type == "cran") {
     script <-
-      paste(
-        installCommand,
-        paste0("-e \'",
-               libPathsCommand,
-               "install.packages(args[1])\' %s"),
-        sep = " "
-      )
+      paste(installCommand,
+            paste("-e",
+                  libPathsCommand,
+                  "install.packages(args[1])\' %s")
+            )
   }
   else if (type == "github") {
     script <-
       paste(
         installCommand,
-        paste0(
-          "-e \'",
+        paste(
+          "-e",
           libPathsCommand,
           "devtools::install_github(args[1])\' %s"
-        ),
-        sep = " "
+        )
       )
   }
   else if (type == "bioconductor") {
@@ -116,7 +112,7 @@ linuxWrapCommands <- function(commands = c()) {
   # Sanitize the vector and don't allow empty values
   cleanCommands <- commands[lapply(commands, length) > 0]
 
-  commandLine <- "ls"
+  commandLine <- ""
   if (length(cleanCommands) > 0) {
     # Do not allow absolute paths is enforced in lintr
     commandLine <-

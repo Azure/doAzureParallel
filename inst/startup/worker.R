@@ -92,6 +92,9 @@ result <- lapply(taskArgs, function(args) {
   },
   error = function(e) {
     workerErrorStatus <<- 1
+    print(e)
+    traceback()
+
     e
   })
 })
@@ -106,7 +109,8 @@ saveRDS(result,
           paste0(batchTaskId, "-result.rds")
         ))
 
-cat(paste0("Error Code: ", workerErrorStatus, fill = TRUE))
+cat(paste0("Error Code: ", workerErrorStatus), fill = TRUE)
+
 quit(save = "yes",
      status = workerErrorStatus,
      runLast = FALSE)
