@@ -10,7 +10,7 @@ status <- tryCatch({
       packageName <- packageDirectory[length(packageDirectory)]
 
       if (!require(packageName, character.only = TRUE)) {
-        devtools::install_github(new = "$AZ_BATCH_JOB_PREP_WORKING_DIR", package)
+        devtools::install_github(package)
         require(packageName, character.only = TRUE)
     }
   }
