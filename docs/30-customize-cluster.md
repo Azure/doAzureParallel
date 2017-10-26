@@ -1,10 +1,10 @@
 # Customizing the cluster
 
-There are several ways to control what gets deployed to a cluster. The most flexible and powerful method is to manage the docker conatiner image that is used to provision the cluster. By default doAzureParallel uses containers to provision the R environement. Anything within the container will be available on all nodes in the cluster. The default container used in doAzureParallel is [rocker/tidyverse:latest](https://hub.docker.com/r/rocker/tidyverse/) developed and maintained by the rocker organization.
+There are several ways to control what gets deployed to a cluster. The most flexible and powerful method is to manage the docker container image that is used to provision the cluster. By default doAzureParallel uses containers to provision the R environement. Anything within the container will be available on all nodes in the cluster. The default container used in doAzureParallel is [rocker/tidyverse:latest](https://hub.docker.com/r/rocker/tidyverse/) developed and maintained by the rocker organization.
 
 ## Modifying the default docker container
 
-Specifying a docker container is done by updating your cluster.json file. Simply adding a reference to the docker container in the cluster.json file 'containerImage' property will cause all new clusters to deploy that conatiner to your cluster. doAzureParallel will use the version of R specified in the container.
+Specifying a docker container is done by updating your cluster.json file. Simply adding a reference to the docker container in the cluster.json file 'containerImage' property will cause all new clusters to deploy that container to your cluster. doAzureParallel will use the version of R specified in the container.
 
 ```json
 {
@@ -98,7 +98,7 @@ AZ\_BATCH\_TASK\_ID | Task ID for the task running the R loop instance
 AZ\_BATCH\_TASK\_WORKING\_DIR | Working directory where all files for the R process are logged
 AZ\_BATCH\_JOB\_PREP\_WORKING | Working directory where all files for packages in the foreach loop are logged
 
-### Directories for conatiners
+### Directories for containers
 
 The following directories are mounted into the container.
 
