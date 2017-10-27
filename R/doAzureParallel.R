@@ -194,6 +194,8 @@ setHttpTraffic <- function(value = FALSE) {
   assign("expr", expr, .doAzureBatchGlobals)
   assign("exportenv", exportenv, .doAzureBatchGlobals)
   assign("packages", obj$packages, .doAzureBatchGlobals)
+  assign("github", eval(obj$github), .doAzureBatchGlobals)
+  assign("bioconductor", eval(obj$bioconductor), .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
 
   if (!is.null(obj$options$azure$job)) {
@@ -396,6 +398,8 @@ setHttpTraffic <- function(value = FALSE) {
       resourceFiles = resourceFiles,
       metadata = metadata,
       packages = obj$packages,
+      github = eval(obj$args$github),
+      bioconductor = eval(obj$args$bioconductor),
       containerImage = data$containerImage
     )
 
