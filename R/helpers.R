@@ -150,7 +150,8 @@
   containerImage <- args$containerImage
   poolInfo <- list("poolId" = poolId)
 
-  commands <- c()
+  # Default command for job preparation task
+  commands <- c("ls")
   if (!is.null(packages)) {
     jobPackages <-
       dockerRunCommand(containerImage,
