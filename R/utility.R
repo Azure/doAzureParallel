@@ -426,13 +426,24 @@ getJobResult <- function(jobId) {
     }
 
     # if the job has failed task
-    if (job$tasks$failed > 0 && metadata$errorHandling == "stop") {
-      stop(
-        sprintf(
-          "job %s has failed tasks and error handling is set to 'stop', no result will be avaialble",
-          job$jobId
+    if (job$tasks$failed > 0) {
+      if (metadata$errorHandling == "stop") {
+        stop(
+          sprintf(
+            "job %s has failed tasks and error handling is set to 'stop', no result will be avaialble",
+            job$jobId
+          )
         )
-      )
+      } else {
+        if (job$tasks$succeeded == 0) {
+          stop(
+            sprintf(
+              "all tasks failed for job %s, no result will be avaialble",
+              job$jobId
+            )
+          )
+        }
+      }
     }
   }
 
@@ -461,15 +472,12 @@ getJobResult <- function(jobId) {
 
     if (is.vector(results)) {
       results <- readRDS(tempFile)
-      break
-
+      return(results)
     }
 
     # wait for 10 seconds for the result to be available
     Sys.sleep(10)
   }
-
-  return(results)
 }
 
 #' Utility function for creating an output file
@@ -713,25 +721,30 @@ readMetadataBlob <- function(jobId) {
     downloadPath = tempFile,
     overwrite = TRUE
   )
-  result <- readRDS(tempFile)
-  result <- xml2::as_xml_document(result)
-  chunkSize <- getXmlValues(result, ".//chunkSize")
-  packages <- getXmlValues(result, ".//packages")
-  errorHandling <- getXmlValues(result, ".//errorHandling")
-  wait <- getXmlValues(result, ".//wait")
-  enableCloudCombine <-
-    getXmlValues(result, ".//enableCloudCombine")
 
-  metadata <-
-    list(
-      chunkSize = chunkSize,
-      packages = packages,
-      errorHandling = errorHandling,
-      enableCloudCombine = enableCloudCombine,
-      wait = wait
-    )
+  if (is.vector(result)) {
+    result <- readRDS(tempFile)
+    result <- xml2::as_xml_document(result)
+    chunkSize <- getXmlValues(result, ".//chunkSize")
+    packages <- getXmlValues(result, ".//packages")
+    errorHandling <- getXmlValues(result, ".//errorHandling")
+    wait <- getXmlValues(result, ".//wait")
+    enableCloudCombine <-
+      getXmlValues(result, ".//enableCloudCombine")
 
-  metadata
+    metadata <-
+      list(
+        chunkSize = chunkSize,
+        packages = packages,
+        errorHandling = errorHandling,
+        enableCloudCombine = enableCloudCombine,
+        wait = wait
+      )
+
+    metadata
+  } else {
+    stop(paste0(result, "\r\n"))
+  }
 }
 
 areShallowEqual <- function(a, b) {

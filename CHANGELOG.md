@@ -1,4 +1,12 @@
 # Change Log
+## [0.5.2] 2017-10-30
+### Added
+- Support for users to delete job and terminate job
+### Changed
+- Add retry to get job result
+- Add errorHandling and wait option to job metadata
+- Save job metadata to job result storage blob
+
 ## [0.5.1] 2017-09-28
 ### Added
 - Support for users to get job and job results for long running job
