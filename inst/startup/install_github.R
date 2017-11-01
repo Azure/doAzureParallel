@@ -10,12 +10,12 @@ status <- tryCatch({
       packageName <- packageDirectory[length(packageDirectory)]
 
       if (!require(packageName, character.only = TRUE)) {
-        devtools::install_github(new = "$AZ_BATCH_JOB_PREP_WORKING_DIR", packageDirectory)
+        devtools::install_github(package)
         require(packageName, character.only = TRUE)
     }
   }
 
-  return(0)
+  0
 },
 error = function(e) {
   cat(sprintf(
@@ -25,7 +25,7 @@ error = function(e) {
 
   # Install packages doesn't return a non-exit code.
   # Using '1' as the default non-exit code
-  return(1)
+  1
 })
 
 quit(save = "yes",
