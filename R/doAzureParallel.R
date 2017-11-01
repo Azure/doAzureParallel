@@ -129,8 +129,8 @@ setHttpTraffic <- function(value = FALSE) {
 .doAzureParallel <- function(obj, expr, envir, data) {
   stopifnot(inherits(obj, "foreach"))
 
-  github <- eval(obj$args$github)
-  bioconductor <- eval(obj$args$bioconductor)
+  githubPackages <- eval(obj$args$github)
+  bioconductorPackages <- eval(obj$args$bioconductor)
 
   # Remove special arguments, github and bioconductor, from args list
   if (!is.null(obj$args[["github"]])) {
@@ -206,8 +206,8 @@ setHttpTraffic <- function(value = FALSE) {
   assign("expr", expr, .doAzureBatchGlobals)
   assign("exportenv", exportenv, .doAzureBatchGlobals)
   assign("packages", obj$packages, .doAzureBatchGlobals)
-  assign("github", github, .doAzureBatchGlobals)
-  assign("bioconductor", bioconductor, .doAzureBatchGlobals)
+  assign("github", githubPackages, .doAzureBatchGlobals)
+  assign("bioconductor", bioconductorPackages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
 
   if (!is.null(obj$options$azure$job)) {
@@ -410,8 +410,8 @@ setHttpTraffic <- function(value = FALSE) {
       resourceFiles = resourceFiles,
       metadata = metadata,
       packages = obj$packages,
-      github = github,
-      bioconductor = bioconductor,
+      github = githubPackages,
+      bioconductor = bioconductorPackages,
       containerImage = data$containerImage
     )
 
@@ -515,8 +515,8 @@ setHttpTraffic <- function(value = FALSE) {
 
   if (wait) {
     if (!is.null(obj$packages) ||
-        !is.null(github) ||
-        !is.null(bioconductor)) {
+        !is.null(githubPackages) ||
+        !is.null(bioconductorPackages)) {
       waitForJobPreparation(id, data$poolId)
     }
 
