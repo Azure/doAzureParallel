@@ -86,6 +86,7 @@ generateClusterConfig <- function(fileName) {
                                 max = 3),
         autoscaleFormula = "QUEUE"
       ),
+      containerImage = "rocker/tidyverse:latest",
       rPackages = list(
         cran = vector(),
         github = vector(),
