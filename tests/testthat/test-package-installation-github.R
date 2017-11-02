@@ -2,6 +2,7 @@
 # install feature of doAzureParallel are still working
 context("github package install scenario test")
 test_that("single github package install Test", {
+  testthat::skip("Live test")
   testthat::skip_on_travis()
   credentialsFileName <- "credentials.json"
   clusterFileName <- "cluster.json"
@@ -36,6 +37,7 @@ test_that("single github package install Test", {
 })
 
 test_that("multiple github package install Test", {
+  testthat::skip("Live test")
   testthat::skip_on_travis()
   credentialsFileName <- "credentials.json"
   clusterFileName <- "cluster.json"

@@ -2,6 +2,7 @@
 # install feature of doAzureParallel are still working
 context("bioconductor package install scenario test")
 test_that("multiple bioconductor package install Test", {
+  testthat::skip("Live test")
   testthat::skip_on_travis()
   credentialsFileName <- "credentials.json"
   clusterFileName <- "cluster.json"
@@ -35,6 +36,7 @@ test_that("multiple bioconductor package install Test", {
 })
 
 test_that("multiple bioconductor package install Test", {
+  testthat::skip("Live test")
   testthat::skip_on_travis()
   credentialsFileName <- "credentials.json"
   clusterFileName <- "cluster.json"
