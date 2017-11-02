@@ -1,5 +1,5 @@
-Validators <- R6::R6Class(
-  "Validators",
+validationClass <- R6::R6Class(
+  "validationClass",
   lock_objects = TRUE,
   public = list(
     isValidStorageContainerName = function(storageContainerName) {
@@ -145,4 +145,4 @@ Validators <- R6::R6Class(
   )
 )
 
-`Validators` <- Validators$new()
+`validation` <- validationClass$new()

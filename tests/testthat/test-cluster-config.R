@@ -21,7 +21,7 @@ test_that("validating a cluster config file with bad autoscale formula property"
   configJson <- jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
   write(configJson, file = paste0(getwd(), "/", clusterConfig))
 
-  expect_error(`Validators`$validateClusterConfig(clusterConfig))
+  expect_error(`validation`$validateClusterConfig(clusterConfig))
 
   on.exit(file.remove(clusterConfig))
 })
@@ -52,7 +52,7 @@ test_that("validating a cluster config file with default values", {
   configJson <- jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
   write(configJson, file = paste0(getwd(), "/", clusterConfig))
 
-  expect_equal(`Validators`$validateClusterConfig(clusterConfig), TRUE)
+  expect_equal(`validation`$validateClusterConfig(clusterConfig), TRUE)
 
   on.exit(file.remove(clusterConfig))
 })
@@ -68,7 +68,7 @@ test_that("validating a cluster config file with null values", {
   configJson <- jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
   write(configJson, file = paste0(getwd(), "/", clusterConfig))
 
-  expect_error(`Validators`$validateClusterConfig(clusterConfig))
+  expect_error(`validation`$validateClusterConfig(clusterConfig))
 
   on.exit(file.remove(clusterConfig))
 })
