@@ -25,7 +25,6 @@ test_that("Basic scenario test", {
 
   testthat::expect_equal(length(res), 4)
   testthat::expect_equal(res, list(2, 2, 2, 2))
-
 })
 
 test_that("Chunksize Test", {

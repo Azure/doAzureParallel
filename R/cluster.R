@@ -151,7 +151,7 @@ makeCluster <-
         !is.null(poolConfig$rPackages$cran) &&
         length(poolConfig$rPackages$cran) > 0) {
       installCranCommand <-
-        getPoolPackageInstallationCommand ("cran", poolConfig$rPackages$cran)
+        getPoolPackageInstallationCommand("cran", poolConfig$rPackages$cran)
     }
 
     if (!is.null(poolConfig$rPackages) &&
