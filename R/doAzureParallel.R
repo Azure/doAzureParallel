@@ -219,8 +219,8 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   tryCatch({
-    `validation`$isValidStorageContainerName(id)
-    `validation`$isValidJobName(id)
+    validation$isValidStorageContainerName(id)
+    validation$isValidJobName(id)
   },
   error = function(e){
     stop(paste("Invalid job name: \n",

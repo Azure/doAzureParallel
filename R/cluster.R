@@ -234,15 +234,15 @@ makeCluster <-
     }
 
     if (!is.null(poolConfig[["pool"]])) {
-      `validation`$isValidDeprecatedClusterConfig(clusterSetting)
+      validation$isValidDeprecatedClusterConfig(clusterSetting)
       poolConfig <- poolConfig[["pool"]]
     }
     else {
-      `validation`$isValidClusterConfig(clusterSetting)
+      validation$isValidClusterConfig(clusterSetting)
     }
 
     tryCatch({
-      `validation`$isValidPoolName(poolConfig$name)
+      validation$isValidPoolName(poolConfig$name)
     },
     error = function(e) {
       stop(paste("Invalid pool name: \n",
