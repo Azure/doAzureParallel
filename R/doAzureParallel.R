@@ -129,6 +129,18 @@ setHttpTraffic <- function(value = FALSE) {
 .doAzureParallel <- function(obj, expr, envir, data) {
   stopifnot(inherits(obj, "foreach"))
 
+  githubPackages <- eval(obj$args$github)
+  bioconductorPackages <- eval(obj$args$bioconductor)
+
+  # Remove special arguments, github and bioconductor, from args list
+  if (!is.null(obj$args[["github"]])) {
+    obj$args[["github"]] <- NULL
+  }
+
+  if (!is.null(obj$args[["bioconductor"]])) {
+    obj$args[["bioconductor"]] <- NULL
+  }
+
   storageCredentials <- rAzureBatch::getStorageCredentials()
 
   it <- iterators::iter(obj)
@@ -194,8 +206,8 @@ setHttpTraffic <- function(value = FALSE) {
   assign("expr", expr, .doAzureBatchGlobals)
   assign("exportenv", exportenv, .doAzureBatchGlobals)
   assign("packages", obj$packages, .doAzureBatchGlobals)
-  assign("github", eval(obj$github), .doAzureBatchGlobals)
-  assign("bioconductor", eval(obj$bioconductor), .doAzureBatchGlobals)
+  assign("github", githubPackages, .doAzureBatchGlobals)
+  assign("bioconductor", bioconductorPackages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
 
   if (!is.null(obj$options$azure$job)) {
@@ -207,8 +219,8 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   tryCatch({
-    `Validators`$isValidStorageContainerName(id)
-    `Validators`$isValidJobName(id)
+    validation$isValidStorageContainerName(id)
+    validation$isValidJobName(id)
   },
   error = function(e){
     stop(paste("Invalid job name: \n",
@@ -398,8 +410,8 @@ setHttpTraffic <- function(value = FALSE) {
       resourceFiles = resourceFiles,
       metadata = metadata,
       packages = obj$packages,
-      github = eval(obj$args$github),
-      bioconductor = eval(obj$args$bioconductor),
+      github = githubPackages,
+      bioconductor = bioconductorPackages,
       containerImage = data$containerImage
     )
 
@@ -502,7 +514,9 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   if (wait) {
-    if (!is.null(obj$packages)) {
+    if (!is.null(obj$packages) ||
+        !is.null(githubPackages) ||
+        !is.null(bioconductorPackages)) {
       waitForJobPreparation(id, data$poolId)
     }
 

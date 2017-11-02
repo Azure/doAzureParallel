@@ -151,7 +151,7 @@ makeCluster <-
         !is.null(poolConfig$rPackages$cran) &&
         length(poolConfig$rPackages$cran) > 0) {
       installCranCommand <-
-        getPoolPackageInstallationCommand ("cran", poolConfig$rPackages$cran)
+        getPoolPackageInstallationCommand("cran", poolConfig$rPackages$cran)
     }
 
     if (!is.null(poolConfig$rPackages) &&
@@ -234,15 +234,15 @@ makeCluster <-
     }
 
     if (!is.null(poolConfig[["pool"]])) {
-      Validators$isValidDeprecatedClusterConfig(clusterSetting)
+      validation$isValidDeprecatedClusterConfig(clusterSetting)
       poolConfig <- poolConfig[["pool"]]
     }
     else {
-      Validators$isValidClusterConfig(clusterSetting)
+      validation$isValidClusterConfig(clusterSetting)
     }
 
     tryCatch({
-      `Validators`$isValidPoolName(poolConfig$name)
+      validation$isValidPoolName(poolConfig$name)
     },
     error = function(e) {
       stop(paste("Invalid pool name: \n",
