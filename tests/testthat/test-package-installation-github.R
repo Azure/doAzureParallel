@@ -73,3 +73,49 @@ test_that("multiple github package install Test", {
                               c(TRUE, TRUE, TRUE),
                               c(TRUE, TRUE, TRUE)))
 })
+
+test_that("pool multiple github package install Test", {
+  testthat::skip("Live test")
+  testthat::skip_on_travis()
+  credentialsFileName <- "credentials.json"
+  clusterFileName <- "cluster.json"
+
+  githubPackages <- c('Azure/doAzureParallel', 'twitter/AnomalyDetection', 'hadley/dplyr')
+
+  doAzureParallel::generateCredentialsConfig(credentialsFileName)
+  doAzureParallel::generateClusterConfig(clusterFileName)
+
+  config <- jsonlite::fromJSON(clusterFileName)
+  config$name <- "multipleGithubPackage"
+  config$poolSize$dedicatedNodes$min <- 0
+  config$poolSize$dedicatedNodes$max <- 0
+  config$poolSize$lowPriorityNodes$min <- 1
+  config$poolSize$lowPriorityNodes$max <- 1
+  config$rPackages$github <- c('Azure/doAzureParallel', 'twitter/AnomalyDetection', 'hadley/dplyr')
+  configJson <- jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
+  write(configJson, file = paste0(getwd(), "/", clusterFileName))
+
+  # set your credentials
+  doAzureParallel::setCredentials(credentialsFileName)
+  cluster <- doAzureParallel::makeCluster(clusterFileName)
+  doAzureParallel::registerDoAzureParallel(cluster)
+
+  '%dopar%' <- foreach::'%dopar%'
+  res <-
+    foreach::foreach(i = 1:3) %dopar% {
+      c("doAzureParallel" %in% rownames(installed.packages()),
+        "AnomalyDetection" %in% rownames(installed.packages()),
+        "dplyr" %in% rownames(installed.packages()))
+    }
+
+  # verify the job result is correct
+  testthat::expect_equal(length(res),
+                         3)
+
+  testthat::expect_equal(res,
+                         list(c(TRUE, TRUE, TRUE),
+                              c(TRUE, TRUE, TRUE),
+                              c(TRUE, TRUE, TRUE)))
+
+  doAzureParallel::stopCluster(cluster)
+})
