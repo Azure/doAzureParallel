@@ -1,4 +1,19 @@
 # Change Log
+
+## [0.6.0] 2017-11-03
+### Added
+- Support for users to run custom versions of R via Docker containers
+- GitHub and BioConductor support as parameters in the foreach
+
+### Changed
+- [BREAKING CHANGE] Host OS distribution is now Debian instead of CentOS
+- [BREAKING CHANGE] Command line no longer updates the environment of R
+- [BREAKING CHANGE] Default version of R changed from MRO 3.3.2 to latest version of CRAN R
+
+### Fixed
+- Packages installed in foreach are only present and visible to a single foreach loop and then deleted from the cluster
+- Linux clients would get stuck waiting for the job to finish when using the .packages() option in the foreach loop
+
 ## [0.5.1] 2017-09-28
 ### Added
 - Support for users to get job and job results for long running job
