@@ -14,7 +14,7 @@ If you would like to see more samples, please reach out to [razurebatch@microsof
 
    This sample uses the built-in email dataset to evaluate whether or not an email is spam. Using Caret, the code runs through random search using a 10-fold cross validation with 10 repeats. The classification algorithm used in the sample if Random Forest ('rf'), and each run is evaluated for ROC. Using doAzureParallel to create the backend, caret is able to distribute work to Azure and significantly speed up the work.
 
-3. **Mandelbrot Simulation Benchmark** [(link)](./mandlebrot/mandlebrot_performance_test.ipynb)
+3. **Mandelbrot Simulation Benchmark** [(link)](./mandelbrot/mandelbrot_performance_test.ipynb)
 
    This sample uses doAzureParallel to compute the mandelbrot set. The code benchmarks the difference in performance for running local and running on a doAzureParallel cluster size of 10, 20, 40, and 80 cores. 
 

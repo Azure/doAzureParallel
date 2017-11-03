@@ -16,9 +16,10 @@
   "rPackages": {
     "cran": [],
     "github": [],
+    "bioconductor": [],
     "githubAuthenticationToken": ""
   },
   "commandLine": [
-    "mkdir /mnt/data",
-    "mount -t cifs //<STORAGE_ACCOUNT_NAME>.file.core.windows.net/<FILE_SHARE_NAME> /mnt/data -o vers=3.0,username=<STORAGE_ACCOUNT_NAME>,password=<STORAGE_ACCOUNT_KEY>==,dir_mode=0777,file_mode=0777,sec=ntlmssp"]
+    "mkdir /mnt/batch/tasks/shared/data",
+    "mount -t cifs //<STORAGE_ACCOUNT_NAME>.file.core.windows.net/<FILE_SHARE_NAME> /mnt/batch/tasks/shared/data -o vers=3.0,username=<STORAGE_ACCOUNT_NAME>,password=<STORAGE_ACCOUNT_KEY>==,dir_mode=0777,file_mode=0777,sec=ntlmssp"]
 }

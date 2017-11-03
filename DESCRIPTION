@@ -1,7 +1,7 @@
 Package: doAzureParallel
 Type: Package
 Title: doAzureParallel
-Version: 0.5.0
+Version: 0.6.0
 Author: Brian Hoang
 Maintainer: Brian Hoang <brhoan@microsoft.com>
 Description: The project is for data experts who use R at scale. The project
@@ -17,7 +17,7 @@ Depends:
     foreach (>= 1.4.3),
     iterators (>= 1.0.8)
 Imports:
-    rAzureBatch (>= 0.5.1),
+    rAzureBatch (>= 0.5.3),
     jsonlite,
     rjson,
     xml2,
@@ -27,5 +27,5 @@ Suggests:
     caret,
     plyr,
     lintr
-Remotes: Azure/rAzureBatch@v0.5.1
+Remotes: Azure/rAzureBatch@v0.5.3
 RoxygenNote: 6.0.1

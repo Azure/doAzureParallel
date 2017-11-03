@@ -1,0 +1,23 @@
+{
+  "name": "mandelbrot",
+  "vmSize": "Standard_F4",
+  "maxTasksPerNode": 4,
+  "poolSize": {
+    "dedicatedNodes": {
+      "min": 0,
+      "max": 0
+    },
+    "lowPriorityNodes": {
+      "min": 2,
+      "max": 2
+    },
+    "autoscaleFormula": "QUEUE"
+  },
+  "rPackages": {
+    "cran": [],
+    "github": [],
+    "bioconductor": [],
+    "githubAuthenticationToken": ""
+  },
+  "commandLine": []
+}
