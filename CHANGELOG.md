@@ -3,7 +3,7 @@
 ## [0.6.0] 2017-11-03
 ### Added
 - Support for users to run custom versions of R via Docker containers
-- Github and BiocSupport on foreach
+- Github and Bioconductor support as parameters in the foreach
 
 ### Changed
 - [BREAKING CHANGE] Host OS distribution is now Debian instead of CentOS
