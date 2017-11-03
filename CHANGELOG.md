@@ -1,5 +1,4 @@
 # Change Log
-
 ## [0.6.0] 2017-11-03
 ### Added
 - Support for users to run custom versions of R via Docker containers
