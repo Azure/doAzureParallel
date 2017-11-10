@@ -35,6 +35,17 @@ Specifying a docker container is done by updating your cluster.json file. Simply
 
 Note: \_If no 'containerImage' property is set, rocker/tidyverse:latest will be used. This usually points to one of the latest versions of R.\_
 
+### List of tested container images
+
+The following containers were tested and cover the most common cases for end users.
+
+Container Image | R type | Description
+--- | --- | ---
+[rocker/tidyverse](https://hub.docker.com/r/rocker/r-ver/) | Open source R | Tidyverse is provided by the rocker org and uses a standard version of R developed by the open soruce community. rocker/tidyverse typically keeps up with the latest releases or R quite quickly and has versions back to R 3.1
+[nuest/mro](https://hub.docker.com/r/nuest/mro/) | Microsoft R Open | [Microsoft R Open](https://mran.microsoft.com/open/) is an open source SKU of R that provides out of the box support for math packages, version pacakge support with MRAN and improved performance over standard Open Source R.
+
+* We recommend reading the details of each package before using it to make sure you understand any limitaions or requirements of using the container images.
+
 ### Building your own container
 
 Building your own container gives you the flexibility to package any specific requirements, packages or data you require for running your workloads. We recommend using a debian based OS such as debian or ubuntu to build your containers and pointing to where R is in the final CMD command. For example:
@@ -53,18 +64,11 @@ FROM ubuntu:16.04
 CMD ["R"]
 ```
 
+For more information and samples on how to build images, deploy them to dockerhub and use them in your cluster please refer to the [Building Containers](./32-building-containers.md) documentation.
+
 There is no requirement to be debian based. For consistency with other pacakges it is recommeneded though. Please note though that the container **must be based off a Linux distribution as Windows is not supported**.
 
-### List of tested container images
 
-The following containers were tested and cover the most common cases for end users.
-
-Container Image | R type | Description
---- | --- | ---
-[rocker/tidyverse](https://hub.docker.com/r/rocker/r-ver/) | Open source R | Tidyverse is provided by the rocker org and uses a standard version of R developed by the open soruce community. rocker/tidyverse typically keeps up with the latest releases or R quite quickly and has versions back to R 3.1
-[nuest/mro](https://hub.docker.com/r/nuest/mro/) | Microsoft R Open | [Microsoft R Open](https://mran.microsoft.com/open/) is an open source SKU of R that provides out of the box support for math packages, version pacakge support with MRAN and improved performance over standard Open Source R.
-
-* We recommend reading the details of each package before using it to make sure you understand any limitaions or requirements of using the container images.
 
 ## Running Commands when the Cluster Starts
 
