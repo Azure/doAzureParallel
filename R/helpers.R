@@ -180,7 +180,7 @@
   args <- list(...)
 
   commands <- c(
-    "/anaconda/envs/py35/bin/pip install --no-dependencies blobxfer"
+    "/anaconda/envs/py35/bin/pip install --no-dependencies blobxfer==0.12.1"
   )
 
   if (!is.null(args$commandLine)) {
