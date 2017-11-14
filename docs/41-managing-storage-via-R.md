@@ -9,7 +9,7 @@ Blob is a storage file of any type and size. The Azure Storage Blob service uses
 _More information on general knowledge of Azure Storage Blob service [here](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-dotnet-how-to-use-blobs#what-is-blob-storage)_
 
 ### Viewing storage files and storage containers
-By default, the new storage container is private, meaning you will need to use your storage access key from storage via 'setCredentials' function. 
+By default, the new storage container is private, meaning you will need to use your storage access key from storage via 'setCredentials/setCrdetntialsObject' function. 
 ``` R
 containers <- listStorageContainers()
 View(containers)
