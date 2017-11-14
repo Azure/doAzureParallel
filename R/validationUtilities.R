@@ -23,15 +23,7 @@ validationClass <- R6::R6Class(
       }
     },
     # Validating cluster configuration files below doAzureParallel version 0.3.2
-    isValidDeprecatedClusterConfig = function(clusterFilePath) {
-      if (file.exists(clusterFilePath)) {
-        poolConfig <- rjson::fromJSON(file = clusterFilePath)
-      }
-      else{
-        poolConfig <-
-          rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
-      }
-
+    isValidDeprecatedClusterConfig = function(poolConfig) {
       if (is.null(poolConfig$pool$poolSize)) {
         stop("Missing poolSize entry")
       }

@@ -137,7 +137,28 @@ makeCluster <-
       poolConfig <-
         rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
     }
+    
+    doAzureParallel::makeClusterObject(poolConfig,
+                                       wait,
+                                       resouceFiles)
+  }
 
+#' Creates an Azure cloud-enabled cluster.
+#'
+#' @param clusterSettingsObj Cluster configuration as R object
+#' @param wait A boolean flag to wait for all nodes to boot up
+#' @param resourceFiles A list of files that Batch will download to the compute node before running the command line
+#'
+#' @return The request to the Batch service was successful.
+#' @examples
+#' \dontrun{
+#' cluster <- makeClusterObject(clusterSettingsObj = clusterConfigObj, fullName = TRUE, wait = TRUE)
+#' }
+#' @export
+makeClusterObject <-
+  function(clusterObject,
+           wait = TRUE,
+           resourceFiles = list()) {
     config <- getOption("az_config")
     if (is.null(config)) {
       stop("Credentials were not set.")
@@ -146,6 +167,7 @@ makeCluster <-
     installCranCommand <- NULL
     installGithubCommand <- NULL
     installBioconductorCommand <- NULL
+    poolConfig <- clusterObject
 
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$cran) &&
@@ -233,11 +255,11 @@ makeCluster <-
     }
 
     if (!is.null(poolConfig[["pool"]])) {
-      validation$isValidDeprecatedClusterConfig(clusterSetting)
+      validation$isValidDeprecatedClusterConfig(poolConfig)
       poolConfig <- poolConfig[["pool"]]
     }
     else {
-      validation$isValidClusterConfig(clusterSetting)
+      validation$isValidClusterConfig(poolConfig)
     }
 
     tryCatch({
@@ -378,9 +400,9 @@ stopCluster <- function(cluster) {
   print(sprintf("Your %s cluster has been destroyed.", cluster$poolId))
 }
 
-#' Set azure credentials to R session.
+#' Set azure credentials to R session from json file.
 #'
-#' @param fileName The cluster configuration that was created in \code{makeCluster}
+#' @param fileName The credentials json file that was created in \code{makeCluster}
 #'
 #' @export
 setCredentials <- function(fileName = "az_config.json") {
@@ -392,6 +414,16 @@ setCredentials <- function(fileName = "az_config.json") {
   }
 
   options("az_config" = config)
+  print("Your azure credentials have been set.")
+}
+
+#' Set azure credentials to R session from specified R object.
+#'
+#' @param credentialsConfig The credentials R object was created by user programatically
+#'
+#' @export
+setCredentialsObject <- function(credentialsConfig) {
+  options("az_config" = credentialsConfig)
   print("Your azure credentials have been set.")
 }
 

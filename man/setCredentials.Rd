@@ -2,13 +2,13 @@
 % Please edit documentation in R/cluster.R
 \name{setCredentials}
 \alias{setCredentials}
-\title{Set azure credentials to R session.}
+\title{Set azure credentials to R session from json file.}
 \usage{
 setCredentials(fileName = "az_config.json")
 }
 \arguments{
-\item{fileName}{The cluster configuration that was created in \code{makeCluster}}
+\item{fileName}{The credentials json file that was created in \code{makeCluster}}
 }
 \description{
-Set azure credentials to R session.
+Set azure credentials to R session from json file.
 }
