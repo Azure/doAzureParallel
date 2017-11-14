@@ -1,10 +1,10 @@
 # Run this test for users to make sure the set credentials from R object features
 # of doAzureParallel are still working
 context("set credentials from R object scenario test")
-test_that("Basic scenario test", {
+test_that("set credentials scenario test", {
   testthat::skip("Live test")
   testthat::skip_on_travis()
-  
+
   # set your credentials
   credentials <- list(
     "batchAccount" = list(
@@ -16,7 +16,7 @@ test_that("Basic scenario test", {
                             "key" = "storageaccountkey")
   )
   doAzureParallel::setCredentialsObject(credentials)
-  
+
   # set cluster config
   clusterConfig <- list(
     "name" = "clustername",
@@ -38,18 +38,18 @@ test_that("Basic scenario test", {
     ),
     "commandLine" = c()
   )
-  
+
   cluster <- doAzureParallel::makeClusterObject(clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
-  
+
   '%dopar%' <- foreach::'%dopar%'
   res <-
     foreach::foreach(i = 1:4) %dopar% {
       mean(1:3)
     }
-  
+
   res
-  
+
   testthat::expect_equal(length(res), 4)
   testthat::expect_equal(res, list(2, 2, 2, 2))
 })
