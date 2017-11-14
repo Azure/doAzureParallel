@@ -12,10 +12,8 @@ test_that("Basic scenario test", {
       "key" = "batchaccountkey",
       "url" = "https://batchaccountname.region.batch.azure.com"
     ),
-    "storageAccount" = list(
-      "name" = "storageaccountname",
-      "key" = "storageaccountkey"
-    )
+    "storageAccount" = list("name" = "storageaccountname",
+                            "key" = "storageaccountkey")
   )
   doAzureParallel::setCredentialsObject(credentials)
   
@@ -25,14 +23,10 @@ test_that("Basic scenario test", {
     "vmSize" = "Standard_D2_v2",
     "maxTasksPerNode" = 1,
     "poolSize" = list(
-      "dedicatedNodes" = list(
-        "min" = 0,
-        "max" = 0
-      ),
-      "lowPriorityNodes" = list(
-        "min" = 1,
-        "max" = 1
-      ),
+      "dedicatedNodes" = list("min" = 0,
+                              "max" = 0),
+      "lowPriorityNodes" = list("min" = 1,
+                                "max" = 1),
       "autoscaleFormula" = "QUEUE"
     ),
     "containerImage" = "rocker/tidyverse:latest",
@@ -47,15 +41,15 @@ test_that("Basic scenario test", {
   
   cluster <- doAzureParallel::makeClusterObject(clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
-
+  
   '%dopar%' <- foreach::'%dopar%'
   res <-
     foreach::foreach(i = 1:4) %dopar% {
       mean(1:3)
     }
-
+  
   res
-
+  
   testthat::expect_equal(length(res), 4)
   testthat::expect_equal(res, list(2, 2, 2, 2))
 })
