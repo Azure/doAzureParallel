@@ -45,11 +45,12 @@ FROM rocker/r-ver
 # Install any dependencies required for the R packages
 RUN  apt-get update \
   && apt-get install -y --no-install-recommends \
-  libxml2-dev
-
+  libxml2-dev \
+  libcurl4-openssl-dev \
+  libssl-dev
 
 # Install the R Packages from CRAN
-RUN Rscript -e 'install.packages(c(jsonlite, httr), dependecies = TRUE)'
+RUN Rscript -e 'install.packages(c("jsonlite", "httr"))'
 ```
 
 Finally save the file and build the docker image.

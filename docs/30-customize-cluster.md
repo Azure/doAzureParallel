@@ -42,7 +42,7 @@ The following containers were tested and cover the most common cases for end use
 Container Image | R type | Description
 --- | --- | ---
 [rocker/tidyverse](https://hub.docker.com/r/rocker/r-ver/) | Open source R | Tidyverse is provided by the rocker org and uses a standard version of R developed by the open soruce community. rocker/tidyverse typically keeps up with the latest releases or R quite quickly and has versions back to R 3.1
-[nuest/mro](https://hub.docker.com/r/nuest/mro/) | Microsoft R Open | [Microsoft R Open](https://mran.microsoft.com/open/) is an open source SKU of R that provides out of the box support for math packages, version pacakge support with MRAN and improved performance over standard Open Source R.
+[nuest/mro](https://hub.docker.com/r/nuest/mro/) | Microsoft R Open | [Microsoft R Open](https://mran.microsoft.com/open/) is an open source SKU of R that provides out of the box support for math packages, version package support with MRAN and improved performance over standard Open Source R.
 
 * We recommend reading the details of each package before using it to make sure you understand any limitaions or requirements of using the container images.
 
@@ -66,7 +66,7 @@ CMD ["R"]
 
 For more information and samples on how to build images, deploy them to dockerhub and use them in your cluster please refer to the [Building Containers](./32-building-containers.md) documentation.
 
-There is no requirement to be debian based. For consistency with other pacakges it is recommeneded though. Please note though that the container **must be based off a Linux distribution as Windows is not supported**.
+There is no requirement to be debian based. For consistency with other packages it is recommeneded though. Please note though that the container **must be based off a Linux distribution as Windows is not supported**.
 
 
 
