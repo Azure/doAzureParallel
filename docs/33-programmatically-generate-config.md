@@ -18,7 +18,7 @@ You can generate credentials by creating a R object as shown below:
       "key" = "storageaccountkey"
     )
   )
-  doAzureParallel::setCredentialsObject(credentials)
+  doAzureParallel::setCredentials(credentials)
 ```
 
 ### Programmatically generated cluster config
@@ -51,6 +51,6 @@ You can generate cluster config by creating a R object as shown below:
     "commandLine" = c()
   )
 
-  cluster <- doAzureParallel::makeClusterObject(clusterConfig)
+  cluster <- doAzureParallel::makeCluster(clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 ```

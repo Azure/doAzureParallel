@@ -8,7 +8,7 @@ makeCluster(clusterSetting = "cluster_settings.json", fullName = FALSE,
   wait = TRUE, resourceFiles = list())
 }
 \arguments{
-\item{clusterSetting}{Cluster configuration's file name}
+\item{clusterSetting}{Cluster configuration object or file name}
 
 \item{fullName}{A boolean flag for checking the file full name}
 

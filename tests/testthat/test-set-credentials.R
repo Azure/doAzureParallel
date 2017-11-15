@@ -15,7 +15,7 @@ test_that("set credentials scenario test", {
     "storageAccount" = list("name" = "storageaccountname",
                             "key" = "storageaccountkey")
   )
-  doAzureParallel::setCredentialsObject(credentials)
+  doAzureParallel::setCredentials(credentials)
 
   # set cluster config
   clusterConfig <- list(
@@ -39,7 +39,7 @@ test_that("set credentials scenario test", {
     "commandLine" = c()
   )
 
-  cluster <- doAzureParallel::makeClusterObject(clusterConfig)
+  cluster <- doAzureParallel::makeCluster(clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'
