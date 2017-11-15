@@ -322,7 +322,7 @@ makeCluster <-
 stopCluster <- function(cluster) {
   rAzureBatch::deletePool(cluster$poolId)
 
-  print(sprintf("Your %s cluster has been destroyed.", cluster$poolId))
+  print(sprintf("Your %s cluster is being deleted.", cluster$poolId))
 }
 
 getPoolWorkers <- function(poolId, ...) {
