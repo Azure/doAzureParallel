@@ -69,6 +69,7 @@ generateCredentialsConfig <- function(fileName, ...) {
 #' @export
 setCredentials <- function(credentials = "az_config.json") {
   if (class(credentials) == "character") {
+    fileName <- credentials
     if (file.exists(fileName)) {
       config <- rjson::fromJSON(file = paste0(fileName))
     }
@@ -77,6 +78,14 @@ setCredentials <- function(credentials = "az_config.json") {
     }
   } else if (class(credentials) == "list") {
     config <- credentials
+    generateCredentialsConfig(
+      "az_config.json",
+      batchAccount = config$batchAccount$name,
+      batchKey = config$batchAccount$key,
+      batchUrl = config$batchAccount$url,
+      storageAccount = config$storageAccount$name,
+      storageKey = config$storageAccount$key
+    )
   } else {
     stop(sprintf(
       "credentials type is not supported: %s\n",

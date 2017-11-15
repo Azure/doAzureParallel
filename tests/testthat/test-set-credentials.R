@@ -1,7 +1,7 @@
-# Run this test for users to make sure the set credentials from R object features
+# Run this test for users to make sure the set credentials from json or R object features
 # of doAzureParallel are still working
 context("set credentials from R object scenario test")
-test_that("set credentials scenario test", {
+test_that("set credentials/cluster config programmatically scenario test", {
   testthat::skip("Live test")
   testthat::skip_on_travis()
 
@@ -31,25 +31,33 @@ test_that("set credentials scenario test", {
     ),
     "containerImage" = "rocker/tidyverse:latest",
     "rPackages" = list(
-      "cran" = c(),
-      "github" = c(),
-      "bioconductor" = c(),
-      "githubAuthenticationToken" = c()
+      "cran" = list(),
+      "github" = list(),
+      "bioconductor" = list(),
+      "githubAuthenticationToken" = ""
     ),
-    "commandLine" = c()
+    "commandLine" = list()
   )
 
-  cluster <- doAzureParallel::makeCluster(clusterConfig)
-  doAzureParallel::registerDoAzureParallel(cluster)
+  source("R\\validationUtilities.R") #import validation R6 object
+  source("R\\autoscale.R") #import autoscaleFormula
+  validation$isValidClusterConfig(clusterConfig)
+})
 
-  '%dopar%' <- foreach::'%dopar%'
-  res <-
-    foreach::foreach(i = 1:4) %dopar% {
-      mean(1:3)
-    }
+test_that("set credentials/cluster config from Json file scenario test", {
+  testthat::skip("Live test")
+  testthat::skip_on_travis()
 
-  res
+  credentialsFileName <- "credentials.json"
+  clusterFileName <- "test_cluster.json"
 
-  testthat::expect_equal(length(res), 4)
-  testthat::expect_equal(res, list(2, 2, 2, 2))
+  doAzureParallel::generateCredentialsConfig(credentialsFileName)
+  doAzureParallel::generateClusterConfig(clusterFileName)
+
+  # set your credentials
+  doAzureParallel::setCredentials(credentialsFileName)
+
+  source("R\\validationUtilities.R") #import validation R6 object
+  source("R\\autoscale.R") #import autoscaleFormula
+  validation$isValidClusterConfig(clusterFileName)
 })

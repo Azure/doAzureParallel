@@ -43,12 +43,12 @@ You can generate cluster config by creating a R object as shown below:
     ),
     "containerImage" = "rocker/tidyverse:latest",
     "rPackages" = list(
-      "cran" = c(),
-      "github" = c(),
-      "bioconductor" = c(),
-      "githubAuthenticationToken" = c()
+      "cran" = list(),
+      "github" = list(),
+      "bioconductor" = list(),
+      "githubAuthenticationToken" = ""
     ),
-    "commandLine" = c()
+    "commandLine" = list()
   )
 
   cluster <- doAzureParallel::makeCluster(clusterConfig)
