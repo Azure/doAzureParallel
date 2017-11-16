@@ -13,7 +13,8 @@ test_that("set credentials/cluster config programmatically scenario test", {
       "url" = "https://batchaccountname.region.batch.azure.com"
     ),
     "storageAccount" = list("name" = "storageaccountname",
-                            "key" = "storageaccountkey")
+                            "key" = "storageaccountkey"),
+    "githubAuthenticationToken" = ""
   )
   doAzureParallel::setCredentials(credentials)
 
@@ -33,8 +34,7 @@ test_that("set credentials/cluster config programmatically scenario test", {
     "rPackages" = list(
       "cran" = list(),
       "github" = list(),
-      "bioconductor" = list(),
-      "githubAuthenticationToken" = ""
+      "bioconductor" = list()
     ),
     "commandLine" = list()
   )

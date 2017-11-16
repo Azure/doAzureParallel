@@ -26,8 +26,7 @@ generateClusterConfig <- function(fileName) {
       rPackages = list(
         cran = vector(),
         github = vector(),
-        bioconductor = vector(),
-        githubAuthenticationToken = ""
+        bioconductor = vector()
       ),
       commandLine = vector()
     )
@@ -167,14 +166,13 @@ makeCluster <-
     }
 
     environmentSettings <- NULL
-    if (!is.null(poolConfig$rPackages) &&
-        !is.null(poolConfig$rPackages$githubAuthenticationToken) &&
-        poolConfig$rPackages$githubAuthenticationToken != "") {
+    if (!is.null(config$githubAuthenticationToken) &&
+        config$githubAuthenticationToken != "") {
       environmentSettings <-
         list(
           list(
             name = "GITHUB_PAT",
-            value = poolConfig$rPackages$githubAuthenticationToken
+            value = config$githubAuthenticationToken
           )
         )
     }

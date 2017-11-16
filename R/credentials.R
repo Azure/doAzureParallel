@@ -38,15 +38,19 @@ generateCredentialsConfig <- function(fileName, ...) {
            "storage_account_key",
            args$storageKey)
 
+  githubAuthenticationToken <-
+    ifelse(is.null(args$githubAuthenticationToken),
+           "",
+           args$githubAuthenticationToken)
+
   if (!file.exists(paste0(getwd(), "/", fileName))) {
     config <- list(
-      batchAccount = list(
-        name = batchAccount,
-        key = batchKey,
-        url = batchUrl
-      ),
+      batchAccount = list(name = batchAccount,
+                          key = batchKey,
+                          url = batchUrl),
       storageAccount = list(name = storageName,
-                            key = storageKey)
+                            key = storageKey),
+      githubAuthenticationToken = githubAuthenticationToken
     )
 
     configJson <-

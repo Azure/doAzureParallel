@@ -16,7 +16,8 @@ You can generate credentials by creating a R object as shown below:
     "storageAccount" = list(
       "name" = "storageaccountname",
       "key" = "storageaccountkey"
-    )
+    ),
+    "githubAuthenticationToken" = ""
   )
   doAzureParallel::setCredentials(credentials)
 ```
@@ -45,8 +46,7 @@ You can generate cluster config by creating a R object as shown below:
     "rPackages" = list(
       "cran" = list(),
       "github" = list(),
-      "bioconductor" = list(),
-      "githubAuthenticationToken" = ""
+      "bioconductor" = list()
     ),
     "commandLine" = list()
   )
