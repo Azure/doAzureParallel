@@ -3,6 +3,7 @@
 ### Added
 - Support for users to run custom versions of R via Docker containers
 - GitHub and BioConductor support as parameters in the foreach
+- Test Travis only, do not merge
 
 ### Changed
 - [BREAKING CHANGE] Host OS distribution is now Debian instead of CentOS
