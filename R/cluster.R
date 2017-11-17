@@ -1,67 +1,3 @@
-#' Creates a credentials file for rAzureBatch package authentication
-#'
-#' @param fileName Credentials file name
-#' @param ... Further named parameters
-#' \itemize{
-#'  \item{"batchAccount"}: {Batch account name for Batch Service authentication.}
-#'  \item{"batchKey"}: {Batch account key for signing REST signatures.}
-#'  \item{"batchUrl"}: {Batch service url for account.}
-#'  \item{"storageAccount"}: {Storage account for storing output results.}
-#'  \item{"storageKey"}: {Storage account key for storage service authentication.}
-#'}
-#' @return The request to the Batch service was successful.
-#' @examples {
-#' generateCredentialsConfig("test_config.json")
-#' generateCredentialsConfig("test_config.json", batchAccount = "testbatchaccount",
-#'    batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com",
-#'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
-#' }
-#' @export
-generateCredentialsConfig <- function(fileName, ...) {
-  args <- list(...)
-
-  batchAccount <-
-    ifelse(is.null(args$batchAccount),
-           "batch_account_name",
-           args$batchAccount)
-  batchKey <-
-    ifelse(is.null(args$batchKey), "batch_account_key", args$batchKey)
-  batchUrl <-
-    ifelse(is.null(args$batchUrl), "batch_account_url", args$batchUrl)
-
-  storageName <-
-    ifelse(is.null(args$storageAccount),
-           "storage_account_name",
-           args$storageAccount)
-  storageKey <-
-    ifelse(is.null(args$storageKey),
-           "storage_account_key",
-           args$storageKey)
-
-  if (!file.exists(paste0(getwd(), "/", fileName))) {
-    config <- list(
-      batchAccount = list(
-        name = batchAccount,
-        key = batchKey,
-        url = batchUrl
-      ),
-      storageAccount = list(name = storageName,
-                            key = storageKey)
-    )
-
-    configJson <-
-      jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
-    write(configJson, file = paste0(getwd(), "/", fileName))
-
-    print(
-      sprintf(
-        "A config file has been generated %s. Please enter your Batch credentials.",
-        paste0(getwd(), "/", fileName)
-      )
-    )
-  }
-}
-
 #' Creates a configuration file for the user's cluster setup.
 #'
 #' @param fileName Cluster settings file name
@@ -90,8 +26,7 @@ generateClusterConfig <- function(fileName) {
       rPackages = list(
         cran = vector(),
         github = vector(),
-        bioconductor = vector(),
-        githubAuthenticationToken = ""
+        bioconductor = vector()
       ),
       commandLine = vector()
     )
@@ -114,7 +49,7 @@ generateClusterConfig <- function(fileName) {
 
 #' Creates an Azure cloud-enabled cluster.
 #'
-#' @param clusterSetting Cluster configuration's file name
+#' @param clusterSetting Cluster configuration object or file name
 #' @param fullName A boolean flag for checking the file full name
 #' @param wait A boolean flag to wait for all nodes to boot up
 #' @param resourceFiles A list of files that Batch will download to the compute node before running the command line
@@ -130,12 +65,21 @@ makeCluster <-
            fullName = FALSE,
            wait = TRUE,
            resourceFiles = list()) {
-    if (fullName) {
-      poolConfig <- rjson::fromJSON(file = paste0(clusterSetting))
-    }
-    else {
-      poolConfig <-
-        rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
+    if (class(clusterSetting) == "character") {
+      if (fullName) {
+        poolConfig <- rjson::fromJSON(file = paste0(clusterSetting))
+      }
+      else {
+        poolConfig <-
+          rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
+      }
+    } else if (class(clusterSetting) == "list") {
+      poolConfig <- clusterSetting
+    } else {
+      stop(sprintf(
+        "cluster setting type is not supported: %s\n",
+        class(clusterSetting)
+      ))
     }
 
     config <- getOption("az_config")
@@ -199,11 +143,13 @@ makeCluster <-
     containerInstallCommand <- c(
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "master/inst/startup/cluster_setup.sh"),
+        "master/inst/startup/cluster_setup.sh"
+      ),
       "chmod u+x cluster_setup.sh",
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "master/inst/startup/install_bioconductor.R"),
+        "master/inst/startup/install_bioconductor.R"
+      ),
       "chmod u+x install_bioconductor.R",
       installAndStartContainerCommand
     )
@@ -220,14 +166,13 @@ makeCluster <-
     }
 
     environmentSettings <- NULL
-    if (!is.null(poolConfig$rPackages) &&
-        !is.null(poolConfig$rPackages$githubAuthenticationToken) &&
-        poolConfig$rPackages$githubAuthenticationToken != "") {
+    if (!is.null(config$githubAuthenticationToken) &&
+        config$githubAuthenticationToken != "") {
       environmentSettings <-
         list(
           list(
             name = "GITHUB_PAT",
-            value = poolConfig$rPackages$githubAuthenticationToken
+            value = config$githubAuthenticationToken
           )
         )
     }
@@ -375,24 +320,7 @@ makeCluster <-
 stopCluster <- function(cluster) {
   rAzureBatch::deletePool(cluster$poolId)
 
-  print(sprintf("Your %s cluster has been destroyed.", cluster$poolId))
-}
-
-#' Set azure credentials to R session.
-#'
-#' @param fileName The cluster configuration that was created in \code{makeCluster}
-#'
-#' @export
-setCredentials <- function(fileName = "az_config.json") {
-  if (file.exists(fileName)) {
-    config <- rjson::fromJSON(file = paste0(fileName))
-  }
-  else{
-    config <- rjson::fromJSON(file = paste0(getwd(), "/", fileName))
-  }
-
-  options("az_config" = config)
-  print("Your azure credentials have been set.")
+  print(sprintf("Your %s cluster is being deleted.", cluster$poolId))
 }
 
 getPoolWorkers <- function(poolId, ...) {

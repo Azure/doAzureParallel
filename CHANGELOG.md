@@ -1,4 +1,8 @@
 # Change Log
+## [0.6.1] 2017-11-13
+### Added
+- Support for users to use programmatically generated credentials and cluster config
+
 ## [0.6.0] 2017-11-03
 ### Added
 - Support for users to run custom versions of R via Docker containers

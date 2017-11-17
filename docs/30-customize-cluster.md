@@ -26,8 +26,7 @@ Specifying a docker container is done by updating your cluster.json file. Simply
   "rPackages": {
     "cran": [],
     "github": [],
-    "bioconductor": [],
-    "githubAuthenticationToken": ""
+    "bioconductor": []
   },
   "commandLine": []
 }

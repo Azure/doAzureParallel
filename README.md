@@ -142,7 +142,8 @@ Use your credential config JSON file to enter your credentials.
   "storageAccount": {
     "name": <Azure Storage Account Name>,
     "key": <Azure Storage Account Key>
-  }
+  },
+  "githubAuthenticationToken": {}
 }
 ```
 Learn more:
@@ -170,8 +171,7 @@ Use your pool configuration JSON file to define your pool in Azure.
   },
   "rPackages": {
     "cran": ["some_cran_package", "some_other_cran_package"],
-    "github": ["username/some_github_package", "another_username/some_other_github_package"],
-    "githubAuthenticationToken": {}
+    "github": ["username/some_github_package", "another_username/some_other_github_package"]
   },
   "commandLine": []
 }
