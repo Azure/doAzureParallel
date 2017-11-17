@@ -2,6 +2,13 @@
 args <- commandArgs(trailingOnly = TRUE)
 status <- 0
 
+jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
+.libPaths(c(
+  jobPrepDirectory,
+  "/mnt/batch/tasks/shared/R/packages",
+  .libPaths()
+))
+
 isError <- function(x) {
   inherits(x, "simpleError") || inherits(x, "try-error")
 }
@@ -40,12 +47,17 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
                                     "result"),
                           full.names = TRUE)
 
-      if (errorHandling == "stop" && length(files) != batchTasksCount) {
-        stop(paste("Error handling is set to 'stop' and there are missing results due to",
-                   "task failures. If this is not the correct behavior, change the errorHandling",
-                   "property to 'pass' or 'remove' in the foreach object.",
-                   "For more information on troubleshooting, check",
-                   "https://github.com/Azure/doAzureParallel/blob/master/docs/40-troubleshooting.md"))
+      if (errorHandling == "stop" &&
+          length(files) != batchTasksCount) {
+        stop(
+          paste(
+            "Error handling is set to 'stop' and there are missing results due to",
+            "task failures. If this is not the correct behavior, change the errorHandling",
+            "property to 'pass' or 'remove' in the foreach object.",
+            "For more information on troubleshooting, check",
+            "https://github.com/Azure/doAzureParallel/blob/master/docs/40-troubleshooting.md"
+          )
+        )
       }
 
       results <- vector("list", length(files))

@@ -2,6 +2,13 @@
 args <- commandArgs(trailingOnly = TRUE)
 workerErrorStatus <- 0
 
+jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
+.libPaths(c(
+  jobPrepDirectory,
+  "/mnt/batch/tasks/shared/R/packages",
+  .libPaths()
+))
+
 getparentenv <- function(pkgname) {
   parenv <- NULL
 
@@ -50,7 +57,8 @@ getparentenv <- function(pkgname) {
 
 batchJobId <- Sys.getenv("AZ_BATCH_JOB_ID")
 batchTaskId <- Sys.getenv("AZ_BATCH_TASK_ID")
-batchJobPreparationDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
+batchJobPreparationDirectory <-
+  Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 batchTaskWorkingDirectory <- Sys.getenv("AZ_BATCH_TASK_WORKING_DIR")
 
 batchJobEnvironment <- paste0(batchJobId, ".rds")
@@ -84,6 +92,9 @@ result <- lapply(taskArgs, function(args) {
   },
   error = function(e) {
     workerErrorStatus <<- 1
+    print(e)
+    traceback()
+
     e
   })
 })
@@ -98,7 +109,8 @@ saveRDS(result,
           paste0(batchTaskId, "-result.rds")
         ))
 
-cat(paste0("Error Code: ", workerErrorStatus, fill = TRUE))
+cat(paste0("Error Code: ", workerErrorStatus), fill = TRUE)
+
 quit(save = "yes",
      status = workerErrorStatus,
      runLast = FALSE)

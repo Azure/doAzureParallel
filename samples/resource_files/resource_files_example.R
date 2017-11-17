@@ -1,23 +1,15 @@
 # =======================================
 # === Setup / Install and Credentials ===
 # =======================================
-
 # install packages from github
 library(devtools)
-install_github("azure/razurebatch")
-install_github("azure/doazureparallel")
+devtools::install_github("azure/doAzureParallel")
 
 # import packages
 library(doAzureParallel)
 
-# create credentials config files
-generateCredentialsConfig("credentials.json")
-
 # set azure credentials
-setCredentials("credentials.json")
-
-# create credentials config files
-generateClusterConfig("cluster_settings.json")
+doAzureParallel::setCredentials("credentials.json")
 
 # Add data.table package to the CRAN packages and Azure/rAzureBatch to the Github packages
 # in order to install the packages to all of the nodes
@@ -42,22 +34,22 @@ generateClusterConfig("cluster_settings.json")
 # Using the NYC taxi datasets, http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml
 azureStorageUrl <- "http://playdatastore.blob.core.windows.net/nyc-taxi-dataset"
 resource_files <- list(
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-1.csv"), fileName = "yellow_tripdata_2016-1.csv"),
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-2.csv"), fileName = "yellow_tripdata_2016-2.csv"),
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-3.csv"), fileName = "yellow_tripdata_2016-3.csv"),
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-4.csv"), fileName = "yellow_tripdata_2016-4.csv"),
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-5.csv"), fileName = "yellow_tripdata_2016-5.csv"),
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-6.csv"), fileName = "yellow_tripdata_2016-6.csv"),
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-7.csv"), fileName = "yellow_tripdata_2016-7.csv"),
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-8.csv"), fileName = "yellow_tripdata_2016-8.csv"),
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-9.csv"), fileName = "yellow_tripdata_2016-9.csv"),
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-10.csv"), fileName = "yellow_tripdata_2016-10.csv"),
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-11.csv"), fileName = "yellow_tripdata_2016-11.csv"),
-  createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-12.csv"), fileName = "yellow_tripdata_2016-12.csv")
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-1.csv"), fileName = "yellow_tripdata_2016-1.csv"),
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-2.csv"), fileName = "yellow_tripdata_2016-2.csv"),
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-3.csv"), fileName = "yellow_tripdata_2016-3.csv"),
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-4.csv"), fileName = "yellow_tripdata_2016-4.csv"),
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-5.csv"), fileName = "yellow_tripdata_2016-5.csv"),
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-6.csv"), fileName = "yellow_tripdata_2016-6.csv"),
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-7.csv"), fileName = "yellow_tripdata_2016-7.csv"),
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-8.csv"), fileName = "yellow_tripdata_2016-8.csv"),
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-9.csv"), fileName = "yellow_tripdata_2016-9.csv"),
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-10.csv"), fileName = "yellow_tripdata_2016-10.csv"),
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-11.csv"), fileName = "yellow_tripdata_2016-11.csv"),
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-12.csv"), fileName = "yellow_tripdata_2016-12.csv")
 )
 
 # add the parameter 'resourceFiles' to download files to nodes
-cluster <- makeCluster("cluster_settings.json", resourceFiles = resource_files)
+cluster <- makeCluster("resource_files_cluster.json", resourceFiles = resource_files)
 
 # when the cluster is provisioned, register the cluster as your parallel backend
 registerDoAzureParallel(cluster)
@@ -77,18 +69,25 @@ registerDoAzureParallel(cluster)
 #
 storageAccountName <- "mystorageaccount"
 outputsContainer <- "nyc-taxi-graphs"
-createContainer(outputsContainer)
-outputSas <- createSasToken(permission = "w", sr = "c", outputsContainer)
+rAzureBatch::createContainer(outputsContainer)
+
+# permissions: r = read, w = write.
+outputSas <- rAzureBatch::createSasToken(permission = "rw", sr = "c", outputsContainer)
 
 # =======================================================
 # === Foreach with resourceFiles & writing to storage ===
 # =======================================================
 
-results <- foreach(i = 1:12, .packages = c("data.table", "ggplot2", "rAzureBatch")) %dopar% {
+results <- foreach(i = 1:12) %dopar% {
+
+  library(data.table)
+  library(ggplot2)
+  library(rAzureBatch)
 
   # To get access to your azure resource files, user needs to use the special
   # environment variable to get the directory
   fileDirectory <- paste0(Sys.getenv("AZ_BATCH_NODE_STARTUP_DIR"), "/wd")
+  print(fileDirectory)
 
   # columns to keep for the datafram
   colsToKeep <- c("pickup_longitude", "pickup_latitude", "dropoff_longitude", "dropoff_latitude", "tip_amount", "trip_distance")
@@ -115,12 +114,16 @@ results <- foreach(i = 1:12, .packages = c("data.table", "ggplot2", "rAzureBatch
   ggsave(image)
 
   # save image to the storage account using the Sas token we created above
-  uploadBlob(containerName = outputsContainer,
+  blob <- rAzureBatch::uploadBlob(containerName = outputsContainer,
              image,
              sasToken = outputSas,
              accountName = storageAccountName)
-  NULL
+
+  # return the blob url
+  blob$url
 }
+
+results
 
 # deprovision your cluster after your work is complete
 stopCluster(cluster)

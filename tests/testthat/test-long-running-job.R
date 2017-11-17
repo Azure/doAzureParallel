@@ -2,6 +2,7 @@
 # of doAzureParallel are still working
 context("long running job scenario test")
 test_that("Long Running Job Test", {
+  testthat::skip("Live test")
   testthat::skip_on_travis()
   credentialsFileName <- "credentials.json"
   clusterFileName <- "cluster.json"

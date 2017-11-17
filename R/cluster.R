@@ -86,9 +86,11 @@ generateClusterConfig <- function(fileName) {
                                 max = 3),
         autoscaleFormula = "QUEUE"
       ),
+      containerImage = "rocker/tidyverse:latest",
       rPackages = list(
         cran = vector(),
         github = vector(),
+        bioconductor = vector(),
         githubAuthenticationToken = ""
       ),
       commandLine = vector()
@@ -143,6 +145,7 @@ makeCluster <-
 
     installCranCommand <- NULL
     installGithubCommand <- NULL
+    installBioconductorCommand <- NULL
 
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$cran) &&
@@ -158,21 +161,62 @@ makeCluster <-
         getPoolPackageInstallationCommand("github", poolConfig$rPackages$github)
     }
 
-    packages <- NULL
-    if (!is.null(installCranCommand)) {
-      packages <- installCranCommand
+    if (!is.null(poolConfig$rPackages) &&
+        !is.null(poolConfig$rPackages$bioconductor) &&
+        length(poolConfig$rPackages$bioconductor) > 0) {
+      installBioconductorCommand <-
+        getPoolPackageInstallationCommand("bioconductor", poolConfig$rPackages$bioconductor)
     }
 
-    if (!is.null(installGithubCommand) && is.null(packages)) {
-      packages <- installGithubCommand
+    packages <- c()
+    if (!is.null(installCranCommand)) {
+      packages <- c(installCranCommand, packages)
     }
-    else if (!is.null(installGithubCommand) && !is.null(packages)) {
-      packages <- c(installCranCommand, installGithubCommand)
+    if (!is.null(installGithubCommand)) {
+      packages <- c(installGithubCommand, packages)
+    }
+    if (!is.null(installBioconductorCommand)) {
+      packages <- c(installBioconductorCommand, packages)
+    }
+
+    if (length(packages) == 0) {
+      packages <- NULL
     }
 
     commandLine <- NULL
+
+    # install docker and create docker container
+    dockerImage <- "rocker/tidyverse:latest"
+    if (!is.null(poolConfig$containerImage)) {
+      dockerImage <- poolConfig$containerImage
+    }
+
+    config$containerImage <- dockerImage
+    installAndStartContainerCommand <- paste("cluster_setup.sh",
+                                             dockerImage,
+                                             sep = " ")
+
+    containerInstallCommand <- c(
+      paste0(
+        "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
+        "master/inst/startup/cluster_setup.sh"),
+      "chmod u+x cluster_setup.sh",
+      paste0(
+        "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
+        "master/inst/startup/install_bioconductor.R"),
+      "chmod u+x install_bioconductor.R",
+      installAndStartContainerCommand
+    )
+
     if (!is.null(poolConfig$commandLine)) {
-      commandLine <- poolConfig$commandLine
+      commandLine <- c(containerInstallCommand, poolConfig$commandLine)
+    }
+
+    if (!is.null(packages)) {
+      # install packages
+      commandLine <-
+        c(commandLine,
+          dockerRunCommand(dockerImage, packages, NULL, FALSE, FALSE))
     }
 
     environmentSettings <- NULL
@@ -189,17 +233,17 @@ makeCluster <-
     }
 
     if (!is.null(poolConfig[["pool"]])) {
-      validateDeprecatedClusterConfig(clusterSetting)
+      validation$isValidDeprecatedClusterConfig(clusterSetting)
       poolConfig <- poolConfig[["pool"]]
     }
     else {
-      validateClusterConfig(clusterSetting)
+      validation$isValidClusterConfig(clusterSetting)
     }
 
     tryCatch({
-      `Validators`$isValidPoolName(poolConfig$name)
+      validation$isValidPoolName(poolConfig$name)
     },
-    error = function(e){
+    error = function(e) {
       stop(paste("Invalid pool name: \n",
                  e))
     })
@@ -219,19 +263,19 @@ makeCluster <-
     if (grepl("PoolBeingDeleted", response)) {
       pool <- rAzureBatch::getPool(poolConfig$name)
 
-      cat(
-        sprintf(
-          paste("Cluster '%s' already exists and is being deleted.",
-                "Another cluster with the same name cannot be created",
-                "until it is deleted. Please wait for the cluster to be deleted",
-                "or create one with a different name"),
-          poolConfig$name
+      cat(sprintf(
+        paste(
+          "Cluster '%s' already exists and is being deleted.",
+          "Another cluster with the same name cannot be created",
+          "until it is deleted. Please wait for the cluster to be deleted",
+          "or create one with a different name"
         ),
-        fill = TRUE
-      )
+        poolConfig$name
+      ),
+      fill = TRUE)
 
       while (areShallowEqual(rAzureBatch::getPool(poolConfig$name)$state,
-                      "deleting")) {
+                             "deleting")) {
         cat(".")
         Sys.sleep(10)
       }

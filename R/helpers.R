@@ -7,13 +7,31 @@
   dependsOn <- args$dependsOn
   cloudCombine <- args$cloudCombine
   userOutputFiles <- args$outputFiles
+  containerImage <- args$containerImage
+
+  resultFile <- paste0(taskId, "-result", ".rds")
+  accountName <- storageCredentials$name
 
   if (!is.null(argsList)) {
     assign("argsList", argsList, .doAzureBatchGlobals)
   }
 
+  # Only use the download command if cloudCombine is enabled
+  # Otherwise just leave it empty
+  commands <- c()
+
   if (!is.null(cloudCombine)) {
     assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
+    copyCommand <- sprintf(
+      "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds",
+      accountName,
+      jobId,
+      "$AZ_BATCH_TASK_WORKING_DIR"
+    )
+
+    downloadCommand <-
+      dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
+    commands <- c(downloadCommand)
   }
 
   envFile <- paste0(taskId, ".rds")
@@ -34,24 +52,8 @@
     dependsOn <- list(taskIds = dependsOn)
   }
   else {
-    exitConditions <- list(
-      default = list(
-        dependencyAction = "satisfy"
-      )
-    )
+    exitConditions <- list(default = list(dependencyAction = "satisfy"))
   }
-
-  resultFile <- paste0(taskId, "-result", ".rds")
-  accountName <- storageCredentials$name
-
-  downloadCommand <-
-    sprintf(
-      paste("/anaconda/envs/py35/bin/blobxfer %s %s %s --download --saskey $BLOBXFER_SASKEY",
-            "--remoteresource . --include result/*.rds"),
-      accountName,
-      jobId,
-      "$AZ_BATCH_TASK_WORKING_DIR"
-    )
 
   containerUrl <-
     rAzureBatch::createBlobUrl(
@@ -96,9 +98,10 @@
   )
 
   outputFiles <- append(outputFiles, userOutputFiles)
+
   commands <-
-    c(downloadCommand,
-      rCommand)
+    c(commands,
+      dockerRunCommand(containerImage, rCommand, taskId))
 
   commands <- linuxWrapCommands(commands)
 
@@ -142,12 +145,35 @@
                     ...) {
   args <- list(...)
   packages <- args$packages
-
+  github <- args$github
+  bioconductor <- args$bioconductor
+  containerImage <- args$containerImage
   poolInfo <- list("poolId" = poolId)
 
+  # Default command for job preparation task
   commands <- c("ls")
   if (!is.null(packages)) {
-    jobPackages <- getJobPackageInstallationCommand("cran", packages)
+    jobPackages <-
+      dockerRunCommand(containerImage,
+                       getJobPackageInstallationCommand("cran", packages),
+                       jobId)
+    commands <- c(commands, jobPackages)
+  }
+
+  if (!is.null(github) && length(github) > 0) {
+    jobPackages <-
+      dockerRunCommand(containerImage,
+                        getJobPackageInstallationCommand("github", github),
+                        jobId)
+    commands <- c(commands, jobPackages)
+  }
+
+  if (!is.null(bioconductor) &&
+      length(bioconductor) > 0) {
+    jobPackages <-
+      dockerRunCommand(containerImage,
+                        getJobPackageInstallationCommand("bioconductor", bioconductor),
+                        jobId)
     commands <- c(commands, jobPackages)
   }
 
@@ -176,66 +202,64 @@
   return(response)
 }
 
-.addPool <- function(pool, packages, environmentSettings, resourceFiles, ...) {
-  args <- list(...)
+.addPool <-
+  function(pool,
+           packages,
+           environmentSettings,
+           resourceFiles,
+           ...) {
+    args <- list(...)
+    commands <- c()
 
-  commands <- c(
-    "/anaconda/envs/py35/bin/pip install --no-dependencies blobxfer"
-  )
+    if (!is.null(args$commandLine)) {
+      commands <- c(commands, args$commandLine)
+    }
 
-  if (!is.null(args$commandLine)) {
-    commands <- c(commands, args$commandLine)
+    startTask <- list(
+      commandLine = linuxWrapCommands(commands),
+      userIdentity = list(autoUser = list(
+        scope = "pool",
+        elevationLevel = "admin"
+      )),
+      waitForSuccess = TRUE
+    )
+
+    if (!is.null(environmentSettings)) {
+      startTask$environmentSettings <- environmentSettings
+    }
+
+    if (length(resourceFiles) > 0) {
+      startTask$resourceFiles <- resourceFiles
+    }
+
+    virtualMachineConfiguration <- list(
+      imageReference = list(
+        publisher = "Canonical",
+        offer = "UbuntuServer",
+        sku = "16.04-LTS",
+        version = "latest"
+      ),
+      nodeAgentSKUId = "batch.node.ubuntu 16.04"
+    )
+
+    response <- rAzureBatch::addPool(
+      pool$name,
+      pool$vmSize,
+      startTask = startTask,
+      virtualMachineConfiguration = virtualMachineConfiguration,
+      enableAutoScale = TRUE,
+      autoscaleFormula = getAutoscaleFormula(
+        pool$poolSize$autoscaleFormula,
+        pool$poolSize$dedicatedNodes$min,
+        pool$poolSize$dedicatedNodes$max,
+        pool$poolSize$lowPriorityNodes$min,
+        pool$poolSize$lowPriorityNodes$max,
+        maxTasksPerNode = pool$maxTasksPerNode
+      ),
+      autoScaleEvaluationInterval = "PT5M",
+      maxTasksPerNode = pool$maxTasksPerNode,
+      content = "text"
+    )
+
+    return(response)
   }
-
-  if (!is.null(packages)) {
-    commands <- c(commands, packages)
-  }
-
-  startTask <- list(
-    commandLine = linuxWrapCommands(commands),
-    userIdentity = list(autoUser = list(
-      scope = "pool",
-      elevationLevel = "admin"
-    )),
-    waitForSuccess = TRUE
-  )
-
-  if (!is.null(environmentSettings)) {
-    startTask$environmentSettings <- environmentSettings
-  }
-
-  if (length(resourceFiles) > 0) {
-    startTask$resourceFiles <- resourceFiles
-  }
-
-  virtualMachineConfiguration <- list(
-    imageReference = list(
-      publisher = "microsoft-ads",
-      offer = "linux-data-science-vm",
-      sku = "linuxdsvm",
-      version = "latest"
-    ),
-    nodeAgentSKUId = "batch.node.centos 7"
-  )
-
-  response <- rAzureBatch::addPool(
-    pool$name,
-    pool$vmSize,
-    startTask = startTask,
-    virtualMachineConfiguration = virtualMachineConfiguration,
-    enableAutoScale = TRUE,
-    autoscaleFormula = getAutoscaleFormula(
-      pool$poolSize$autoscaleFormula,
-      pool$poolSize$dedicatedNodes$min,
-      pool$poolSize$dedicatedNodes$max,
-      pool$poolSize$lowPriorityNodes$min,
-      pool$poolSize$lowPriorityNodes$max,
-      maxTasksPerNode = pool$maxTasksPerNode
-    ),
-    autoScaleEvaluationInterval = "PT5M",
-    maxTasksPerNode = pool$maxTasksPerNode,
-    content = "text"
-  )
-
-  return(response)
-}

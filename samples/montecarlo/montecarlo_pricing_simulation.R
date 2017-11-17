@@ -4,23 +4,16 @@
 
 # install packages
 library(devtools)
-install_github("azure/razurebatch")
 install_github("azure/doazureparallel")
 
 # import the doAzureParallel library and its dependencies
 library(doAzureParallel)
 
-# generate a credentials json file
-generateCredentialsConfig("credentials.json")
-
 # set your credentials
 setCredentials("credentials.json")
 
-# generate a cluster config file
-generateClusterConfig("cluster.json")
-
 # Create your cluster if not exist
-cluster <- makeCluster("cluster.json")
+cluster <- makeCluster("montecarlo_cluster.json")
 
 # register your parallel backend
 registerDoAzureParallel(cluster)
@@ -37,18 +30,6 @@ mean_change = 1.001
 volatility = 0.01
 opening_price = 100
 
-# define a function to simulate the movement of the stock price for one possible outcome over 5 years
-simulateMovement <- function() {
-  days <- 1825 # ~ 5 years
-  movement <- rnorm(days, mean=mean_change, sd=volatility)
-  path <- cumprod(c(opening_price, movement))
-  return(path)
-}
-
-# run and plot 30 simulations 
-simulations <- replicate(30, simulateMovement())
-matplot(simulations, type='l')
-
 # define a new function to simulate closing prices
 getClosingPrice <- function() {
   days <- 1825 # ~ 5 years
@@ -58,11 +39,35 @@ getClosingPrice <- function() {
   return(closingPrice)
 }
 
-# Run 5 million simulations with doAzureParallel - we will run 50 iterations where each iteration executes 100000 simulations
-closingPrices <- foreach(i = 1:50, .combine='c') %dopar% {
+start_s <- Sys.time()
+# Run 10,000 simulations in series
+closingPrices_s <- foreach(i = 1:10, .combine='c') %do% {
+  replicate(1000, getClosingPrice())
+}
+end_s <- Sys.time()
+
+# plot the 50 closing prices in a histogram to show the distribution of outcomes
+hist(closingPrices_s)
+
+# How long did it take?
+difftime(end_s, start_s)
+
+# Estimate runtime for 10 million (linear approximation)
+1000 * difftime(end_s, start_s, unit = "min")
+
+# Run 10 million simulations with doAzureParallel
+
+# We will run 100 iterations where each iteration executes 100,000 simulations
+opt <- list(chunkSize = 13) # optimizie runtime. Chunking allows us to run multiple iterations on a single instance of R.
+
+start_p <- Sys.time()
+closingPrices_p <- foreach(i = 1:100, .combine='c', .options.azure = opt) %dopar% {
   replicate(100000, getClosingPrice())
 }
+end_p <- Sys.time()
 
-# plot the 5 million closing prices in a histogram to show the distribution of outcomes
-hist(closingPrices)
+# How long did it take?
+difftime(end_p, start_p, unit = "min")
 
+# plot the 10 million closing prices in a histogram to show the distribution of outcomes
+hist(closingPrices_p)

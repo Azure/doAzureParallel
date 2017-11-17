@@ -11,7 +11,8 @@ registerDoAzureParallel <- function(cluster) {
     fun = .doAzureParallel,
     data = list(
       config = list(cluster$batchAccount, cluster$storageAccount),
-      poolId = cluster$poolId
+      poolId = cluster$poolId,
+      containerImage = cluster$containerImage
     ),
     info = .info
   )
@@ -128,6 +129,18 @@ setHttpTraffic <- function(value = FALSE) {
 .doAzureParallel <- function(obj, expr, envir, data) {
   stopifnot(inherits(obj, "foreach"))
 
+  githubPackages <- eval(obj$args$github)
+  bioconductorPackages <- eval(obj$args$bioconductor)
+
+  # Remove special arguments, github and bioconductor, from args list
+  if (!is.null(obj$args[["github"]])) {
+    obj$args[["github"]] <- NULL
+  }
+
+  if (!is.null(obj$args[["bioconductor"]])) {
+    obj$args[["bioconductor"]] <- NULL
+  }
+
   storageCredentials <- rAzureBatch::getStorageCredentials()
 
   it <- iterators::iter(obj)
@@ -193,6 +206,8 @@ setHttpTraffic <- function(value = FALSE) {
   assign("expr", expr, .doAzureBatchGlobals)
   assign("exportenv", exportenv, .doAzureBatchGlobals)
   assign("packages", obj$packages, .doAzureBatchGlobals)
+  assign("github", githubPackages, .doAzureBatchGlobals)
+  assign("bioconductor", bioconductorPackages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
 
   if (!is.null(obj$options$azure$job)) {
@@ -204,8 +219,8 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   tryCatch({
-    `Validators`$isValidStorageContainerName(id)
-    `Validators`$isValidJobName(id)
+    validation$isValidStorageContainerName(id)
+    validation$isValidJobName(id)
   },
   error = function(e){
     stop(paste("Invalid job name: \n",
@@ -411,7 +426,10 @@ setHttpTraffic <- function(value = FALSE) {
       poolId = data$poolId,
       resourceFiles = resourceFiles,
       metadata = metadata,
-      packages = obj$packages
+      packages = obj$packages,
+      github = githubPackages,
+      bioconductor = bioconductorPackages,
+      containerImage = data$containerImage
     )
 
     if (response$status_code == 201) {
@@ -487,7 +505,8 @@ setHttpTraffic <- function(value = FALSE) {
       args = argsList[startIndex:endIndex],
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
-      outputFiles = obj$options$azure$outputFiles
+      outputFiles = obj$options$azure$outputFiles,
+      containerImage = data$containerImage
     )
 
     return(taskId)
@@ -510,12 +529,15 @@ setHttpTraffic <- function(value = FALSE) {
       packages = obj$packages,
       dependsOn = tasks,
       cloudCombine = cloudCombine,
-      outputFiles = obj$options$azure$outputFiles
+      outputFiles = obj$options$azure$outputFiles,
+      containerImage = data$containerImage
     )
   }
 
   if (wait) {
-    if (!is.null(obj$packages)) {
+    if (!is.null(obj$packages) ||
+        !is.null(githubPackages) ||
+        !is.null(bioconductorPackages)) {
       waitForJobPreparation(id, data$poolId)
     }
 

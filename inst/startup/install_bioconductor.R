@@ -1,7 +1,14 @@
 #!/usr/bin/Rscript
 args <- commandArgs(trailingOnly = TRUE)
+jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
+.libPaths(c("/mnt/batch/tasks/shared/R/packages", .libPaths()))
+
+if (jobPrepDirectory != "") {
+  .libPaths(c(jobPrepDirectory, .libPaths()))
+}
 
 status <- tryCatch({
+
   library(BiocInstaller)
   for (package in args) {
     if (!require(package, character.only = TRUE)) {
