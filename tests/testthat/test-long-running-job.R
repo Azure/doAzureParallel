@@ -53,5 +53,5 @@ test_that("Long Running Job Test", {
                          list(2, 2, 2, 2))
 
   # delete the job
-  rAzureBatch::deleteJob(jobId)
+  deleteJob(jobId)
 })

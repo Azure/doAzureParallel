@@ -69,11 +69,13 @@ getJob <- function(jobId, verbose = TRUE) {
       ),
       fill = TRUE
     )
+    cat(sprintf("\njob state: %s", job$state), fill = TRUE)
   }
 
   jobObj <- list(jobId = job$id,
                  metadata = metadata,
-                 tasks = tasks)
+                 tasks = tasks,
+                 jobState = job$state)
 
   return(jobObj)
 }
