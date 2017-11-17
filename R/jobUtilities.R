@@ -180,10 +180,14 @@ getJobResult <- function(jobId) {
   if (metadata$wait == "FALSE") {
     job <- getJob(jobId, verbose = FALSE)
 
-    if (job$tasks$active != 0 && job$tasks$running != 0) {
+    if (job$jobState == "active") {
+      stop(sprintf("job %s is not finished yet, please try again later",
+                   job$jobId))
+    } else if (job$jobState != "completed") {
       stop(sprintf(
-        "job %s is not finished yet, please try again later",
-        job$jobId
+        "job %s is %s state, no job result is available",
+        job$jobId,
+        job$jobState
       ))
     }
 

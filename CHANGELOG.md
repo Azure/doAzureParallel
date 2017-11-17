@@ -1,11 +1,15 @@
 # Change Log
-## [0.6.1] 2017-11-10
+## [0.6.2] 2017-11-17
 ### Added
 - Support for users to delete job and terminate job
 ### Changed
 - Add retry to get job result
 - Add errorHandling and wait option to job metadata
 - Save job metadata to job result storage blob
+
+## [0.6.1] 2017-11-13
+### Added
+- Support for users to use programmatically generated credentials and cluster config
 
 ## [0.6.0] 2017-11-03
 ### Added
