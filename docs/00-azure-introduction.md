@@ -20,7 +20,19 @@ Learn more about Azure Batch [here](https://docs.microsoft.com/en-us/azure/batch
 
 Azure Batch is a free service; you aren't charged for the Batch account itself. You are charged for the underlying Azure compute resources that your Batch solutions consume, and for the resources consumed by other services when your workloads run.
 
-## Data Science Virtual Machines (DSVM)
+## Docker containers
+
+The doAzureParallel package uses Docker containers for each worker in the cluster. Users can configure doAzureParallel to use any Docker image they want. By default doAzureParallel uses _rocker/tidyverse:latest_, the latest R environment provided by the R Studio community pre-packaged with a large number of popular R packages.
+
+Learn more about the rocker/tidyverse:latest [here](https://hub.docker.com/r/rocker/tidyverse/) and available stable versions [here](https://hub.docker.com/r/rocker/tidyverse/tags/)
+
+### Docker Pricing
+Using the Docker containers is free and doesn't add to the cost of bare VMs.
+
+## Data Science Virtual Machines (DSVM) [Deprecated]
+
+**This documentation is only valid for versions prior to v0.6.0. After v0.6.0 doAzureParallel uses Docker containers for the run-time. Additional information can be found [here](./30-customize-cluster.md)**
+
 
 The doAzureParallel package uses the Data Science Virtual Machine (DSVM) for each node in the pool. The DSVM is a customized VM image that has many popular R tools pre-installed. Because these tools are pre-baked into the DSVM VM image, using it gives us considerable speedup when provisioning the pool.
 
