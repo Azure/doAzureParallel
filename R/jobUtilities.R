@@ -170,44 +170,46 @@ getJobResult <- function(jobId) {
 
   metadata <- readMetadataBlob(jobId)
 
-  if (metadata$enableCloudCombine == "FALSE") {
-    cat("enalbeCloudCombine is set to FALSE, no job merge result is available",
-        fill = TRUE)
+  if (!is.null(metadata)) {
+    if (metadata$enableCloudCombine == "FALSE") {
+      cat("enalbeCloudCombine is set to FALSE, no job merge result is available",
+          fill = TRUE)
 
-    return()
-  }
-
-  if (metadata$wait == "FALSE") {
-    job <- getJob(jobId, verbose = FALSE)
-
-    if (job$jobState == "active") {
-      stop(sprintf("job %s is not finished yet, please try again later",
-                   job$jobId))
-    } else if (job$jobState != "completed") {
-      stop(sprintf(
-        "job %s is %s state, no job result is available",
-        job$jobId,
-        job$jobState
-      ))
+      return()
     }
 
-    # if the job has failed task
-    if (job$tasks$failed > 0) {
-      if (metadata$errorHandling == "stop") {
-        stop(
-          sprintf(
-            "job %s has failed tasks and error handling is set to 'stop', no result will be avaialble",
-            job$jobId
-          )
-        )
-      } else {
-        if (job$tasks$succeeded == 0) {
+    if (metadata$wait == "FALSE") {
+      job <- getJob(jobId, verbose = FALSE)
+
+      if (job$jobState == "active") {
+        stop(sprintf(
+          "job %s is not finished yet, please try again later",
+          job$jobId
+        ))
+      } else if (job$jobState != "completed") {
+        stop(sprintf(
+          "job %s is %s state, no job result is available",
+          job$jobId,
+          job$jobState
+        ))
+      }
+
+      # if the job has failed task
+      if (job$tasks$failed > 0) {
+        if (metadata$errorHandling == "stop") {
           stop(
             sprintf(
-              "all tasks failed for job %s, no result will be avaialble",
+              "job %s has failed tasks and error handling is set to 'stop', no result will be avaialble",
               job$jobId
             )
           )
+        } else {
+          if (job$tasks$succeeded == 0) {
+            stop(sprintf(
+              "all tasks failed for job %s, no result will be avaialble",
+              job$jobId
+            ))
+          }
         }
       }
     }
@@ -221,8 +223,9 @@ getJobResult <- function(jobId) {
     if (retryCounter > maxRetryCount) {
       stop(
         sprintf(
-          "Error getting job result: Maxmium number of retries (%d) reached",
-          maxRetryCount
+          "Error getting job result: Maxmium number of retries (%d) reached\r\n%s",
+          maxRetryCount,
+          paste0(results, "\r\n")
         )
       )
     } else {
@@ -241,8 +244,8 @@ getJobResult <- function(jobId) {
       return(results)
     }
 
-    # wait for 10 seconds for the result to be available
-    Sys.sleep(10)
+    # wait for 5 seconds for the result to be available
+    Sys.sleep(5)
   }
 }
 

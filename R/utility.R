@@ -234,9 +234,9 @@ readMetadataBlob <- function(jobId) {
         wait = wait
       )
 
-    metadata
+    return(metadata)
   } else {
-    stop(paste0(result, "\r\n"))
+    return(NULL)
   }
 }
 
