@@ -232,6 +232,11 @@ setHttpTraffic <- function(value = FALSE) {
     wait <- obj$options$azure$wait
   }
 
+  deleteJob <- TRUE
+  if (!is.null(obj$options$azure$deleteJob)) {
+    wait <- obj$options$azure$deleteJob
+  }
+
   inputs <- FALSE
   if (!is.null(obj$options$azure$inputs)) {
     storageCredentials <- rAzureBatch::getStorageCredentials()
@@ -584,7 +589,10 @@ setHttpTraffic <- function(value = FALSE) {
           cat(sprintf("Number of errors: %i", numberOfFailedTasks),
               fill = TRUE)
 
-          rAzureBatch::deleteJob(id)
+          # delete job from batch service and job result from storage blob
+          if(deleteJob) {
+            deleteJob(id)
+          }
 
           if (identical(obj$errorHandling, "stop") &&
               !is.null(errorValue)) {
