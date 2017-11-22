@@ -3,6 +3,7 @@
 ### Added
 - Support for users to delete job and terminate job
 ### Changed
+- [BREAKING CHANGE] when wait = TRUE, both job and job results are deleted at the end of the run
 - Add retry to get job result
 - Add errorHandling and wait option to job metadata
 - Save job metadata to job result storage blob
