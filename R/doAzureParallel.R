@@ -590,7 +590,7 @@ setHttpTraffic <- function(value = FALSE) {
               fill = TRUE)
 
           # delete job from batch service and job result from storage blob
-          if(deleteJob) {
+          if (deleteJob) {
             deleteJob(id)
           }
 
