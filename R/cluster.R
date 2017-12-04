@@ -129,18 +129,16 @@ makeCluster <-
 
     commandLine <- NULL
 
-    # install docker and create docker container
+    # install docker
     dockerImage <- "rocker/tidyverse:latest"
     if (!is.null(poolConfig$containerImage)) {
       dockerImage <- poolConfig$containerImage
     }
 
     config$containerImage <- dockerImage
-    installAndStartContainerCommand <- paste("cluster_setup.sh",
-                                             dockerImage,
-                                             sep = " ")
+    installAndStartContainerCommand <- "cluster_setup.sh"
 
-    containerInstallCommand <- c(
+    dockerInstallCommand <- c(
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
         "master/inst/startup/cluster_setup.sh"
@@ -154,8 +152,26 @@ makeCluster <-
       installAndStartContainerCommand
     )
 
+    commandLine <- dockerInstallCommand
+
+    # log into private registry if registry credentials were provided
+    if (!is.null(config$dockerAuthentication) &&
+        !is.null(config$dockerAuthentication$username)) {
+
+      username <- config$dockerAuthentication$username
+      passowrd <- config$dockerAuthentication$password
+      registry <- config$dockerAuthentication$registry
+
+      loginCommand <- dockerLoginCommand(username, password, registr)
+      commandLine <- c(commandLine, loginCommand)
+    }
+
+    # pull docker image
+    pullImageCommand <- dockerPullCommand(dockerImage)
+    commandLine <- c(commandLine, pullImageCommand)
+
     if (!is.null(poolConfig$commandLine)) {
-      commandLine <- c(containerInstallCommand, poolConfig$commandLine)
+      commandLine <- c(commandLine, poolConfig$commandLine)
     }
 
     if (!is.null(packages)) {

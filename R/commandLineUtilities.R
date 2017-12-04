@@ -67,6 +67,34 @@ getPoolPackageInstallationCommand <- function(type, packages) {
   poolInstallationCommand
 }
 
+dockerLoginCommand <-
+  function(username,
+           password,
+           registry) {
+    loginCommand <- paste(
+      "docker login",
+      "-u",
+      username,
+      "-p",
+      password,
+      registry,
+      sep = " "
+    )
+
+    return(loginCommand)
+  }
+
+dockerPullCommand <-
+  function(containerImage) {
+    pullCommand <- paste(
+      "docker pull",
+      containerImage,
+      sep = " "
+    )
+
+    return(pullCommand)
+  }
+
 dockerRunCommand <-
   function(containerImage,
            command,
