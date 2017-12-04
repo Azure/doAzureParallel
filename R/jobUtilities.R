@@ -217,7 +217,7 @@ waitForTasksToComplete <-
 
     repeat {
       taskCounts <- rAzureBatch::getJobTaskCounts(jobId)
-      progressBarValue <- round(taskCounts$completed/totalTasks * getOption("width"))
+      progressBarValue <- round(taskCounts$completed / totalTasks * getOption("width"))
 
       if (taskCounts$completed == totalTasks - 1) {
         status <- "- Tasks have completed. Merging results"
@@ -229,7 +229,7 @@ waitForTasksToComplete <-
       cat('\r', sprintf("|%s%s| %s (%s/%s) %s",
                         strrep("=", progressBarValue),
                         strrep(" ", getOption("width") - progressBarValue),
-                        sprintf("%.2f%%", (taskCounts$completed/totalTasks) * 100),
+                        sprintf("%.2f%%", (taskCounts$completed / totalTasks) * 100),
                         taskCounts$completed,
                         totalTasks,
                         status))
