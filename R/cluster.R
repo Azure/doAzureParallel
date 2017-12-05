@@ -141,12 +141,12 @@ makeCluster <-
     dockerInstallCommand <- c(
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "master/inst/startup/cluster_setup.sh"
+        "feature/dockerRegistryAuth/inst/startup/cluster_setup.sh"
       ),
       "chmod u+x cluster_setup.sh",
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "master/inst/startup/install_bioconductor.R"
+        "feature/dockerRegistryAuth/inst/startup/install_bioconductor.R"
       ),
       "chmod u+x install_bioconductor.R",
       installAndStartContainerCommand
@@ -159,10 +159,11 @@ makeCluster <-
         !is.null(config$dockerAuthentication$username)) {
 
       username <- config$dockerAuthentication$username
-      passowrd <- config$dockerAuthentication$password
+      password <- config$dockerAuthentication$password
       registry <- config$dockerAuthentication$registry
 
-      loginCommand <- dockerLoginCommand(username, password, registr)
+      # TODO: Use --password-stdin when logging in to not show the password on the command line
+      loginCommand <- dockerLoginCommand(username, password, registry)
       commandLine <- c(commandLine, loginCommand)
     }
 
