@@ -17,7 +17,10 @@ You can generate credentials by creating a R object as shown below:
       "name" = "storageaccountname",
       "key" = "storageaccountkey"
     ),
-    "githubAuthenticationToken" = ""
+    "githubAuthenticationToken" = "",
+    "dockerAuthentication" = list("username" = "registryusername",
+                                  "password" = "registrypassword",
+                                  "registry" = "registryurl")
   )
   doAzureParallel::setCredentials(credentials)
 ```
