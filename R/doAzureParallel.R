@@ -232,6 +232,7 @@ setHttpTraffic <- function(value = FALSE) {
     wait <- obj$options$azure$wait
   }
 
+  # by default, delete both job and job result after job is completed (both synchronous and asynchronous)
   deleteJob <- TRUE
   if (!is.null(obj$options$azure$deleteJob)) {
     wait <- obj$options$azure$deleteJob
@@ -305,14 +306,12 @@ setHttpTraffic <- function(value = FALSE) {
   metadata <-
     list(enableCloudCombineKeyValuePair, chunkSizeKeyValuePair)
 
-  metadataCount <- 3
   if (!is.null(obj$packages)) {
     packagesKeyValuePair <-
       list(name = "packages",
            value = paste(obj$packages, collapse = ";"))
 
-    metadata[[metadataCount]] <- packagesKeyValuePair
-    metadataCount <- metadataCount + 1
+    metadata[[length(metadata) + 1]] <- packagesKeyValuePair
   }
 
   if (!is.null(obj$errorHandling)) {
@@ -320,8 +319,7 @@ setHttpTraffic <- function(value = FALSE) {
       list(name = "errorHandling",
            value = as.character(obj$errorHandling))
 
-    metadata[[metadataCount]] <- errorHandlingKeyValuePair
-    metadataCount <- metadataCount + 1
+    metadata[[length(metadata) + 1]] <- errorHandlingKeyValuePair
   }
 
   if (!is.null(obj$options$azure$wait)) {
@@ -329,8 +327,7 @@ setHttpTraffic <- function(value = FALSE) {
       list(name = "wait",
            value = as.character(obj$options$azure$wait))
 
-    metadata[[metadataCount]] <- waitKeyValuePair
-    metadataCount <- metadataCount + 1
+    metadata[[length(metadata) + 1]] <- waitKeyValuePair
   }
 
   retryCounter <- 0
@@ -568,7 +565,7 @@ setHttpTraffic <- function(value = FALSE) {
 
           numberOfFailedTasks <- sum(unlist(failTasks))
 
-          if (numberOfFailedTasks > 0) {
+          if (numberOfFailedTasks > 0 && deleteJob == FALSE) {
             .createErrorViewerPane(id, failTasks)
           }
 
