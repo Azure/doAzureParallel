@@ -338,12 +338,35 @@ waitForTasksToComplete <-
       totalTasks <- totalTasks + length(currentTasks$value)
     }
 
-    pb <- txtProgressBar(min = 0, max = totalTasks, style = 3)
     timeToTimeout <- Sys.time() + timeout
 
     repeat {
       taskCounts <- rAzureBatch::getJobTaskCounts(jobId)
-      setTxtProgressBar(pb, taskCounts$completed)
+      progressBarValue <- round(taskCounts$completed / totalTasks * getOption("width"))
+
+      if (taskCounts$completed == totalTasks - 1) {
+        status <- "Tasks have completed. Merging results"
+      }
+      else {
+        status <-  ""
+      }
+
+      outputProgressBar <- sprintf("|%s%s|",
+                           strrep("=", progressBarValue),
+                           strrep(" ", getOption("width") - progressBarValue))
+      outputTaskCount <- sprintf("%s (%s/%s)",
+                                 sprintf("%.2f%%", (taskCounts$completed / totalTasks) * 100),
+                                 taskCounts$completed,
+                                 totalTasks)
+      outputTaskCount <- sprintf("%s %s",
+                                 outputTaskCount,
+                                 strrep(" ", getOption("width") - nchar(as.character(outputTaskCount))))
+
+      cat('\r', sprintf("%s %s %s",
+                        outputProgressBar,
+                        outputTaskCount,
+                        status))
+      flush.console()
 
       validationFlag <-
         (taskCounts$validationStatus == "Validated" &&
