@@ -220,18 +220,26 @@ waitForTasksToComplete <-
       progressBarValue <- round(taskCounts$completed / totalTasks * getOption("width"))
 
       if (taskCounts$completed == totalTasks - 1) {
-        status <- "- Tasks have completed. Merging results"
+        status <- "Tasks have completed. Merging results"
       }
       else {
         status <-  ""
       }
 
-      cat('\r', sprintf("|%s%s| %s (%s/%s) %s",
-                        strrep("=", progressBarValue),
-                        strrep(" ", getOption("width") - progressBarValue),
-                        sprintf("%.2f%%", (taskCounts$completed / totalTasks) * 100),
-                        taskCounts$completed,
-                        totalTasks,
+      outputProgressBar <- sprintf("|%s%s|",
+                           strrep("=", progressBarValue),
+                           strrep(" ", getOption("width") - progressBarValue))
+      outputTaskCount <- sprintf("%s (%s/%s)",
+                                 sprintf("%.2f%%", (taskCounts$completed / totalTasks) * 100),
+                                 taskCounts$completed,
+                                 totalTasks)
+      outputTaskCount <- sprintf("%s %s",
+                                 outputTaskCount,
+                                 strrep(" ", getOption("width") - nchar(as.character(outputTaskCount))))
+
+      cat('\r', sprintf("%s %s %s",
+                        outputProgressBar,
+                        outputTaskCount,
                         status))
       flush.console()
 
