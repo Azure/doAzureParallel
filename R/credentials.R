@@ -8,9 +8,9 @@
 #'  \item{"batchUrl"}: {Batch service url for account.}
 #'  \item{"storageAccount"}: {Storage account for storing output results.}
 #'  \item{"storageKey"}: {Storage account key for storage service authentication.}
-#'  \item{"githubAuthenticationToken"}: {GitHub authentication token for pulling R 
+#'  \item{"githubAuthenticationToken"}: {GitHub authentication token for pulling R
 #'                                       packages from private GitHub repositories}
-#'  \item{"dockerAuthentication"}: {Docker authentication for pulling Docker images 
+#'  \item{"dockerAuthentication"}: {Docker authentication for pulling Docker images
 #'                                  from private Docker registries}
 #'  \item{"dockerUsername"}: {Username to docker registry}
 #'  \item{"dockerPassword"}: {Password to docker registry}
