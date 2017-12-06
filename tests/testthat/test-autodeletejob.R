@@ -30,7 +30,8 @@ test_that("auto delete job as foreach option test", {
                            i)
   }
 
-  # find the job id from the output of above command and call deleteJob(jobId) when you no longer need the job and its result
+  # find the job id from the output of above command and call
+  # deleteJob(jobId) when you no longer need the job and its result
 })
 
 test_that("auto delete job as global setting test", {
