@@ -280,7 +280,8 @@ waitForTasksToComplete <-
           )
 
         for (i in 1:length(failedTasks$value)) {
-          if (failedTasks$value[[i]]$executionInfo$result == "Failure") {
+          if (!is.null(failedTasks$value[[i]]$executionInfo$result) &&
+              failedTasks$value[[i]]$executionInfo$result == "Failure") {
             tasksFailureWarningLabel <-
               paste0(tasksFailureWarningLabel,
                      sprintf("%s\n", failedTasks$value[[i]]$id))
@@ -294,18 +295,7 @@ waitForTasksToComplete <-
         httr::stop_for_status(response)
 
         stop(sprintf(
-          paste(
-            "Errors have occurred while running the job '%s'.",
-            "Error handling is set to 'stop' and has proceeded to terminate the job.",
-            "The user will have to handle deleting the job.",
-            "If this is not the correct behavior, change the errorHandling property to 'pass'",
-            " or 'remove' in the foreach object. Use the 'getJobFile' function to obtain the logs.",
-            "For more information about getting job logs, follow this link:",
-            paste0(
-              "https://github.com/Azure/doAzureParallel/blob/master/docs/",
-              "40-troubleshooting.md#viewing-files-directly-from-compute-node"
-            )
-          ),
+          getTaskFailedErrorString("Errors have occurred while running the job '%s'."),
           jobId
         ))
       }
@@ -358,18 +348,7 @@ waitForTasksToComplete <-
           # The foreach will not be able to run properly if the merge task fails
           # Stopping the user from processing a merge task that has failed
           stop(sprintf(
-            paste(
-              "An error has occurred in the merge task of the job '%s'.",
-              "Error handling is set to 'stop' and has proceeded to terminate the job.",
-              "The user will have to handle deleting the job.",
-              "If this is not the correct behavior, change the errorHandling property to 'pass'",
-              " or 'remove' in the foreach object. Use the 'getJobFile' function to obtain the logs.",
-              "For more information about getting job logs, follow this link:",
-              paste0(
-                "https://github.com/Azure/doAzureParallel/blob/master/docs/",
-                "40-troubleshooting.md#viewing-files-directly-from-compute-node"
-              )
-            ),
+            getTaskFailedErrorString("An error has occurred in the merge task of the job '%s'."),
             jobId
           ))
         }
