@@ -73,6 +73,20 @@ setChunkSize <- function(value = 1) {
   assign("chunkSize", value, envir = .doAzureBatchGlobals)
 }
 
+#' Specify whether to delete job/jobresult after asychronous job is completed.
+#'
+#' @param value boolean of TRUE or FALSE
+#'
+#' @examples
+#' setJobAutoDelete(FALSE)
+#' @export
+setJobAutoDelete <- function(value = TRUE) {
+  if (!is.logical(value))
+    stop("setJobAutoDelete requires a boolean argument")
+
+  assign("jobAutoDelete", value, envir = .doAzureBatchGlobals)
+}
+
 #' Apply reduce function on a group of iterations of the foreach loop together per task.
 #'
 #' @param fun The number of iterations to group
@@ -232,10 +246,16 @@ setHttpTraffic <- function(value = FALSE) {
     wait <- obj$options$azure$wait
   }
 
-  # by default, delete both job and job result after job is completed (both synchronous and asynchronous)
-  deleteJob <- TRUE
-  if (!is.null(obj$options$azure$deleteJob)) {
-    wait <- obj$options$azure$deleteJob
+  # by default, delete both job and job result after synchronous job is completed
+  jobAutoDelete <- TRUE
+
+  if (exists("jobAutoDelete", envir = .doAzureBatchGlobals)) {
+    jobAutoDelete <- get("jobAutoDelete", envir = .doAzureBatchGlobals)
+  }
+
+  if (!is.null(obj$options$azure$jobAutoDelete) &&
+      is.logical(obj$options$azure$jobAutoDelete)) {
+    jobAutoDelete <- obj$options$azure$jobAutoDelete
   }
 
   inputs <- FALSE
@@ -288,16 +308,16 @@ setHttpTraffic <- function(value = FALSE) {
 
   chunkSize <- 1
 
+  if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
+    chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
+  }
+
   if (!is.null(obj$options$azure$chunkSize)) {
     chunkSize <- obj$options$azure$chunkSize
   }
 
   if (!is.null(obj$options$azure$chunksize)) {
     chunkSize <- obj$options$azure$chunksize
-  }
-
-  if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
-    chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
   }
 
   chunkSizeKeyValuePair <-
@@ -565,7 +585,7 @@ setHttpTraffic <- function(value = FALSE) {
 
           numberOfFailedTasks <- sum(unlist(failTasks))
 
-          if (numberOfFailedTasks > 0 && deleteJob == FALSE) {
+          if (numberOfFailedTasks > 0 && jobAutoDelete == FALSE) {
             .createErrorViewerPane(id, failTasks)
           }
 
@@ -587,7 +607,7 @@ setHttpTraffic <- function(value = FALSE) {
               fill = TRUE)
 
           # delete job from batch service and job result from storage blob
-          if (deleteJob) {
+          if (jobAutoDelete) {
             deleteJob(id)
           }
 

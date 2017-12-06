@@ -4,13 +4,10 @@
 \alias{deleteJob}
 \title{Delete a job}
 \usage{
-deleteJob(jobId, deleteResult = TRUE)
+deleteJob(jobId)
 }
 \arguments{
 \item{jobId}{A job id}
-
-\item{deleteResult}{TRUE to delete job result in storage blob
-container, FALSE to keep the result in storage blob container.}
 }
 \description{
 Delete a job
@@ -18,6 +15,5 @@ Delete a job
 \examples{
 \dontrun{
 deleteJob("job-001")
-deleteJob("job-001", deleteResult = FALSE)
 }
 }

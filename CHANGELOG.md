@@ -1,16 +1,14 @@
 # Change Log
-## [0.6.2] 2017-11-17
+
+## [0.6.1] 2017-12-05
 ### Added
+- Support for users to use programmatically generated credentials and cluster config
 - Support for users to delete job and terminate job
 ### Changed
-- [BREAKING CHANGE] when wait = TRUE, both job and job results are deleted at the end of the run
+- [BREAKING CHANGE] when wait = TRUE, both job and job results are deleted at the end of the run, set jobAutoComplete to FALSE to keep them
 - Add retry to get job result
 - Add errorHandling and wait option to job metadata
 - Save job metadata to job result storage blob
-
-## [0.6.1] 2017-11-13
-### Added
-- Support for users to use programmatically generated credentials and cluster config
 
 ## [0.6.0] 2017-11-03
 ### Added

@@ -52,6 +52,6 @@ test_that("Long Running Job Test", {
   testthat::expect_equal(jobResult,
                          list(2, 2, 2, 2))
 
-  # delete the job
+  # delete the job and its result
   deleteJob(jobId)
 })

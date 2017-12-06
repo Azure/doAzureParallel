@@ -252,19 +252,14 @@ getJobResult <- function(jobId) {
 #' Delete a job
 #'
 #' @param jobId A job id
-#' @param deleteResult TRUE to delete job result in storage blob
-#' container, FALSE to keep the result in storage blob container.
 #'
 #' @examples
 #' \dontrun{
 #' deleteJob("job-001")
-#' deleteJob("job-001", deleteResult = FALSE)
 #' }
 #' @export
-deleteJob <- function(jobId, deleteResult = TRUE) {
-  if (deleteResult == TRUE) {
-    deleteStorageContainer(jobId)
-  }
+deleteJob <- function(jobId) {
+  deleteStorageContainer(jobId)
 
   response <- rAzureBatch::deleteJob(jobId, content = "response")
 
