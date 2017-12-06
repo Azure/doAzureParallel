@@ -73,18 +73,18 @@ setChunkSize <- function(value = 1) {
   assign("chunkSize", value, envir = .doAzureBatchGlobals)
 }
 
-#' Specify whether to delete job/jobresult after asychronous job is completed.
+#' Specify whether to delete job and its result after asychronous job is completed.
 #'
 #' @param value boolean of TRUE or FALSE
 #'
 #' @examples
-#' setJobAutoDelete(FALSE)
+#' setAutoDeleteJob(FALSE)
 #' @export
-setJobAutoDelete <- function(value = TRUE) {
+setAutoDeleteJob <- function(value = TRUE) {
   if (!is.logical(value))
-    stop("setJobAutoDelete requires a boolean argument")
+    stop("setAutoDeleteJob requires a boolean argument")
 
-  assign("jobAutoDelete", value, envir = .doAzureBatchGlobals)
+  assign("autoDeleteJob", value, envir = .doAzureBatchGlobals)
 }
 
 #' Apply reduce function on a group of iterations of the foreach loop together per task.
@@ -247,15 +247,15 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   # by default, delete both job and job result after synchronous job is completed
-  jobAutoDelete <- TRUE
+  autoDeleteJob <- TRUE
 
-  if (exists("jobAutoDelete", envir = .doAzureBatchGlobals)) {
-    jobAutoDelete <- get("jobAutoDelete", envir = .doAzureBatchGlobals)
+  if (exists("autoDeleteJob", envir = .doAzureBatchGlobals)) {
+    autoDeleteJob <- get("autoDeleteJob", envir = .doAzureBatchGlobals)
   }
 
-  if (!is.null(obj$options$azure$jobAutoDelete) &&
-      is.logical(obj$options$azure$jobAutoDelete)) {
-    jobAutoDelete <- obj$options$azure$jobAutoDelete
+  if (!is.null(obj$options$azure$autoDeleteJob) &&
+      is.logical(obj$options$azure$autoDeleteJob)) {
+    autoDeleteJob <- obj$options$azure$autoDeleteJob
   }
 
   inputs <- FALSE
@@ -585,7 +585,7 @@ setHttpTraffic <- function(value = FALSE) {
 
           numberOfFailedTasks <- sum(unlist(failTasks))
 
-          if (numberOfFailedTasks > 0 && jobAutoDelete == FALSE) {
+          if (numberOfFailedTasks > 0 && autoDeleteJob == FALSE) {
             .createErrorViewerPane(id, failTasks)
           }
 
@@ -607,15 +607,18 @@ setHttpTraffic <- function(value = FALSE) {
               fill = TRUE)
 
           # delete job from batch service and job result from storage blob
-          if (jobAutoDelete) {
+          if (autoDeleteJob) {
             deleteJob(id)
           }
 
           if (identical(obj$errorHandling, "stop") &&
               !is.null(errorValue)) {
-            msg <- sprintf("task %d failed - '%s'",
-                           errorIndex,
-                           conditionMessage(errorValue))
+            msg <-
+              sprintf(
+                "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation.",
+                errorIndex,
+                conditionMessage(errorValue)
+              )
             stop(simpleError(msg, call = expr))
           }
           else {
