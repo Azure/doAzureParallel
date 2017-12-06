@@ -23,3 +23,6 @@ doAzureParallel requires you to run R 3.3 or greater on you local machine.
 
 ## My job failed but I can't find my job and its result?
 if you set wait = TRUE, job and its result is automatically deleted, to keep them for investigation purpose, you can set global option using setAutoDeleteJob(FALSE), or use autoDeleteJob option at foreach level.
+
+## How do I cancel a job?
+You can call terminateJob(jobId) to cancel a job.
