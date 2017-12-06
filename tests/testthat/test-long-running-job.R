@@ -28,21 +28,21 @@ test_that("Long Running Job Test", {
       mean(1:3)
     }
 
-  job <- getJob(jobId)
+  job <- doAzureParallel::getJob(jobId)
 
   # get active/running job list
   filter <- filter <- list()
   filter$state <- c("active", "completed")
-  getJobList(filter)
+  doAzureParallel::getJobList(filter)
 
   # get job list for all jobs
-  getJobList()
+  doAzureParallel::getJobList()
 
   # wait 2 minutes for job to finish
   Sys.sleep(120)
 
   # get job result
-  jobResult <- getJobResult(jobId)
+  jobResult <- doAzureParallel::getJobResult(jobId)
   doAzureParallel::stopCluster(cluster)
 
   # verify the job result is correct
@@ -53,5 +53,5 @@ test_that("Long Running Job Test", {
                          list(2, 2, 2, 2))
 
   # delete the job and its result
-  deleteJob(jobId)
+  doAzureParallel::deleteJob(jobId)
 })
