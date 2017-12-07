@@ -351,13 +351,17 @@ waitForTasksToComplete <-
           taskCounts$completed <- totalTasks
         }
 
+        if (taskCounts$completed == totalTasks && taskCounts$running == 1) {
+          taskCounts$running <- 0
+        }
+
         if (taskCounts$active >= 1) {
           taskCounts$active <- taskCounts$active - 1
         }
       }
 
       runningOutput <- paste0("Running: ", taskCounts$running)
-      queueOutput <- paste0("Queue: ", taskCounts$active)
+      queueOutput <- paste0("Queued: ", taskCounts$active)
       completedOutput <- paste0("Completed: ", taskCounts$completed)
       failedOutput <- paste0("Failed: ", taskCounts$failed)
 
