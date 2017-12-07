@@ -8,6 +8,14 @@
 #'  \item{"batchUrl"}: {Batch service url for account.}
 #'  \item{"storageAccount"}: {Storage account for storing output results.}
 #'  \item{"storageKey"}: {Storage account key for storage service authentication.}
+#'  \item{"githubAuthenticationToken"}: {GitHub authentication token for pulling R
+#'                                       packages from private GitHub repositories}
+#'  \item{"dockerAuthentication"}: {Docker authentication for pulling Docker images
+#'                                  from private Docker registries}
+#'  \item{"dockerUsername"}: {Username to docker registry}
+#'  \item{"dockerPassword"}: {Password to docker registry}
+#'  \item{"dockerRegistry"}: {URL to docker registry}
+#'
 #'}
 #' @return The request to the Batch service was successful.
 #' @examples {
@@ -43,6 +51,26 @@ generateCredentialsConfig <- function(fileName, ...) {
            "",
            args$githubAuthenticationToken)
 
+  dockerAuthentication <-
+    ifelse(is.null(args$dockerAuthentication),
+           "",
+           args$dockerAuthentication)
+
+  dockerUsername <-
+    ifelse(is.null(args$dockerUsername),
+           "",
+           args$dockerUsername)
+
+  dockerPassword <-
+    ifelse(is.null(args$dockerPassword),
+           "",
+           args$dockerPassword)
+
+  dockerRegistry <-
+    ifelse(is.null(args$dockerRegistry),
+           "",
+           args$dockerRegistry)
+
   if (!file.exists(paste0(getwd(), "/", fileName))) {
     config <- list(
       batchAccount = list(name = batchAccount,
@@ -50,7 +78,10 @@ generateCredentialsConfig <- function(fileName, ...) {
                           url = batchUrl),
       storageAccount = list(name = storageName,
                             key = storageKey),
-      githubAuthenticationToken = githubAuthenticationToken
+      githubAuthenticationToken = githubAuthenticationToken,
+      dockerAuthentication = list(username = dockerUsername,
+                                  password = dockerPassword,
+                                  registry = dockerRegistry)
     )
 
     configJson <-

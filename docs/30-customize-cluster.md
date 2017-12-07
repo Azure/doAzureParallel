@@ -116,7 +116,7 @@ The following examples show how to configure the host node, or R package via the
 
 #### Installing apt-get packages or configuring the host node
 
-Configuring the host node is not a common operation but sometimes required. This can include installing packages, downloading data or setting up directories. The below example shows how to mount and Azure File Share to the node and expose it to the Azure Batch shared directory so it can be consumed by any R process running in the containers.
+Configuring the host node is not a common operation but sometimes required. This can include installing packages, downloading data or setting up directories. The following example shows how to mount an Azure File Share to the node and expose it to the Azure Batch shared directory so it can be consumed by any R process running in the containers.
 
 ```json
 {

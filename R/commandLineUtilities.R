@@ -67,6 +67,38 @@ getPoolPackageInstallationCommand <- function(type, packages) {
   poolInstallationCommand
 }
 
+dockerLoginCommand <-
+  function(username,
+           password,
+           registry) {
+    writePasswordCommand <- paste(
+      "echo",
+      password,
+      ">> ~/pwd.txt"
+    )
+
+    loginCommand <- paste(
+      "cat ~/pwd.txt |",
+      "docker login",
+      "-u",
+      username,
+      "--password-stdin",
+      registry
+    )
+
+    return(c(writePasswordCommand, loginCommand))
+  }
+
+dockerPullCommand <-
+  function(containerImage) {
+    pullCommand <- paste(
+      "docker pull",
+      containerImage
+    )
+
+    return(pullCommand)
+  }
+
 dockerRunCommand <-
   function(containerImage,
            command,
@@ -77,8 +109,7 @@ dockerRunCommand <-
       "--rm",
       "-v $AZ_BATCH_NODE_ROOT_DIR:$AZ_BATCH_NODE_ROOT_DIR",
       "-e AZ_BATCH_NODE_ROOT_DIR=$AZ_BATCH_NODE_ROOT_DIR",
-      "-e AZ_BATCH_NODE_STARTUP_DIR=$AZ_BATCH_NODE_STARTUP_DIR",
-      sep = " "
+      "-e AZ_BATCH_NODE_STARTUP_DIR=$AZ_BATCH_NODE_STARTUP_DIR"
     )
 
     if (runAsDaemon) {
@@ -87,7 +118,7 @@ dockerRunCommand <-
 
     if (!is.null(containerName)) {
       dockerOptions <-
-        paste(dockerOptions, "--name", containerName, dockerOptions, sep = " ")
+        paste(dockerOptions, "--name", containerName, dockerOptions)
     }
 
     if (includeEnvironmentVariables) {
@@ -98,13 +129,12 @@ dockerRunCommand <-
           "-e AZ_BATCH_JOB_ID=$AZ_BATCH_JOB_ID",
           "-e AZ_BATCH_TASK_WORKING_DIR=$AZ_BATCH_TASK_WORKING_DIR",
           "-e AZ_BATCH_JOB_PREP_WORKING_DIR=$AZ_BATCH_JOB_PREP_WORKING_DIR",
-          "-e BLOBXFER_SASKEY=$BLOBXFER_SASKEY",
-          sep = " "
+          "-e BLOBXFER_SASKEY=$BLOBXFER_SASKEY"
         )
     }
 
     dockerRunCommand <-
-      paste("docker run", dockerOptions, containerImage, command, sep = " ")
+      paste("docker run", dockerOptions, containerImage, command)
     dockerRunCommand
   }
 
