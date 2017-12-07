@@ -19,7 +19,9 @@ getJob <- function(jobId, verbose = TRUE) {
     list(
       chunkSize = 1,
       enableCloudCombine = "TRUE",
-      packages = ""
+      packages = "",
+      errorHandling = "stop",
+      wait = "TRUE"
     )
 
   if (!is.null(job$metadata)) {
@@ -36,6 +38,10 @@ getJob <- function(jobId, verbose = TRUE) {
     cat(sprintf("\tenableCloudCombine: %s", metadata$enableCloudCombine),
         fill = TRUE)
     cat(sprintf("\tpackages: %s", metadata$packages),
+        fill = TRUE)
+    cat(sprintf("\terrorHandling: %s", metadata$errorHandling),
+        fill = TRUE)
+    cat(sprintf("\twait: %s", metadata$wait),
         fill = TRUE)
   }
 
@@ -63,11 +69,13 @@ getJob <- function(jobId, verbose = TRUE) {
       ),
       fill = TRUE
     )
+    cat(sprintf("\njob state: %s", job$state), fill = TRUE)
   }
 
   jobObj <- list(jobId = job$id,
                  metadata = metadata,
-                 tasks = tasks)
+                 tasks = tasks,
+                 jobState = job$state)
 
   return(jobObj)
 }
@@ -160,20 +168,132 @@ getJobResult <- function(jobId) {
     stop("jobId must contain at least 3 characters.")
   }
 
-  tempFile <- tempFile <- tempfile("getJobResult", fileext = ".rds")
+  metadata <- readMetadataBlob(jobId)
 
-  results <- rAzureBatch::downloadBlob(
-    jobId,
-    paste0("result/", jobId, "-merge-result.rds"),
-    downloadPath = tempFile,
-    overwrite = TRUE
-  )
+  if (!is.null(metadata)) {
+    if (metadata$enableCloudCombine == "FALSE") {
+      cat("enalbeCloudCombine is set to FALSE, no job merge result is available",
+          fill = TRUE)
 
-  if (is.vector(results)) {
-    results <- readRDS(tempFile)
+      return()
+    }
+
+    if (metadata$wait == "FALSE") {
+      job <- getJob(jobId, verbose = FALSE)
+
+      if (job$jobState == "active") {
+        stop(sprintf(
+          "job %s is not finished yet, please try again later",
+          job$jobId
+        ))
+      } else if (job$jobState != "completed") {
+        stop(sprintf(
+          "job %s is %s state, no job result is available",
+          job$jobId,
+          job$jobState
+        ))
+      }
+
+      # if the job has failed task
+      if (job$tasks$failed > 0) {
+        if (metadata$errorHandling == "stop") {
+          stop(
+            sprintf(
+              "job %s has failed tasks and error handling is set to 'stop', no result will be avaialble",
+              job$jobId
+            )
+          )
+        } else {
+          if (job$tasks$succeeded == 0) {
+            stop(sprintf(
+              "all tasks failed for job %s, no result will be avaialble",
+              job$jobId
+            ))
+          }
+        }
+      }
+    }
   }
 
-  return(results)
+  tempFile <- tempfile("getJobResult", fileext = ".rds")
+
+  retryCounter <- 0
+  maxRetryCount <- 3
+  repeat {
+    if (retryCounter > maxRetryCount) {
+      stop(
+        sprintf(
+          "Error getting job result: Maxmium number of retries (%d) reached\r\n%s",
+          maxRetryCount,
+          paste0(results, "\r\n")
+        )
+      )
+    } else {
+      retryCounter <- retryCounter + 1
+    }
+
+    results <- rAzureBatch::downloadBlob(
+      jobId,
+      paste0("result/", jobId, "-merge-result.rds"),
+      downloadPath = tempFile,
+      overwrite = TRUE
+    )
+
+    if (is.vector(results)) {
+      results <- readRDS(tempFile)
+      return(results)
+    }
+
+    # wait for 5 seconds for the result to be available
+    Sys.sleep(5)
+  }
+}
+
+#' Delete a job
+#'
+#' @param jobId A job id
+#'
+#' @examples
+#' \dontrun{
+#' deleteJob("job-001")
+#' }
+#' @export
+deleteJob <- function(jobId) {
+  deleteStorageContainer(jobId)
+
+  response <- rAzureBatch::deleteJob(jobId, content = "response")
+
+  if (response$status_code == 202) {
+    cat(sprintf("Your job '%s' has been deleted.", jobId),
+        fill = TRUE)
+  } else if (response$status_code == 404) {
+    cat(sprintf("Job '%s' does not exist.", jobId),
+        fill = TRUE)
+  }
+}
+
+#' Terminate a job
+#'
+#' @param jobId A job id
+#'
+#' @examples
+#' \dontrun{
+#' terminateJob("job-001")
+#' }
+#' @export
+terminateJob <- function(jobId) {
+  response <- rAzureBatch::terminateJob(jobId, content = "response")
+
+  if (response$status_code == 202) {
+    cat(sprintf("Your job '%s' has been terminated.", jobId),
+        fill = TRUE)
+  } else if (response$status_code == 404) {
+    cat(sprintf("Job '%s' does not exist.", jobId),
+        fill = TRUE)
+  } else if (response$status_code == 409) {
+    cat(sprintf("Job '%s' has already completed.", jobId),
+        fill = TRUE)
+  }
 }
 
 #' Wait for current tasks to complete

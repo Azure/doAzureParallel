@@ -39,7 +39,10 @@ deleteStorageContainer <- function(container) {
     rAzureBatch::deleteContainer(container, content = "response")
 
   if (response$status_code == 202) {
-    cat(sprintf("Your container '%s' has been deleted.", container),
+    cat(sprintf("Your storage container '%s' has been deleted.", container),
+        fill = TRUE)
+  } else if (response$status_code == 404) {
+    cat(sprintf("storage container '%s' does not exist.", container),
         fill = TRUE)
   }
 

@@ -43,6 +43,8 @@ getJob returns job metadata, such as chunk size, whether cloud combine is enable
 		succeeded: 0
 		failed: 5
 	total: 6
+
+  job state: completed
 ```
 
 ## Get job list
@@ -81,9 +83,14 @@ Once job is completed successfully, you can call getJobResult to retrieve the jo
 
 ### Clean up
 
-Once you get the job result, you can delete the job.
+Once you get the job result, you can delete the job and its result.
 ```R
-  rAzureBatch::deleteJob(jobId)
+  deleteJob(jobId)
+```
+
+Please note deleteJob will delete the job at batch service and the storage container holding the job result.
+```R
+  deleteJob(jobId)
 ```
 
 A [working sample](../samples/long_running_job/long_running_job.R) can be found in the samples directory.

@@ -22,7 +22,7 @@ By default, *wait* is set to TRUE. This blocks the R session. By setting *wait* 
 
 ## Getting results from storage
 
-When the user is ready to get their results in a new session, the user use the following command:
+When the user is ready to get their results in a new session, the user uses the following command:
 
 ```R
 my_job_id <- "my_unique_job_id"

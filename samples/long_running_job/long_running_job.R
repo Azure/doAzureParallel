@@ -65,4 +65,4 @@ jobResult <- getJobResult(jobId)
 doAzureParallel::stopCluster(cluster)
 
 # delete the job
-rAzureBatch::deleteJob(jobId)
+deleteJob(jobId)

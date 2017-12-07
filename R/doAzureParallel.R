@@ -73,6 +73,20 @@ setChunkSize <- function(value = 1) {
   assign("chunkSize", value, envir = .doAzureBatchGlobals)
 }
 
+#' Specify whether to delete job and its result after asychronous job is completed.
+#'
+#' @param value boolean of TRUE or FALSE
+#'
+#' @examples
+#' setAutoDeleteJob(FALSE)
+#' @export
+setAutoDeleteJob <- function(value = TRUE) {
+  if (!is.logical(value))
+    stop("setAutoDeleteJob requires a boolean argument")
+
+  assign("autoDeleteJob", value, envir = .doAzureBatchGlobals)
+}
+
 #' Apply reduce function on a group of iterations of the foreach loop together per task.
 #'
 #' @param fun The number of iterations to group
@@ -232,6 +246,18 @@ setHttpTraffic <- function(value = FALSE) {
     wait <- obj$options$azure$wait
   }
 
+  # by default, delete both job and job result after synchronous job is completed
+  autoDeleteJob <- TRUE
+
+  if (exists("autoDeleteJob", envir = .doAzureBatchGlobals)) {
+    autoDeleteJob <- get("autoDeleteJob", envir = .doAzureBatchGlobals)
+  }
+
+  if (!is.null(obj$options$azure$autoDeleteJob) &&
+      is.logical(obj$options$azure$autoDeleteJob)) {
+    autoDeleteJob <- obj$options$azure$autoDeleteJob
+  }
+
   inputs <- FALSE
   if (!is.null(obj$options$azure$inputs)) {
     storageCredentials <- rAzureBatch::getStorageCredentials()
@@ -282,6 +308,10 @@ setHttpTraffic <- function(value = FALSE) {
 
   chunkSize <- 1
 
+  if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
+    chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
+  }
+
   if (!is.null(obj$options$azure$chunkSize)) {
     chunkSize <- obj$options$azure$chunkSize
   }
@@ -290,25 +320,34 @@ setHttpTraffic <- function(value = FALSE) {
     chunkSize <- obj$options$azure$chunksize
   }
 
-  if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
-    chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
-  }
-
   chunkSizeKeyValuePair <-
     list(name = "chunkSize", value = as.character(chunkSize))
 
-  if (is.null(obj$packages)) {
-    metadata <-
-      list(enableCloudCombineKeyValuePair, chunkSizeKeyValuePair)
-  } else {
+  metadata <-
+    list(enableCloudCombineKeyValuePair, chunkSizeKeyValuePair)
+
+  if (!is.null(obj$packages)) {
     packagesKeyValuePair <-
       list(name = "packages",
            value = paste(obj$packages, collapse = ";"))
 
-    metadata <-
-      list(enableCloudCombineKeyValuePair,
-           chunkSizeKeyValuePair,
-           packagesKeyValuePair)
+    metadata[[length(metadata) + 1]] <- packagesKeyValuePair
+  }
+
+  if (!is.null(obj$errorHandling)) {
+    errorHandlingKeyValuePair <-
+      list(name = "errorHandling",
+           value = as.character(obj$errorHandling))
+
+    metadata[[length(metadata) + 1]] <- errorHandlingKeyValuePair
+  }
+
+  if (!is.null(obj$options$azure$wait)) {
+    waitKeyValuePair <-
+      list(name = "wait",
+           value = as.character(obj$options$azure$wait))
+
+    metadata[[length(metadata) + 1]] <- waitKeyValuePair
   }
 
   retryCounter <- 0
@@ -454,6 +493,10 @@ setHttpTraffic <- function(value = FALSE) {
   job <- rAzureBatch::getJob(id)
   cat(sprintf("Id: %s", job$id), fill = TRUE)
 
+  if (!is.null(job$id)) {
+    saveMetadataBlob(job$id, metadata)
+  }
+
   ntasks <- length(argsList)
 
   startIndices <- seq(1, length(argsList), chunkSize)
@@ -542,7 +585,7 @@ setHttpTraffic <- function(value = FALSE) {
 
           numberOfFailedTasks <- sum(unlist(failTasks))
 
-          if (numberOfFailedTasks > 0) {
+          if (numberOfFailedTasks > 0 && autoDeleteJob == FALSE) {
             .createErrorViewerPane(id, failTasks)
           }
 
@@ -563,13 +606,22 @@ setHttpTraffic <- function(value = FALSE) {
           cat(sprintf("Number of errors: %i", numberOfFailedTasks),
               fill = TRUE)
 
-          rAzureBatch::deleteJob(id)
+          # delete job from batch service and job result from storage blob
+          if (autoDeleteJob) {
+            deleteJob(id)
+          }
 
           if (identical(obj$errorHandling, "stop") &&
               !is.null(errorValue)) {
-            msg <- sprintf("task %d failed - '%s'",
-                           errorIndex,
-                           conditionMessage(errorValue))
+            msg <-
+              sprintf(
+                paste0(
+                  "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use",
+                  " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
+                ),
+                errorIndex,
+                conditionMessage(errorValue)
+              )
             stop(simpleError(msg, call = expr))
           }
           else {

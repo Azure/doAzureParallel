@@ -179,6 +179,67 @@ getXmlValues <- function(xmlResponse, xmlPath) {
   xml2::xml_text(xml2::xml_find_all(xmlResponse, xmlPath))
 }
 
+saveMetadataBlob <- function(jobId, metadata) {
+  xmlNode <- "<metadata>"
+  if (length(metadata) > 0) {
+    for (i in 1:length(metadata)) {
+      xmlNode <-
+        paste0(
+          xmlNode,
+          sprintf(
+            "<%s>%s</%s>",
+            metadata[[i]]$name,
+            metadata[[i]]$value,
+            metadata[[i]]$name
+          )
+        )
+    }
+  }
+  xmlNode <- paste0(xmlNode, "</metadata>")
+  saveXmlBlob(jobId, xmlNode, "metadata")
+}
+
+saveXmlBlob <- function(jobId, xmlBlock, name) {
+  xmlFile <- paste0(jobId, "-", name, ".rds")
+  saveRDS(xmlBlock, file = xmlFile)
+  rAzureBatch::uploadBlob(jobId, paste0(getwd(), "/", xmlFile))
+  file.remove(xmlFile)
+}
+
+readMetadataBlob <- function(jobId) {
+  tempFile <- tempfile(paste0(jobId, "-metadata"), fileext = ".rds")
+  result <- rAzureBatch::downloadBlob(
+    jobId,
+    paste0(jobId, "-metadata.rds"),
+    downloadPath = tempFile,
+    overwrite = TRUE
+  )
+
+  if (is.vector(result)) {
+    result <- readRDS(tempFile)
+    result <- xml2::as_xml_document(result)
+    chunkSize <- getXmlValues(result, ".//chunkSize")
+    packages <- getXmlValues(result, ".//packages")
+    errorHandling <- getXmlValues(result, ".//errorHandling")
+    wait <- getXmlValues(result, ".//wait")
+    enableCloudCombine <-
+      getXmlValues(result, ".//enableCloudCombine")
+
+    metadata <-
+      list(
+        chunkSize = chunkSize,
+        packages = packages,
+        errorHandling = errorHandling,
+        enableCloudCombine = enableCloudCombine,
+        wait = wait
+      )
+
+    return(metadata)
+  } else {
+    return(NULL)
+  }
+}
+
 areShallowEqual <- function(a, b) {
   !is.null(a) && !is.null(b) && a == b
 }
