@@ -71,16 +71,22 @@ dockerLoginCommand <-
   function(username,
            password,
            registry) {
+    writePasswordCommand <- paste(
+      "echo",
+      password,
+      ">> ~/pwd.txt"
+    )
+
     loginCommand <- paste(
+      "cat ~/pwd.txt |",
       "docker login",
       "-u",
       username,
-      "-p",
-      password,
+      "--password-stdin",
       registry
     )
 
-    return(loginCommand)
+    return(c(writePasswordCommand, loginCommand))
   }
 
 dockerPullCommand <-
