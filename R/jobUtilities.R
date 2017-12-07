@@ -186,6 +186,9 @@ waitForTasksToComplete <-
     totalTasks <- 0
     currentTasks <- rAzureBatch::listTask(jobId)
 
+    jobInfo <- getJob(jobId, verbose = FALSE)
+    enableCloudCombine <- as.logical(jobInfo$metadata$enableCloudCombine)
+
     if (is.null(currentTasks$value)) {
       stop(paste0("Error: ", currentTasks$message$value))
       return()
@@ -213,34 +216,42 @@ waitForTasksToComplete <-
       totalTasks <- totalTasks + length(currentTasks$value)
     }
 
+    if (enableCloudCombine) {
+      totalTasks <- totalTasks - 1
+    }
+
     timeToTimeout <- Sys.time() + timeout
 
     repeat {
       taskCounts <- rAzureBatch::getJobTaskCounts(jobId)
-      progressBarValue <- round(taskCounts$completed / totalTasks * getOption("width"))
 
-      if (taskCounts$completed == totalTasks - 1) {
-        status <- "Tasks have completed. Merging results"
+      # Assumption: Merge task will always be the last one in the queue
+      if (enableCloudCombine) {
+        if (taskCounts$completed > totalTasks) {
+          taskCounts$completed <- totalTasks
+        }
+
+        if (taskCounts$active >= 1) {
+          taskCounts$active <- taskCounts$active - 1
+        }
       }
-      else {
-        status <-  ""
-      }
 
-      outputProgressBar <- sprintf("|%s%s|",
-                           strrep("=", progressBarValue),
-                           strrep(" ", getOption("width") - progressBarValue))
-      outputTaskCount <- sprintf("%s (%s/%s)",
-                                 sprintf("%.2f%%", (taskCounts$completed / totalTasks) * 100),
-                                 taskCounts$completed,
-                                 totalTasks)
-      outputTaskCount <- sprintf("%s %s",
-                                 outputTaskCount,
-                                 strrep(" ", getOption("width") - nchar(as.character(outputTaskCount))))
+      runningOutput <- paste0("Running: ", taskCounts$running)
+      queueOutput <- paste0("Queue: ", taskCounts$active)
+      completedOutput <- paste0("Completed: ", taskCounts$completed)
+      failedOutput <- paste0("Failed: ", taskCounts$failed)
 
-      cat('\r', sprintf("%s %s %s",
-                        outputProgressBar,
-                        outputTaskCount,
-                        status))
+      cat("\r",
+          sprintf("| %s | %s | %s | %s | %s |",
+                  paste0("Progress: ", sprintf("%.2f%% (%s/%s)", (taskCounts$completed / totalTasks) * 100,
+                                               taskCounts$completed,
+                                               totalTasks)),
+                  runningOutput,
+                  queueOutput,
+                  completedOutput,
+                  failedOutput),
+          sep = "")
+
       flush.console()
 
       validationFlag <-
@@ -269,7 +280,8 @@ waitForTasksToComplete <-
           )
 
         for (i in 1:length(failedTasks$value)) {
-          if (failedTasks$value[[i]]$executionInfo$result == "Failure") {
+          if (!is.null(failedTasks$value[[i]]$executionInfo$result) &&
+              failedTasks$value[[i]]$executionInfo$result == "Failure") {
             tasksFailureWarningLabel <-
               paste0(tasksFailureWarningLabel,
                      sprintf("%s\n", failedTasks$value[[i]]$id))
@@ -283,18 +295,7 @@ waitForTasksToComplete <-
         httr::stop_for_status(response)
 
         stop(sprintf(
-          paste(
-            "Errors have occurred while running the job '%s'.",
-            "Error handling is set to 'stop' and has proceeded to terminate the job.",
-            "The user will have to handle deleting the job.",
-            "If this is not the correct behavior, change the errorHandling property to 'pass'",
-            " or 'remove' in the foreach object. Use the 'getJobFile' function to obtain the logs.",
-            "For more information about getting job logs, follow this link:",
-            paste0(
-              "https://github.com/Azure/doAzureParallel/blob/master/docs/",
-              "40-troubleshooting.md#viewing-files-directly-from-compute-node"
-            )
-          ),
+          getTaskFailedErrorString("Errors have occurred while running the job '%s'."),
           jobId
         ))
       }
@@ -316,11 +317,48 @@ waitForTasksToComplete <-
           (taskCounts$validationStatus == "Validated" ||
            totalTasks >= 200000)) {
         cat("\n")
-        return(0)
+        break
       }
 
       Sys.sleep(10)
     }
+
+    cat("Tasks have completed. ")
+    if (enableCloudCombine) {
+      cat("Merging results")
+
+      # Wait for merge task to complete
+      repeat {
+        # Verify that the merge cloud task didn't have any errors
+        mergeTask <- rAzureBatch::getTask(jobId, paste0(jobId, "-merge"))
+
+        # This test needs to go first as Batch service will not return an execution info as null
+        if (is.null(mergeTask$executionInfo$result)) {
+          cat(".")
+          Sys.sleep(5)
+          next
+        }
+
+        if (mergeTask$executionInfo$result == "Success") {
+          break
+        }
+        else {
+          rAzureBatch::terminateJob(jobId)
+
+          # The foreach will not be able to run properly if the merge task fails
+          # Stopping the user from processing a merge task that has failed
+          stop(sprintf(
+            getTaskFailedErrorString("An error has occurred in the merge task of the job '%s'."),
+            jobId
+          ))
+        }
+
+        cat(".")
+        Sys.sleep(5)
+      }
+    }
+
+    cat("\n")
   }
 
 waitForJobPreparation <- function(jobId, poolId) {
