@@ -77,8 +77,7 @@ dockerLoginCommand <-
       username,
       "-p",
       password,
-      registry,
-      sep = " "
+      registry
     )
 
     return(loginCommand)
@@ -88,8 +87,7 @@ dockerPullCommand <-
   function(containerImage) {
     pullCommand <- paste(
       "docker pull",
-      containerImage,
-      sep = " "
+      containerImage
     )
 
     return(pullCommand)
@@ -105,8 +103,7 @@ dockerRunCommand <-
       "--rm",
       "-v $AZ_BATCH_NODE_ROOT_DIR:$AZ_BATCH_NODE_ROOT_DIR",
       "-e AZ_BATCH_NODE_ROOT_DIR=$AZ_BATCH_NODE_ROOT_DIR",
-      "-e AZ_BATCH_NODE_STARTUP_DIR=$AZ_BATCH_NODE_STARTUP_DIR",
-      sep = " "
+      "-e AZ_BATCH_NODE_STARTUP_DIR=$AZ_BATCH_NODE_STARTUP_DIR"
     )
 
     if (runAsDaemon) {
@@ -115,7 +112,7 @@ dockerRunCommand <-
 
     if (!is.null(containerName)) {
       dockerOptions <-
-        paste(dockerOptions, "--name", containerName, dockerOptions, sep = " ")
+        paste(dockerOptions, "--name", containerName, dockerOptions)
     }
 
     if (includeEnvironmentVariables) {
@@ -126,13 +123,12 @@ dockerRunCommand <-
           "-e AZ_BATCH_JOB_ID=$AZ_BATCH_JOB_ID",
           "-e AZ_BATCH_TASK_WORKING_DIR=$AZ_BATCH_TASK_WORKING_DIR",
           "-e AZ_BATCH_JOB_PREP_WORKING_DIR=$AZ_BATCH_JOB_PREP_WORKING_DIR",
-          "-e BLOBXFER_SASKEY=$BLOBXFER_SASKEY",
-          sep = " "
+          "-e BLOBXFER_SASKEY=$BLOBXFER_SASKEY"
         )
     }
 
     dockerRunCommand <-
-      paste("docker run", dockerOptions, containerImage, command, sep = " ")
+      paste("docker run", dockerOptions, containerImage, command)
     dockerRunCommand
   }
 

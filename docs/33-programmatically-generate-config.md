@@ -1,6 +1,6 @@
 # Programmatically generated credential and cluster configuration
 
-In addition to setting credentials and cluster configiguration through json files, you can specify them programmatically. This allows users to generate the configuration on the fly at runtime.
+In addition to setting credentials and cluster configuration through json files, you can specify them programmatically. This allows users to generate the configuration on the fly at runtime.
 
 ## Programmatically generated credentials
 
@@ -25,9 +25,9 @@ You can generate credentials by creating a R object as shown below:
   doAzureParallel::setCredentials(credentials)
 ```
 
-## Programmatically generated cluster configiguration
+## Programmatically generated cluster configuration
 
-You can generate cluster configiguration by creating a R object as shown below:
+You can generate cluster configuration by creating a R object as shown below:
 
 ```R
   clusterConfig <- list(
