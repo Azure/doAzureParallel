@@ -157,7 +157,6 @@ makeCluster <-
 
     # log into private registry if registry credentials were provided
     if (!is.null(config$dockerAuthentication) &&
-        !is.null(config$dockerAuthentication$username) &&
         nchar(config$dockerAuthentication$username) > 0 &&
         nchar(config$dockerAuthentication$password) > 0 &&
         nchar(config$dockerAuthentication$registry) > 0) {
