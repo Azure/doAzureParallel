@@ -131,7 +131,8 @@ makeCluster <-
 
     # install docker
     dockerImage <- "rocker/tidyverse:latest"
-    if (!is.null(poolConfig$containerImage)) {
+    if (!is.null(poolConfig$containerImage) &&
+        nchar(poolConfig$containerImage) > 0) {
       dockerImage <- poolConfig$containerImage
     }
 
@@ -156,13 +157,14 @@ makeCluster <-
 
     # log into private registry if registry credentials were provided
     if (!is.null(config$dockerAuthentication) &&
-        !is.null(config$dockerAuthentication$username)) {
+        nchar(config$dockerAuthentication$username) > 0 &&
+        nchar(config$dockerAuthentication$password) > 0 &&
+        nchar(config$dockerAuthentication$registry) > 0) {
 
       username <- config$dockerAuthentication$username
       password <- config$dockerAuthentication$password
       registry <- config$dockerAuthentication$registry
 
-      # TODO: Use --password-stdin when logging in to not show the password on the command line
       loginCommand <- dockerLoginCommand(username, password, registry)
       commandLine <- c(commandLine, loginCommand)
     }
