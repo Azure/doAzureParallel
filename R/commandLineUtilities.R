@@ -33,7 +33,7 @@ getPoolPackageInstallationCommand <- function(type, packages) {
 
   # At this point we cannot use install_cran.R and install_github.R because they are not yet available.
   if (type == "cran") {
-    script <-
+    poolInstallationCommand <-
       paste(installCommand,
             paste("-e",
                   libPathsCommand,
@@ -41,7 +41,7 @@ getPoolPackageInstallationCommand <- function(type, packages) {
             )
   }
   else if (type == "github") {
-    script <-
+    poolInstallationCommand <-
       paste(
         installCommand,
         paste(
@@ -52,17 +52,17 @@ getPoolPackageInstallationCommand <- function(type, packages) {
       )
   }
   else if (type == "bioconductor") {
-    script <- "Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R"
+    poolInstallationCommand <- "Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R"
   }
   else {
     stop("Using an incorrect package source")
   }
 
   for (i in 1:length(packages)) {
-    script <- paste(script, packages[i])
+    poolInstallationCommand <- paste(poolInstallationCommand, packages[i])
   }
 
-  script
+  poolInstallationCommand
 }
 
 dockerLoginCommand <-
