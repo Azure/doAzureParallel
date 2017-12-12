@@ -20,7 +20,7 @@ test_that("successfully create github job package command line", {
 test_that("successfully create cran pool package command line", {
   poolInstallation <-
     getPoolPackageInstallationCommand("cran", c("hts", "lubridate", "tidyr"))
-  expect_equal(length(poolInstallation), 3)
+  expect_equal(length(poolInstallation), 1)
 
   libPathCommand <-
     paste(
@@ -39,7 +39,7 @@ test_that("successfully create cran pool package command line", {
 test_that("successfully create github pool package command line", {
   poolInstallation <-
     getPoolPackageInstallationCommand("github", c("Azure/doAzureParallel", "Azure/rAzureBatch"))
-  expect_equal(length(poolInstallation), 2)
+  expect_equal(length(poolInstallation), 1)
 
   libPathCommand <-
     paste(
@@ -58,7 +58,6 @@ test_that("successfully create github pool package command line", {
 test_that("successfully create bioconductor pool package command line", {
   poolInstallation <-
     getPoolPackageInstallationCommand("bioconductor", c("IRanges", "a4"))
-  cat(poolInstallation)
 
   expected <-
     c(
