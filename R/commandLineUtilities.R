@@ -21,8 +21,6 @@ getJobPackageInstallationCommand <- function(type, packages) {
 }
 
 getPoolPackageInstallationCommand <- function(type, packages) {
-  poolInstallationCommand <- character(length(packages))
-
   sharedPackagesDirectory <- "/mnt/batch/tasks/shared/R/packages"
 
   libPathsCommand <- paste0('\'.libPaths( c( \\\"',
@@ -39,7 +37,7 @@ getPoolPackageInstallationCommand <- function(type, packages) {
       paste(installCommand,
             paste("-e",
                   libPathsCommand,
-                  "install.packages(args[1])\' %s")
+                  "install.packages(args)\'")
             )
   }
   else if (type == "github") {
@@ -49,22 +47,22 @@ getPoolPackageInstallationCommand <- function(type, packages) {
         paste(
           "-e",
           libPathsCommand,
-          "devtools::install_github(args[1])\' %s"
+          "devtools::install_github(args)\'"
         )
       )
   }
   else if (type == "bioconductor") {
-    script <- "Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R %s"
+    script <- "Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R"
   }
   else {
     stop("Using an incorrect package source")
   }
 
   for (i in 1:length(packages)) {
-    poolInstallationCommand[i] <- sprintf(script, packages[i])
+    script <- paste(script, packages[i])
   }
 
-  poolInstallationCommand
+  script
 }
 
 dockerLoginCommand <-
