@@ -30,9 +30,7 @@ test_that("successfully create cran pool package command line", {
 
   expected <-
     c(
-      paste(libPathCommand, "install.packages(args[1])\' hts"),
-      paste(libPathCommand, "install.packages(args[1])\' lubridate"),
-      paste(libPathCommand, "install.packages(args[1])\' tidyr")
+      paste(libPathCommand, "install.packages(args)\' hts lubridate tidyr")
     )
 
   expect_equal(poolInstallation, expected)
@@ -51,8 +49,7 @@ test_that("successfully create github pool package command line", {
 
   expected <-
     c(
-      paste(libPathCommand, "devtools::install_github(args[1])\' Azure/doAzureParallel"),
-      paste(libPathCommand, "devtools::install_github(args[1])\' Azure/rAzureBatch")
+      paste(libPathCommand, "devtools::install_github(args)\' Azure/doAzureParallel Azure/rAzureBatch")
     )
 
   expect_equal(poolInstallation, expected)
@@ -62,14 +59,11 @@ test_that("successfully create bioconductor pool package command line", {
   poolInstallation <-
     getPoolPackageInstallationCommand("bioconductor", c("IRanges", "a4"))
   cat(poolInstallation)
-  expect_equal(length(poolInstallation), 2)
 
   expected <-
     c(
       paste("Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R",
              "IRanges",
-            sep = " "),
-      paste("Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R",
             "a4",
             sep = " ")
     )
