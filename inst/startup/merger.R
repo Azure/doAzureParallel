@@ -3,11 +3,6 @@ args <- commandArgs(trailingOnly = TRUE)
 status <- 0
 
 jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
-.libPaths(c(
-  jobPrepDirectory,
-  "/mnt/batch/tasks/shared/R/packages",
-  .libPaths()
-))
 
 isError <- function(x) {
   inherits(x, "simpleError") || inherits(x, "try-error")
@@ -21,6 +16,16 @@ batchJobId <- Sys.getenv("AZ_BATCH_JOB_ID")
 batchJobPreparationDirectory <-
   Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 batchTaskWorkingDirectory <- Sys.getenv("AZ_BATCH_TASK_WORKING_DIR")
+taskPackageDirectory <- paste0(batchTaskWorkingDirectory)
+
+libPaths <- c(
+  taskPackageDirectory,
+  jobPrepDirectory,
+  "/mnt/batch/tasks/shared/R/packages",
+  .libPaths()
+)
+
+.libPaths(libPaths)
 
 azbatchenv <-
   readRDS(paste0(batchJobPreparationDirectory, "/", batchJobId, ".rds"))
@@ -32,16 +37,28 @@ for (package in azbatchenv$packages) {
 }
 
 parent.env(azbatchenv$exportenv) <- globalenv()
-sessionInfo()
 
 enableCloudCombine <- azbatchenv$enableCloudCombine
 cloudCombine <- azbatchenv$cloudCombine
 
 if (typeof(cloudCombine) == "list" && enableCloudCombine) {
-  results <- vector("list", batchTasksCount)
-  count <- 1
+  if (!require("doParallel", character.only = TRUE)) {
+    install.packages(c("doParallel"), repos = "http://cran.us.r-project.org")
+    require("doParallel", character.only = TRUE)
+    library("doParallel")
+  }
+
+  sessionInfo()
+  cluster <- parallel::makeCluster(parallel::detectCores(), outfile = "test.txt")
+  parallel::clusterExport(cluster, "libPaths")
+  parallel::clusterEvalQ(cluster, .libPaths(libPaths))
+
+  doParallel::registerDoParallel(cluster)
 
   status <- tryCatch({
+    results <- vector("list", batchTasksCount)
+    count <- 1
+
     if (errorHandling == "remove" || errorHandling == "stop") {
       files <- list.files(file.path(batchTaskWorkingDirectory,
                                     "result"),
@@ -60,9 +77,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
         )
       }
 
-      results <- vector("list", length(files))
-
-      for (i in 1:length(files)) {
+      results <- foreach::foreach(i = 1:length(files), .export = c("files")) %dopar% {
         task <- readRDS(files[i])
 
         if (isError(task)) {
@@ -74,11 +89,10 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           }
         }
 
-        for (t in 1:length(task)) {
-          results[count] <- task[t]
-          count <- count + 1
-        }
+        task
       }
+
+      results <- unlist(results, recursive = FALSE)
 
       saveRDS(results, file = file.path(
         batchTaskWorkingDirectory,
@@ -86,7 +100,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
       ))
     }
     else if (errorHandling == "pass") {
-      for (i in 1:batchTasksCount) {
+      results <- foreach::foreach(i = 1:batchTasksCount, .export = c("results", "count", "batchTasksCount", "chunkSize")) %dopar% {
         taskResult <-
           file.path(
             batchTaskWorkingDirectory,
@@ -94,21 +108,29 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
             paste0(batchJobId, "-task", i, "-result.rds")
           )
 
+        print(taskResult)
+
         if (file.exists(taskResult)) {
           task <- readRDS(taskResult)
           for (t in 1:length(task)) {
             results[count] <- task[t]
             count <- count + 1
           }
+
+          task
         }
         else {
+          result <- vector(list, length(chunkSize))
           for (t in 1:length(chunkSize)) {
             results[count] <- NA
             count <- count + 1
           }
+
+          result
         }
       }
 
+      results <- unlist(results, recursive = FALSE)
       saveRDS(results, file = file.path(
         batchTaskWorkingDirectory,
         paste0(batchJobId, "-merge-result.rds")
@@ -121,9 +143,11 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
     print(e)
     1
   })
-} else {
-  # Work needs to be done for utilizing custom merge functions
+
+  parallel::stopCluster(cluster)
+  }
 }
+
 
 quit(save = "yes",
      status = status,
