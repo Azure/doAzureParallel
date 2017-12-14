@@ -14,3 +14,14 @@ getTaskFailedErrorString <- function(...) {
 
   return(errorMessage)
 }
+
+getJobPackageSummary <- function(packages) {
+  if (length(packages) > 0) {
+    cat(sprintf("%s: ", deparse(substitute(packages))), fill = TRUE)
+    cat("\t")
+    for (i in 1:length(packages)) {
+      cat(packages[i], "; ", sep = "")
+    }
+    cat("\n")
+  }
+}
