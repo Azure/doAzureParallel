@@ -489,9 +489,20 @@ setHttpTraffic <- function(value = FALSE) {
     }
   }
 
-  cat("Job Summary: ", fill = TRUE)
+
   job <- rAzureBatch::getJob(id)
-  cat(sprintf("Id: %s", job$id), fill = TRUE)
+
+  printJobInformation(
+    jobId = job$id,
+    chunkSize = chunkSize,
+    enableCloudCombine = enableCloudCombine,
+    errorHandling = obj$errorHandling,
+    wait = wait,
+    autoDeleteJob = autoDeleteJob,
+    cranPackages = obj$packages,
+    githubPackages = githubPackages,
+    bioconductorPackages = bioconductorPackages
+  )
 
   if (!is.null(job$id)) {
     saveMetadataBlob(job$id, metadata)
@@ -531,12 +542,16 @@ setHttpTraffic <- function(value = FALSE) {
       containerImage = data$containerImage
     )
 
+    cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")
+    flush.console()
+
     return(taskId)
   })
 
   rAzureBatch::updateJob(id)
 
   if (enableCloudCombine) {
+    cat("\nSubmitting merge task")
     mergeTaskId <- paste0(id, "-merge")
     .addTask(
       jobId = id,
@@ -554,6 +569,7 @@ setHttpTraffic <- function(value = FALSE) {
       outputFiles = obj$options$azure$outputFiles,
       containerImage = data$containerImage
     )
+    cat(". . .")
   }
 
   if (wait) {
@@ -603,12 +619,10 @@ setHttpTraffic <- function(value = FALSE) {
           errorValue <- foreach::getErrorValue(it)
           errorIndex <- foreach::getErrorIndex(it)
 
-          cat(sprintf("Number of errors: %i", numberOfFailedTasks),
-              fill = TRUE)
-
           # delete job from batch service and job result from storage blob
           if (autoDeleteJob) {
-            deleteJob(id)
+            # Default behavior is to delete the job data
+            deleteJob(id, verbose = !autoDeleteJob)
           }
 
           if (identical(obj$errorHandling, "stop") &&

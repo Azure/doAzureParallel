@@ -34,19 +34,29 @@ listStorageContainers <- function(prefix = "") {
 #' @param container The name of the container
 #'
 #' @export
-deleteStorageContainer <- function(container) {
+deleteStorageContainer <- function(container, verbose = TRUE) {
   response <-
     rAzureBatch::deleteContainer(container, content = "response")
 
-  if (response$status_code == 202) {
-    cat(sprintf("Your storage container '%s' has been deleted.", container),
-        fill = TRUE)
-  } else if (response$status_code == 404) {
-    cat(sprintf("storage container '%s' does not exist.", container),
-        fill = TRUE)
-  }
+  tryCatch({
+      httr::stop_for_status(response)
 
-  response
+      if (verbose) {
+        cat(sprintf("Your storage container '%s' has been deleted.", jobId),
+            fill = TRUE)
+      }
+    },
+    error = function(e) {
+      # Checking for status code instead of using xml2 package
+      # Storage helper functions require xml2 package which requires special installations
+      if (verbose && response$status_code == 404) {
+        cat(sprintf("Call: deleteStorageContainer"),
+            fill = TRUE)
+        cat(sprintf("Exception: %s", "The specified storage container does not exist"),
+            fill = TRUE)
+      }
+    }
+  )
 }
 
 #' List storage files from Azure storage.
