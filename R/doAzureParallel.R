@@ -489,21 +489,20 @@ setHttpTraffic <- function(value = FALSE) {
     }
   }
 
-  cat(strrep('=', options("width")), fill = TRUE)
+
   job <- rAzureBatch::getJob(id)
-  cat(sprintf("Id: %s", job$id), fill = TRUE)
-  cat(sprintf("chunkSize: %s", as.character(chunkSize)), fill = TRUE)
-  cat(sprintf("enableCloudCombine: %s", as.character(enableCloudCombine)), fill = TRUE)
 
-  packages <- obj$packages
-  getJobPackageSummary(packages)
-  getJobPackageSummary(githubPackages)
-  getJobPackageSummary(bioconductorPackages)
-
-  cat(sprintf("errorHandling: %s", as.character(obj$errorHandling)), fill = TRUE)
-  cat(sprintf("wait: %s", as.character(wait)), fill = TRUE)
-  cat(sprintf("autoDeleteJob: %s", as.character(autoDeleteJob)), fill = TRUE)
-  cat(strrep('=', options("width")), fill = TRUE)
+  printJobInformation(
+    jobId = job$id,
+    chunkSize = chunkSize,
+    enableCloudCombine = enableCloudCombine,
+    errorHandling = obj$errorHandling,
+    wait = wait,
+    autoDeleteJob = autoDeleteJob,
+    cranPackages = obj$packages,
+    githubPackages = githubPackages,
+    bioconductorPackages = bioconductorPackages
+  )
 
   if (!is.null(job$id)) {
     saveMetadataBlob(job$id, metadata)
@@ -543,7 +542,7 @@ setHttpTraffic <- function(value = FALSE) {
       containerImage = data$containerImage
     )
 
-    cat("\r", sprintf("Submitting Tasks (%s/%s)", i, length(endIndices)), sep = "")
+    cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")
     flush.console()
 
     return(taskId)
@@ -620,16 +619,11 @@ setHttpTraffic <- function(value = FALSE) {
           errorValue <- foreach::getErrorValue(it)
           errorIndex <- foreach::getErrorIndex(it)
 
-          cat(strrep('=', options("width")), fill = TRUE)
-          cat(sprintf("Error Count: %i", numberOfFailedTasks),
-              fill = TRUE)
-
           # delete job from batch service and job result from storage blob
           if (autoDeleteJob) {
             # Default behavior is to delete the job data
             deleteJob(id, verbose = !autoDeleteJob)
           }
-          cat(strrep('=', options("width")), fill = TRUE)
 
           if (identical(obj$errorHandling, "stop") &&
               !is.null(errorValue)) {

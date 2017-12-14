@@ -25,3 +25,28 @@ getJobPackageSummary <- function(packages) {
     cat("\n")
   }
 }
+
+printJobInformation <- function(jobId,
+                                chunkSize,
+                                enableCloudCombine,
+                                errorHandling,
+                                wait,
+                                autoDeleteJob,
+                                cranPackages,
+                                githubPackages,
+                                bioconductorPackages) {
+  cat(strrep('=', options("width")), fill = TRUE)
+  cat(sprintf("Id: %s", jobId), fill = TRUE)
+  cat(sprintf("chunkSize: %s", as.character(chunkSize)), fill = TRUE)
+  cat(sprintf("enableCloudCombine: %s", as.character(enableCloudCombine)), fill = TRUE)
+
+  packages <- cranPackages
+  getJobPackageSummary(packages)
+  getJobPackageSummary(githubPackages)
+  getJobPackageSummary(bioconductorPackages)
+
+  cat(sprintf("errorHandling: %s", as.character(errorHandling)), fill = TRUE)
+  cat(sprintf("wait: %s", as.character(wait)), fill = TRUE)
+  cat(sprintf("autoDeleteJob: %s", as.character(autoDeleteJob)), fill = TRUE)
+  cat(strrep('=', options("width")), fill = TRUE)
+}
