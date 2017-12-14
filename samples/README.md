@@ -37,3 +37,7 @@ If you would like to see more samples, please reach out to [razurebatch@microsof
 7. **Using Azure Files** [(link)](./azure_files/readme.md)
 
    A quick introduction to setting up a distributed file system with Azure Files across all nodes in the cluster
+
+8. **DEoptim** [(link)](./deoptim/readme.md)
+
+   This short sample shows you how you can perform DEoptim jobs on top of doAzureParallel's parallel backend.
