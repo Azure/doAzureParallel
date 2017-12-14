@@ -502,6 +502,7 @@ setHttpTraffic <- function(value = FALSE) {
 
   cat(sprintf("errorHandling: %s", as.character(obj$errorHandling)), fill = TRUE)
   cat(sprintf("wait: %s", as.character(wait)), fill = TRUE)
+  cat(sprintf("autoDeleteJob: %s", as.character(autoDeleteJob)), fill = TRUE)
   cat(strrep('=', options("width")), fill = TRUE)
 
   if (!is.null(job$id)) {
@@ -551,7 +552,7 @@ setHttpTraffic <- function(value = FALSE) {
   rAzureBatch::updateJob(id)
 
   if (enableCloudCombine) {
-    cat(". . . Submitting merge task")
+    cat("\nSubmitting merge task")
     mergeTaskId <- paste0(id, "-merge")
     .addTask(
       jobId = id,
@@ -569,7 +570,7 @@ setHttpTraffic <- function(value = FALSE) {
       outputFiles = obj$options$azure$outputFiles,
       containerImage = data$containerImage
     )
-    cat(". . . \n")
+    cat(". . .")
   }
 
   if (wait) {
@@ -625,7 +626,8 @@ setHttpTraffic <- function(value = FALSE) {
 
           # delete job from batch service and job result from storage blob
           if (autoDeleteJob) {
-            deleteJob(id)
+            # Default behavior is to delete the job data
+            deleteJob(id, verbose = !autoDeleteJob)
           }
           cat(strrep('=', options("width")), fill = TRUE)
 
