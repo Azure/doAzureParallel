@@ -49,7 +49,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
   }
 
   sessionInfo()
-  cluster <- parallel::makeCluster(parallel::detectCores(), outfile = "test.txt")
+  cluster <- parallel::makeCluster(parallel::detectCores(), outfile = "doParallel.txt")
   parallel::clusterExport(cluster, "libPaths")
   parallel::clusterEvalQ(cluster, .libPaths(libPaths))
 
@@ -145,9 +145,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
   })
 
   parallel::stopCluster(cluster)
-  }
 }
-
 
 quit(save = "yes",
      status = status,
