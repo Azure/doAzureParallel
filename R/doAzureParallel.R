@@ -528,7 +528,7 @@ setHttpTraffic <- function(value = FALSE) {
   tasks <- lapply(1:length(endIndices), function(i) {
     startIndex <- startIndices[i]
     endIndex <- endIndices[i]
-    taskId <- paste0(id, "-task", i)
+    taskId <- as.character(i)
 
     .addTask(
       jobId = id,
@@ -548,8 +548,6 @@ setHttpTraffic <- function(value = FALSE) {
     return(taskId)
   })
 
-  rAzureBatch::updateJob(id)
-
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
     mergeTaskId <- paste0(id, "-merge")
@@ -564,13 +562,15 @@ setHttpTraffic <- function(value = FALSE) {
       ),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
-      dependsOn = tasks,
+      dependsOn = list(taskIdRanges = list(list(start = 1, end = length(tasks)))),
       cloudCombine = cloudCombine,
       outputFiles = obj$options$azure$outputFiles,
       containerImage = data$containerImage
     )
     cat(". . .")
   }
+
+  rAzureBatch::updateJob(id)
 
   if (wait) {
     if (!is.null(obj$packages) ||

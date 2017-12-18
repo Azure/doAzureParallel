@@ -34,22 +34,22 @@
     commands <- c(downloadCommand)
   }
 
-  envFile <- paste0(taskId, ".rds")
-  saveRDS(argsList, file = envFile)
-  rAzureBatch::uploadBlob(jobId, paste0(getwd(), "/", envFile))
-  file.remove(envFile)
+  # envFile <- paste0(taskId, ".rds")
+  # saveRDS(argsList, file = envFile)
+  # rAzureBatch::uploadBlob(jobId, paste0(getwd(), "/", envFile))
+  # file.remove(envFile)
 
   sasToken <- rAzureBatch::createSasToken("r", "c", jobId)
   writeToken <- rAzureBatch::createSasToken("w", "c", jobId)
 
-  envFileUrl <-
-    rAzureBatch::createBlobUrl(storageCredentials$name, jobId, envFile, sasToken)
-  resourceFiles <-
-    list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
+  # envFileUrl <-
+  #   rAzureBatch::createBlobUrl(storageCredentials$name, jobId, envFile, sasToken)
+  # resourceFiles <-
+  #   list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
 
   exitConditions <- NULL
   if (!is.null(args$dependsOn)) {
-    dependsOn <- list(taskIds = dependsOn)
+    dependsOn <- args$dependsOn
   }
   else {
     exitConditions <- list(default = list(dependencyAction = "satisfy"))
@@ -101,7 +101,7 @@
 
   commands <-
     c(commands,
-      dockerRunCommand(containerImage, rCommand, taskId))
+      dockerRunCommand(containerImage, rCommand, paste0("task-", taskId)))
 
   commands <- linuxWrapCommands(commands)
 
