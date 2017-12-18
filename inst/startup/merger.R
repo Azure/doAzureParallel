@@ -100,7 +100,11 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
       ))
     }
     else if (errorHandling == "pass") {
-      results <- foreach::foreach(i = 1:batchTasksCount, .export = c("results", "count", "batchTasksCount", "chunkSize")) %dopar% {
+      results <- foreach::foreach(i = 1:batchTasksCount,
+                                  .export = c("results",
+                                              "count",
+                                              "batchTasksCount",
+                                              "chunkSize")) %dopar% {
         taskResult <-
           file.path(
             batchTaskWorkingDirectory,
