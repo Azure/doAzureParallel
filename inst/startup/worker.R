@@ -2,6 +2,9 @@
 args <- commandArgs(trailingOnly = TRUE)
 workerErrorStatus <- 0
 
+startIndex <- as.integer(args[1])
+endIndex <- as.integer(args[2])
+
 jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 .libPaths(c(
   jobPrepDirectory,
@@ -83,7 +86,7 @@ if (!is.null(azbatchenv$inputs)) {
   options("az_config" = list(container = azbatchenv$inputs))
 }
 
-result <- lapply(taskArgs, function(args) {
+result <- lapply(argsList[startIndex:endIndex], function(args) {
   tryCatch({
     lapply(names(args), function(n)
       assign(n, args[[n]], pos = azbatchenv$exportenv))

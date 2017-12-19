@@ -223,7 +223,8 @@ setHttpTraffic <- function(value = FALSE) {
   assign("github", githubPackages, .doAzureBatchGlobals)
   assign("bioconductor", bioconductorPackages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
-
+  assign("argsList", argsList, .doAzureBatchGlobals)
+  
   if (!is.null(obj$options$azure$job)) {
     id <- obj$options$azure$job
   }
@@ -534,7 +535,9 @@ setHttpTraffic <- function(value = FALSE) {
       jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R > $AZ_BATCH_TASK_ID.txt"),
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i > $AZ_BATCH_TASK_ID.txt",
+        startIndex,
+        endIndex),
       args = argsList[startIndex:endIndex],
       envir = .doAzureBatchGlobals,
       packages = obj$packages,

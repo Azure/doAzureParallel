@@ -34,19 +34,6 @@
     commands <- c(downloadCommand)
   }
 
-  # envFile <- paste0(taskId, ".rds")
-  # saveRDS(argsList, file = envFile)
-  # rAzureBatch::uploadBlob(jobId, paste0(getwd(), "/", envFile))
-  # file.remove(envFile)
-
-  sasToken <- rAzureBatch::createSasToken("r", "c", jobId)
-  writeToken <- rAzureBatch::createSasToken("w", "c", jobId)
-
-  # envFileUrl <-
-  #   rAzureBatch::createBlobUrl(storageCredentials$name, jobId, envFile, sasToken)
-  # resourceFiles <-
-  #   list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
-
   exitConditions <- NULL
   if (!is.null(args$dependsOn)) {
     dependsOn <- args$dependsOn
@@ -59,7 +46,7 @@
     rAzureBatch::createBlobUrl(
       storageAccount = storageCredentials$name,
       containerName = jobId,
-      sasToken = writeToken
+      sasToken = rAzureBatch::createSasToken("w", "c", jobId)
     )
 
   outputFiles <- list(
@@ -130,7 +117,6 @@
     jobId,
     taskId,
     environmentSettings = list(setting, containerEnv),
-    resourceFiles = resourceFiles,
     commandLine = commands,
     dependsOn = dependsOn,
     outputFiles = outputFiles,
