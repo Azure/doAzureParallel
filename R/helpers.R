@@ -3,7 +3,6 @@
 
   args <- list(...)
   .doAzureBatchGlobals <- args$envir
-  argsList <- args$args
   dependsOn <- args$dependsOn
   cloudCombine <- args$cloudCombine
   userOutputFiles <- args$outputFiles
@@ -11,10 +10,6 @@
 
   resultFile <- paste0(taskId, "-result", ".rds")
   accountName <- storageCredentials$name
-
-  if (!is.null(argsList)) {
-    assign("argsList", argsList, .doAzureBatchGlobals)
-  }
 
   # Only use the download command if cloudCombine is enabled
   # Otherwise just leave it empty

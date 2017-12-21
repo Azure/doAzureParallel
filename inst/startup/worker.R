@@ -71,7 +71,7 @@ setwd(batchTaskWorkingDirectory)
 
 azbatchenv <-
   readRDS(paste0(batchJobPreparationDirectory, "/", batchJobEnvironment))
-taskArgs <- readRDS(batchTaskEnvironment)
+argsList <- azbatchenv$argsList
 
 for (package in azbatchenv$packages) {
   library(package, character.only = TRUE)

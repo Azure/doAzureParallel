@@ -538,7 +538,6 @@ setHttpTraffic <- function(value = FALSE) {
         "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i > $AZ_BATCH_TASK_ID.txt",
         startIndex,
         endIndex),
-      args = argsList[startIndex:endIndex],
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
       outputFiles = obj$options$azure$outputFiles,
