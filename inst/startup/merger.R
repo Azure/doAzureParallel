@@ -5,7 +5,7 @@ status <- 0
 jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 
 isError <- function(x) {
-  inherits(x, "simpleError") || inherits(x, "try-error")
+  return(inherits(x, "simpleError") || inherits(x, "try-error"))
 }
 
 batchTasksCount <- as.integer(args[1])
@@ -56,94 +56,109 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
   doParallel::registerDoParallel(cluster)
 
   status <- tryCatch({
-    results <- vector("list", batchTasksCount)
     count <- 1
 
-    if (errorHandling == "remove" || errorHandling == "stop") {
-      files <- list.files(file.path(batchTaskWorkingDirectory,
-                                    "result"),
-                          full.names = TRUE)
+    files <- list.files(file.path(batchTaskWorkingDirectory,
+                                  "result"),
+                        full.names = TRUE)
 
-      if (errorHandling == "stop" &&
-          length(files) != batchTasksCount) {
-        stop(
-          paste(
-            "Error handling is set to 'stop' and there are missing results due to",
-            "task failures. If this is not the correct behavior, change the errorHandling",
-            "property to 'pass' or 'remove' in the foreach object.",
-            "For more information on troubleshooting, check",
-            "https://github.com/Azure/doAzureParallel/blob/master/docs/40-troubleshooting.md"
-          )
+    if (errorHandling == "stop" &&
+        length(files) != batchTasksCount) {
+      stop(
+        paste(
+          "Error handling is set to 'stop' and there are missing results due to",
+          "task failures. If this is not the correct behavior, change the errorHandling",
+          "property to 'pass' or 'remove' in the foreach object.",
+          "For more information on troubleshooting, check",
+          "https://github.com/Azure/doAzureParallel/blob/master/docs/40-troubleshooting.md"
         )
-      }
-
-      results <- foreach::foreach(i = 1:length(files), .export = c("files")) %dopar% {
-        task <- readRDS(files[i])
-
-        if (isError(task)) {
-          if (errorHandling == "stop") {
-            stop("Error found")
-          }
-          else {
-            next
-          }
-        }
-
-        task
-      }
-
-      results <- unlist(results, recursive = FALSE)
-
-      saveRDS(results, file = file.path(
-        batchTaskWorkingDirectory,
-        paste0(batchJobId, "-merge-result.rds")
-      ))
+      )
     }
-    else if (errorHandling == "pass") {
-      results <- foreach::foreach(i = 1:batchTasksCount,
-                                  .export = c("results",
-                                              "count",
-                                              "batchTasksCount",
-                                              "chunkSize")) %dopar% {
-        taskResult <-
-          file.path(
-            batchTaskWorkingDirectory,
-            "result",
-            paste0(batchJobId, "-task", i, "-result.rds")
-          )
 
-        print(taskResult)
+    results <- foreach::foreach(i = 1:batchTasksCount, .export = c("batchTaskWorkingDirectory",
+                                                                   "batchJobId",
+                                                                    "chunkSize",
+                                                                   "errorHandling",
+                                                                   "isError")) %dopar% {
+      taskFileName <-
+        file.path(
+          batchTaskWorkingDirectory,
+          "result",
+          paste0(batchJobId, "-task", i, "-result.rds")
+        )
 
-        if (file.exists(taskResult)) {
-          task <- readRDS(taskResult)
-          for (t in 1:length(task)) {
-            results[count] <- task[t]
+      if (file.exists(taskFileName)) {
+        task <- readRDS(taskFileName)
+      }
+      else {
+        if (errorHandling == "stop") {
+          stop("Error found: ", task)
+        }
+        else if (errorHandling == "pass") {
+          for (t in 1:length(chunkSize)) {
+            result[[count]] <- NA
             count <- count + 1
           }
 
-          task
+          next
+        }
+        else if (errorHandling == "remove") {
+          next
         }
         else {
-          result <- vector(list, length(chunkSize))
-          for (t in 1:length(chunkSize)) {
-            results[count] <- NA
-            count <- count + 1
-          }
-
-          result
+          stop("Unknown error handling: ", errorHandling)
         }
       }
 
-      results <- unlist(results, recursive = FALSE)
-      saveRDS(results, file = file.path(
-        batchTaskWorkingDirectory,
-        paste0(batchJobId, "-merge-result.rds")
-      ))
+      result <- vector("list", length(chunkSize))
+      if (isError(task)) {
+        if (errorHandling == "stop") {
+          stop("Error found: ", task)
+        }
+        else if (errorHandling == "pass") {
+          for (t in 1:length(chunkSize)) {
+            result[[t]] <- NA
+          }
+
+          next
+        }
+        else if (errorHandling == "remove"){
+          next
+        }
+        else {
+          stop("Unknown error handling: ", errorHandling)
+        }
+      }
+
+      result <- vector("list", length(task))
+      for (t in 1:length(task) ) {
+        if (isError(task[[t]]) && errorHandling != "pass") {
+          if (errorHandling == "remove") {
+            result[[t]] <- task[[t]]
+          }
+          else if (errorHandling == "stop") {
+            stop("Error found: ", task[[t]])
+          }
+        }
+        else {
+          result[[t]] <- task[[t]]
+        }
+      }
+
+      result
     }
+
+    results <- unlist(results, recursive = FALSE)
+
+    saveRDS(results, file = file.path(
+      batchTaskWorkingDirectory,
+      paste0(batchJobId, "-merge-result.rds")
+    ))
 
     0
   },
   error = function(e) {
+    traceback()
     print(e)
     1
   })
