@@ -1,5 +1,5 @@
 context("error handling test")
-test_that("Pass error handling test", {
+test_that("Remove error handling test", {
   testthat::skip("Live test")
   testthat::skip_on_travis()
   credentialsFileName <- "credentials.json"
