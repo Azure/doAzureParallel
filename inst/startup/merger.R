@@ -86,40 +86,24 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           "result",
           paste0(batchJobId, "-task", i, "-result.rds")
         )
+      
+      task <- tryCatch({
+        readRDS(taskFileName)
+      }, error = function(e) {
+        e  
+      })
 
-      if (file.exists(taskFileName)) {
-        task <- readRDS(taskFileName)
-      }
-      else {
-        if (errorHandling == "stop") {
-          stop("Error found: ", task)
-        }
-        else if (errorHandling == "pass") {
-          for (t in 1:length(chunkSize)) {
-            result[[count]] <- NA
-            count <- count + 1
-          }
-
-          next
-        }
-        else if (errorHandling == "remove") {
-          next
-        }
-        else {
-          stop("Unknown error handling: ", errorHandling)
-        }
-      }
-
-      result <- vector("list", length(chunkSize))
       if (isError(task)) {
         if (errorHandling == "stop") {
           stop("Error found: ", task)
         }
         else if (errorHandling == "pass") {
+          result <- vector("list", length(chunkSize))
           for (t in 1:length(chunkSize)) {
             result[[t]] <- NA
           }
 
+          result
           next
         }
         else if (errorHandling == "remove"){
@@ -132,13 +116,8 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
 
       result <- vector("list", length(task))
       for (t in 1:length(task) ) {
-        if (isError(task[[t]]) && errorHandling != "pass") {
-          if (errorHandling == "remove") {
-            result[[t]] <- task[[t]]
-          }
-          else if (errorHandling == "stop") {
-            stop("Error found: ", task[[t]])
-          }
+        if (isError(task[[t]]) && errorHandling == "stop") {
+          stop("Error found: ", task[[t]])
         }
         else {
           result[[t]] <- task[[t]]
