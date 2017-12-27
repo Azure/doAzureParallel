@@ -86,11 +86,10 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           "result",
           paste0(batchJobId, "-task", i, "-result.rds")
         )
-      
       task <- tryCatch({
         readRDS(taskFileName)
       }, error = function(e) {
-        e  
+        e
       })
 
       if (isError(task)) {
@@ -115,7 +114,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
       }
 
       result <- vector("list", length(task))
-      for (t in 1:length(task) ) {
+      for (t in 1:length(task)) {
         if (isError(task[[t]]) && errorHandling == "stop") {
           stop("Error found: ", task[[t]])
         }
