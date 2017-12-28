@@ -224,7 +224,7 @@ setHttpTraffic <- function(value = FALSE) {
   assign("bioconductor", bioconductorPackages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
   assign("argsList", argsList, .doAzureBatchGlobals)
-  
+
   if (!is.null(obj$options$azure$job)) {
     id <- obj$options$azure$job
   }
