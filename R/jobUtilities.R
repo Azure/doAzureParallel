@@ -464,6 +464,7 @@ waitForTasksToComplete <-
         }
 
         if (mergeTask$executionInfo$result == "Success") {
+          cat(" Completed.")
           break
         }
         else {

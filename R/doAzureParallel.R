@@ -223,6 +223,7 @@ setHttpTraffic <- function(value = FALSE) {
   assign("github", githubPackages, .doAzureBatchGlobals)
   assign("bioconductor", bioconductorPackages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
+  assign("it", it, .doAzureBatchGlobals)
 
   if (!is.null(obj$options$azure$job)) {
     id <- obj$options$azure$job
@@ -523,7 +524,9 @@ setHttpTraffic <- function(value = FALSE) {
       jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R > $AZ_BATCH_TASK_ID.txt"),
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i > $AZ_BATCH_TASK_ID.txt",
+        startIndex,
+        endIndex),
       args = argsList[startIndex:endIndex],
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
@@ -589,19 +592,19 @@ setHttpTraffic <- function(value = FALSE) {
             .createErrorViewerPane(id, failTasks)
           }
 
-          accumulator <- foreach::makeAccum(it)
-
-          tryCatch(
-            accumulator(results, seq(along = results)),
-            error = function(e) {
-              cat("error calling combine function:\n")
-              print(e)
-            }
-          )
-
-          # check for errors
-          errorValue <- foreach::getErrorValue(it)
-          errorIndex <- foreach::getErrorIndex(it)
+          # accumulator <- foreach::makeAccum(it)
+          #
+          # tryCatch(
+          #   accumulator(results, seq(along = results)),
+          #   error = function(e) {
+          #     cat("error calling combine function:\n")
+          #     print(e)
+          #   }
+          # )
+          #
+          # # check for errors
+          # errorValue <- foreach::getErrorValue(it)
+          # errorIndex <- foreach::getErrorIndex(it)
 
           cat(sprintf("Number of errors: %i", numberOfFailedTasks),
               fill = TRUE)
@@ -611,22 +614,24 @@ setHttpTraffic <- function(value = FALSE) {
             deleteJob(id)
           }
 
-          if (identical(obj$errorHandling, "stop") &&
-              !is.null(errorValue)) {
-            msg <-
-              sprintf(
-                paste0(
-                  "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use",
-                  " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
-                ),
-                errorIndex,
-                conditionMessage(errorValue)
-              )
-            stop(simpleError(msg, call = expr))
-          }
-          else {
-            foreach::getResult(it)
-          }
+          # if (identical(obj$errorHandling, "stop") &&
+          #     !is.null(errorValue)) {
+          #   msg <-
+          #     sprintf(
+          #       paste0(
+          #         "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use",
+          #         " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
+          #       ),
+          #       errorIndex,
+          #       conditionMessage(errorValue)
+          #     )
+          #   stop(simpleError(msg, call = expr))
+          # }
+          # else {
+          #   foreach::getResult(it)
+          # }
+
+          results
         }
       },
       error = function(ex){

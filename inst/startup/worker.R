@@ -2,6 +2,9 @@
 args <- commandArgs(trailingOnly = TRUE)
 workerErrorStatus <- 0
 
+startIndex <- as.integer(args[1])
+endIndex <- as.integer(args[2])
+
 jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 .libPaths(c(
   jobPrepDirectory,
@@ -102,6 +105,9 @@ result <- lapply(taskArgs, function(args) {
 if (!is.null(azbatchenv$gather) && length(taskArgs) > 1) {
   result <- Reduce(azbatchenv$gather, result)
 }
+
+names(result) <- seq(startIndex, endIndex)
+print(result)
 
 saveRDS(result,
         file = file.path(
