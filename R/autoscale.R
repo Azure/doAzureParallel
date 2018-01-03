@@ -20,9 +20,6 @@ autoscaleMaxCpuFormula <- paste0(
 )
 
 autoscaleQueueFormula <- paste0(
-  "$samples = $ActiveTasks.GetSamplePercent(TimeInterval_Minute * 15);",
-  "$tasks = $samples < 70 ? max(0,$ActiveTasks.GetSample(1)) : ",
-  "max( $ActiveTasks.GetSample(1), avg($ActiveTasks.GetSample(TimeInterval_Minute * 15)));",
   "$maxTasksPerNode = %s;",
   "$round = $maxTasksPerNode - 1;",
   "$targetVMs = $tasks > 0? (($tasks + $round)/ $maxTasksPerNode) : max(0, $TargetDedicated/2) + 0.5;",
@@ -31,11 +28,27 @@ autoscaleQueueFormula <- paste0(
   "$NodeDeallocationOption = taskcompletion;"
 )
 
+autoscaleQueueOnlyFormula <- paste0(
+  "$samples = $ActiveTasks.GetSamplePercent(TimeInterval_Minute * 15);",
+  "$tasks = $samples < 70 ? max(0,$ActiveTasks.GetSample(1)) : ",
+  "max( $ActiveTasks.GetSample(1), avg($ActiveTasks.GetSample(TimeInterval_Minute * 15)));",
+  autoscaleQueueFormula
+)
+
+autoscaleQueueRunningFormula <- paste0(
+  "$samples = $ActiveTasks.GetSamplePercent(TimeInterval_Minute * 15) + $RunningTasks.GetSamplePercent(TimeInterval_Minute * 15);",
+  "$tasks = $samples < 70 ? max(0, $ActiveTasks.GetSample(1) + $RunningTasks.GetSample(1))",
+  ": max($ActiveTasks.GetSample(1) + $RunningTasks.GetSample(1),",
+  "avg($ActiveTasks.GetSample(TimeInterval_Minute * 15)) + avg($RunningTasks.GetSample(TimeInterval_Minute * 15)));",
+  autoscaleQueueFormula
+)
+
 autoscaleFormula <- list(
   "WEEKEND" = autoscaleWeekendFormula,
   "WORKDAY" = autoscaleWorkdayFormula,
   "MAX_CPU" = autoscaleMaxCpuFormula,
-  "QUEUE" = autoscaleQueueFormula
+  "QUEUE" = autoscaleQueueOnlyFormula,
+  "QUEUE_AND_RUNNING" = autoscaleQueueRunningFormula
 )
 
 getAutoscaleFormula <-
@@ -59,7 +72,19 @@ getAutoscaleFormula <-
     else if (formulaName == formulas[4]) {
       return(
         sprintf(
-          autoscaleQueueFormula,
+          autoscaleQueueOnlyFormula,
+          maxTasksPerNode,
+          dedicatedMin,
+          dedicatedMax,
+          lowPriorityMin,
+          lowPriorityMax
+        )
+      )
+    }
+    else if (formulaName == formulas[5]) {
+      return(
+        sprintf(
+          autoscaleQueueRunningFormula,
           maxTasksPerNode,
           dedicatedMin,
           dedicatedMax,
