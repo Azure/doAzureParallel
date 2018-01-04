@@ -4,7 +4,7 @@
 \alias{deleteJob}
 \title{Delete a job}
 \usage{
-deleteJob(jobId)
+deleteJob(jobId, verbose = TRUE)
 }
 \arguments{
 \item{jobId}{A job id}

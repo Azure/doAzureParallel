@@ -311,20 +311,148 @@ makeCluster <-
       }
     }
 
-    if (wait && !grepl("PoolExists", response)) {
-      waitForNodesToComplete(poolConfig$name, 60000)
+    if (wait) {
+      if (!grepl("PoolExists", response)) {
+        waitForNodesToComplete(poolConfig$name, 60000)
+      }
+
+      cat("Your cluster has been registered.", fill = TRUE)
+      cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
+          fill = TRUE)
+      cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
+          fill = TRUE)
+
+      config$poolId <- poolConfig$name
+      options("az_config" = config)
+      return(getOption("az_config"))
+    } else {
+      print(
+        paste0(
+          "Because the 'wait' parameter is set to FALSE, the returned value is cluster name ",
+          "Use this returned value with getCluster(clusterName) to get the cluster when the ",
+          "cluster is created in Azure"
+        )
+      )
+      return (poolConfig$name)
+    }
+  }
+
+#' Gets the cluster from your Azure account.
+#'
+#' @param clusterName The cluster configuration that was created in \code{makeCluster}
+#'
+#' @examples
+#' \dontrun{
+#' cluster <- getCluster("myCluster")
+#' }
+#' @export
+getCluster <- function(clusterName) {
+  pool <- rAzureBatch::getPool(clusterName)
+
+  if (!is.null(pool$code) && !is.null(pool$message)) {
+    stop(sprintf("Code: %s - Message: %s", pool$code, pool$message))
+  }
+
+  if (pool$targetDedicatedNodes + pool$targetLowPriorityNodes <= 0) {
+    stop("Pool count needs to be greater than 0.")
+  }
+
+  totalNodes <-
+    pool$targetDedicatedNodes + pool$targetLowPriorityNodes
+
+  if (!is.null(pool$resizeErrors)) {
+    cat("\n")
+
+    resizeErrors <- ""
+    for (i in 1:length(pool$resizeErrors)) {
+      resizeErrors <-
+        paste0(
+          resizeErrors,
+          sprintf(
+            "Code: %s - Message: %s \n",
+            pool$resizeErrors[[i]]$code,
+            pool$resizeErrors[[i]]$message
+          )
+        )
     }
 
+    stop(resizeErrors)
+  }
+
+  nodes <- rAzureBatch::listPoolNodes(clusterName)
+
+  currentNodeCount <- 0
+  if (!is.null(nodes$value) && length(nodes$value) > 0) {
+    nodesWithFailures <- c()
+
+    for (i in 1:length(nodes$value)) {
+      # The progress total count is the number of the nodes. Each node counts as 1.
+      # If a node is not in idle, prempted, running, or start task failed, the value is
+      # less than 1. The default value is 0 because the node has not been allocated to
+      # the pool yet.
+      nodeValue <- switch(
+        nodes$value[[i]]$state,
+        "idle" = {
+          1
+        },
+        "creating" = {
+          0.25
+        },
+        "starting" = {
+          0.50
+        },
+        "waitingforstartask" = {
+          0.75
+        },
+        "starttaskfailed" = {
+          nodesWithFailures <- c(nodesWithFailures, nodes$value[[i]]$id)
+          1
+        },
+        "preempted" = {
+          1
+        },
+        "running" = {
+          1
+        },
+        0
+      )
+
+      currentNodeCount <-
+        currentNodeCount + nodeValue
+    }
+
+    if (length(nodesWithFailures) > 0) {
+      nodesFailureWarningLabel <-
+        sprintf(
+          "The following %i nodes failed while running the start task:\n",
+          length(nodesWithFailures)
+        )
+      for (i in 1:length(nodesWithFailures)) {
+        nodesFailureWarningLabel <-
+          paste0(nodesFailureWarningLabel,
+                 sprintf("%s\n", nodesWithFailures[i]))
+      }
+
+      warning(nodesFailureWarningLabel)
+    }
+  }
+
+  if (currentNodeCount >= totalNodes) {
+    config <- getOption("az_config")
     cat("Your cluster has been registered.", fill = TRUE)
     cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
         fill = TRUE)
     cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
         fill = TRUE)
 
-    config$poolId <- poolConfig$name
+    config$poolId <- clusterName
     options("az_config" = config)
     return(getOption("az_config"))
+  } else {
+    cat("Your cluster is not ready yet.", fill = TRUE)
+    return (NULL)
   }
+}
 
 #' Deletes the cluster from your Azure account.
 #'
