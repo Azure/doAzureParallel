@@ -592,19 +592,25 @@ setHttpTraffic <- function(value = FALSE) {
             .createErrorViewerPane(id, failTasks)
           }
 
-          # accumulator <- foreach::makeAccum(it)
-          #
-          # tryCatch(
-          #   accumulator(results, seq(along = results)),
-          #   error = function(e) {
-          #     cat("error calling combine function:\n")
-          #     print(e)
-          #   }
-          # )
-          #
-          # # check for errors
-          # errorValue <- foreach::getErrorValue(it)
-          # errorIndex <- foreach::getErrorIndex(it)
+          accumulator <- foreach::makeAccum(it)
+
+          tryCatch({
+              if (length(results) > 0) {
+                accumulator(results, seq(along = results))
+              }
+              else {
+                warning("Results were not found.")
+              }
+            },
+            error = function(e) {
+              cat("error calling combine function:\n")
+              print(e)
+            }
+          )
+
+          # check for errors
+          errorValue <- foreach::getErrorValue(it)
+          errorIndex <- foreach::getErrorIndex(it)
 
           cat(sprintf("Number of errors: %i", numberOfFailedTasks),
               fill = TRUE)
@@ -614,24 +620,22 @@ setHttpTraffic <- function(value = FALSE) {
             deleteJob(id)
           }
 
-          # if (identical(obj$errorHandling, "stop") &&
-          #     !is.null(errorValue)) {
-          #   msg <-
-          #     sprintf(
-          #       paste0(
-          #         "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use",
-          #         " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
-          #       ),
-          #       errorIndex,
-          #       conditionMessage(errorValue)
-          #     )
-          #   stop(simpleError(msg, call = expr))
-          # }
-          # else {
-          #   foreach::getResult(it)
-          # }
-
-          results
+          if (identical(obj$errorHandling, "stop") &&
+              !is.null(errorValue)) {
+            msg <-
+              sprintf(
+                paste0(
+                  "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use",
+                  " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
+                ),
+                errorIndex,
+                conditionMessage(errorValue)
+              )
+            stop(simpleError(msg, call = expr))
+          }
+          else {
+            foreach::getResult(it)
+          }
         }
       },
       error = function(ex){
