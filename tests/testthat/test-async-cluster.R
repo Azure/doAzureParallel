@@ -12,10 +12,14 @@ test_that("Async cluster scenario test", {
 
   # set your credentials
   doAzureParallel::setCredentials(credentialsFileName)
-  clusterName <- doAzureParallel::makeCluster(clusterFileName, wait = FALSE)
+
+  clusterName <-
+    doAzureParallel::makeCluster(clusterSetting = clusterFileName, wait = FALSE)
+
   while (is.null(getCluster(clusterName))) {
-    cat(".")
+    Sys.sleep(30)
   }
+
   cat("\ncluster is ready")
   cluster <- getCluster(clusterName)
   doAzureParallel::registerDoAzureParallel(cluster)

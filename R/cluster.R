@@ -225,34 +225,40 @@ makeCluster <-
     }
 
     if (grepl("PoolBeingDeleted", response)) {
-      pool <- rAzureBatch::getPool(poolConfig$name)
-
-      cat(sprintf(
-        paste(
-          "Cluster '%s' already exists and is being deleted.",
-          "Another cluster with the same name cannot be created",
-          "until it is deleted. Please wait for the cluster to be deleted",
-          "or create one with a different name"
-        ),
-        poolConfig$name
-      ),
-      fill = TRUE)
-
-      while (areShallowEqual(rAzureBatch::getPool(poolConfig$name)$state,
-                             "deleting")) {
-        cat(".")
-        Sys.sleep(10)
-      }
-
-      cat("\n")
-
-      response <- .addPool(
-        pool = poolConfig,
-        packages = packages,
-        environmentSettings = environmentSettings,
-        resourceFiles = resourceFiles,
-        commandLine = commandLine
+      message <- paste(
+        "Cluster '%s' already exists and is being deleted.",
+        "Another cluster with the same name cannot be created",
+        "until it is deleted. Please wait for the cluster to be deleted",
+        "or create one with a different name"
       )
+
+      if (wait == TRUE) {
+        pool <- rAzureBatch::getPool(poolConfig$name)
+
+        cat(sprintf(message,
+                    poolConfig$name),
+            fill = TRUE)
+
+        while (areShallowEqual(rAzureBatch::getPool(poolConfig$name)$state,
+                               "deleting")) {
+          cat(".")
+          Sys.sleep(10)
+        }
+
+        cat("\n")
+
+        response <- .addPool(
+          pool = poolConfig,
+          packages = packages,
+          environmentSettings = environmentSettings,
+          resourceFiles = resourceFiles,
+          commandLine = commandLine
+        )
+      } else {
+        stop(sprintf(message,
+                     poolConfig$name),
+             fill = TRUE)
+      }
     }
 
     pool <- rAzureBatch::getPool(poolConfig$name)
@@ -383,58 +389,12 @@ getCluster <- function(clusterName) {
 
   currentNodeCount <- 0
   if (!is.null(nodes$value) && length(nodes$value) > 0) {
-    nodesWithFailures <- c()
+    nodesStatus <- .processNodeCount(nodes)
 
-    for (i in 1:length(nodes$value)) {
-      # The progress total count is the number of the nodes. Each node counts as 1.
-      # If a node is not in idle, prempted, running, or start task failed, the value is
-      # less than 1. The default value is 0 because the node has not been allocated to
-      # the pool yet.
-      nodeValue <- switch(
-        nodes$value[[i]]$state,
-        "idle" = {
-          1
-        },
-        "creating" = {
-          0.25
-        },
-        "starting" = {
-          0.50
-        },
-        "waitingforstartask" = {
-          0.75
-        },
-        "starttaskfailed" = {
-          nodesWithFailures <- c(nodesWithFailures, nodes$value[[i]]$id)
-          1
-        },
-        "preempted" = {
-          1
-        },
-        "running" = {
-          1
-        },
-        0
-      )
+    currentNodeCount <- nodesStatus$currentNodeCount
+    nodesWithFailures <- nodesStatus$nodesWithFailures
 
-      currentNodeCount <-
-        currentNodeCount + nodeValue
-    }
-
-    if (length(nodesWithFailures) > 0) {
-      nodesFailureWarningLabel <-
-        sprintf(
-          "The following %i nodes failed while running the start task:\n",
-          length(nodesWithFailures)
-        )
-      for (i in 1:length(nodesWithFailures)) {
-        nodesFailureWarningLabel <-
-          paste0(nodesFailureWarningLabel,
-                 sprintf("%s\n", nodesWithFailures[i]))
-      }
-
-      warning(nodesFailureWarningLabel)
-    }
+    .showNodesFailure(nodesWithFailures)
   }
 
   if (currentNodeCount >= totalNodes) {
