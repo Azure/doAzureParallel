@@ -552,7 +552,7 @@ setHttpTraffic <- function(value = FALSE) {
 
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
-    mergeTaskId <- paste0(id, "-merge")
+    mergeTaskId <- "merge"
     .addTask(
       jobId = id,
       taskId = mergeTaskId,
@@ -572,6 +572,7 @@ setHttpTraffic <- function(value = FALSE) {
     cat(". . .")
   }
 
+  # Updating the job to terminate after all tasks are completed
   rAzureBatch::updateJob(id)
 
   if (wait) {
@@ -590,7 +591,7 @@ setHttpTraffic <- function(value = FALSE) {
           response <-
             rAzureBatch::downloadBlob(
               id,
-              paste0("result/", id, "-merge-result.rds"),
+              paste0("result/", "merge-result.rds"),
               sasToken = sasToken,
               accountName = storageCredentials$name,
               downloadPath = tempFile,

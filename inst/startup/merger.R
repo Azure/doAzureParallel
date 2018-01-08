@@ -18,6 +18,7 @@ chunkSize <- as.integer(args[2])
 errorHandling <- args[3]
 
 batchJobId <- Sys.getenv("AZ_BATCH_JOB_ID")
+batchTaskId <- Sys.getenv("AZ_BATCH_TASK_ID")
 batchJobPreparationDirectory <-
   Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 batchTaskWorkingDirectory <- Sys.getenv("AZ_BATCH_TASK_WORKING_DIR")
@@ -75,14 +76,14 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
         }
 
         for (t in 1:length(task)) {
-          results[count] <- task[t]
+          results[[count]] <- task[[t]]
           count <- count + 1
         }
       }
 
       saveRDS(results, file = file.path(
         batchTaskWorkingDirectory,
-        paste0(batchJobId, "-merge-result.rds")
+        paste0(batchTaskId, "-result.rds")
       ))
     }
     else if (errorHandling == "pass") {

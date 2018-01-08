@@ -464,7 +464,7 @@ waitForTasksToComplete <-
       # Wait for merge task to complete
       repeat {
         # Verify that the merge cloud task didn't have any errors
-        mergeTask <- rAzureBatch::getTask(jobId, paste0(jobId, "-merge"))
+        mergeTask <- rAzureBatch::getTask(jobId, "merge")
 
         # This test needs to go first as Batch service will not return an execution info as null
         if (is.null(mergeTask$executionInfo$result)) {
