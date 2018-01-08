@@ -113,36 +113,18 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
       }
 
       if (errorHandling == "stop") {
-        Filter(function(x) isError(x), task)
+        errors <- Filter(function(x) isError(x), task)
 
-        if (length(task) > 0) {
-          stop("Error found: ", task[[1]])
+        if (length(errors) > 0) {
+          stop("Error found: ", errors)
         }
-
-        task
-      }
-      else if (errorHandling == "remove") {
-        # print("Remove case:")
-        # print(task[isError(task)])
-        # Filter(function(x) isError(x), task)
-        #task[!isError(task)]
-        Filter(function(x) isError(x), task)
-      }
-      else {
-        task
       }
 
-      # result <- lapply(1:length(task), function(t){
-      #   if (isError(task[[t]]) && errorHandling == "stop") {
-      #     stop("Error found: ", task[[t]])
-      #   }
-      #   else if (isError(task[[t]]) && errorHandling == "remove") {
-      #     NA
-      #   }
-      #   else {
-      #     task[[t]]
-      #   }
-      # })
+      if (errorHandling == "remove") {
+        return(Filter(function(x) !isError(x), task))
+      }
+
+      return(task)
     }
 
     results <- unlist(results, recursive = FALSE)

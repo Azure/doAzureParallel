@@ -595,12 +595,7 @@ setHttpTraffic <- function(value = FALSE) {
           accumulator <- foreach::makeAccum(it)
 
           tryCatch({
-              if (length(results) > 0) {
-                accumulator(results, seq(along = results))
-              }
-              else {
-                warning("Results were not found.")
-              }
+              accumulator(results, seq(along = results))
             },
             error = function(e) {
               cat("error calling combine function:\n")
