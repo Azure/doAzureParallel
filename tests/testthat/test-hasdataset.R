@@ -10,7 +10,7 @@ test_that("Arguments contains data set", {
   expect_equal(hasDataSet, TRUE)
 })
 
-test_that("Arguments contains data set", {
+test_that("Arguments does not contain data set", {
   args <- seq(1:10)
   it <- iterators::iter(args)
   argsList <- as.list(it)
