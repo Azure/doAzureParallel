@@ -224,10 +224,11 @@ setHttpTraffic <- function(value = FALSE) {
   assign("bioconductor", bioconductorPackages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
 
+  isDataSet <- hasDataSet(argsList)
 
-  #if (!doesContainData(argsList)) {
+  if (!isDataSet) {
     assign("argsList", argsList, .doAzureBatchGlobals)
-  #}
+  }
 
   if (!is.null(obj$options$azure$job)) {
     id <- obj$options$azure$job
@@ -535,17 +536,24 @@ setHttpTraffic <- function(value = FALSE) {
     endIndex <- endIndices[i]
     taskId <- as.character(i)
 
+    argsList <- NULL
+    if (isDataSet) {
+      argsList <- argsList[startIndex:endIndex]
+    }
+
     .addTask(
       jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i > $AZ_BATCH_TASK_ID.txt",
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i > $AZ_BATCH_TASK_ID.txt",
         startIndex,
-        endIndex),
+        endIndex,
+        isDataSet),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
       outputFiles = obj$options$azure$outputFiles,
-      containerImage = data$containerImage
+      containerImage = data$containerImage,
+      args = argsList
     )
 
     cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")

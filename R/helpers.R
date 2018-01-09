@@ -4,12 +4,27 @@
   args <- list(...)
   .doAzureBatchGlobals <- args$envir
   dependsOn <- args$dependsOn
+  argsList <- args$args
   cloudCombine <- args$cloudCombine
   userOutputFiles <- args$outputFiles
   containerImage <- args$containerImage
 
   resultFile <- paste0(taskId, "-result", ".rds")
   accountName <- storageCredentials$name
+
+  resourceFiles <- NULL
+  if (!is.null(argsList)) {
+    envFile <- paste0(taskId, ".rds")
+    saveRDS(argsList, file = envFile)
+    rAzureBatch::uploadBlob(jobId, file.path(getwd(), envFile))
+    file.remove(envFile)
+
+    readToken <- AzureBatch::createSasToken("r", "c", jobId)
+    envFileUrl <-
+      rAzureBatch::createBlobUrl(storageCredentials$name, jobId, envFile, readToken)
+    resourceFiles <-
+      list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
+  }
 
   # Only use the download command if cloudCombine is enabled
   # Otherwise just leave it empty
@@ -112,6 +127,7 @@
     jobId,
     taskId,
     environmentSettings = list(setting, containerEnv),
+    resourceFiles = resourceFiles,
     commandLine = commands,
     dependsOn = dependsOn,
     outputFiles = outputFiles,

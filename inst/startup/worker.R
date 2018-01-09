@@ -4,6 +4,7 @@ workerErrorStatus <- 0
 
 startIndex <- as.integer(args[1])
 endIndex <- as.integer(args[2])
+isDataSet <- as.logical(as.integer(args[3]))
 
 jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 .libPaths(c(
@@ -71,7 +72,24 @@ setwd(batchTaskWorkingDirectory)
 
 azbatchenv <-
   readRDS(paste0(batchJobPreparationDirectory, "/", batchJobEnvironment))
-argsList <- azbatchenv$argsList
+
+tryCatch({
+  print("Data Set Boolean: ")
+
+  print(isDataSet)
+  print(typeof(isDataSet))
+  if (isDataSet) {
+    argsList <- readRDS(batchTaskEnvironment)
+  } else {
+    argsList <- azbatchenv$argsList
+    argsList <- argsList[startIndex:endIndex]
+  }
+
+  print(argsList)
+},
+error = function(e){
+  print(e)
+})
 
 for (package in azbatchenv$packages) {
   library(package, character.only = TRUE)
@@ -86,7 +104,7 @@ if (!is.null(azbatchenv$inputs)) {
   options("az_config" = list(container = azbatchenv$inputs))
 }
 
-result <- lapply(argsList[startIndex:endIndex], function(args) {
+result <- lapply(argsList, function(args) {
   tryCatch({
     lapply(names(args), function(n)
       assign(n, args[[n]], pos = azbatchenv$exportenv))
@@ -102,7 +120,7 @@ result <- lapply(argsList[startIndex:endIndex], function(args) {
   })
 })
 
-if (!is.null(azbatchenv$gather) && length(taskArgs) > 1) {
+if (!is.null(azbatchenv$gather) && length(argsList) > 1) {
   result <- Reduce(azbatchenv$gather, result)
 }
 
