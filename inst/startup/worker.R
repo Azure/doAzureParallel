@@ -73,23 +73,11 @@ setwd(batchTaskWorkingDirectory)
 azbatchenv <-
   readRDS(paste0(batchJobPreparationDirectory, "/", batchJobEnvironment))
 
-tryCatch({
-  print("Data Set Boolean: ")
-
-  print(isDataSet)
-  print(typeof(isDataSet))
-  if (isDataSet) {
-    argsList <- readRDS(batchTaskEnvironment)
-  } else {
-    argsList <- azbatchenv$argsList
-    argsList <- argsList[startIndex:endIndex]
-  }
-
-  print(argsList)
-},
-error = function(e){
-  print(e)
-})
+if (isDataSet) {
+  argsList <- readRDS(batchTaskEnvironment)
+} else {
+  argsList <- azbatchenv$argsList[startIndex:endIndex]
+}
 
 for (package in azbatchenv$packages) {
   library(package, character.only = TRUE)

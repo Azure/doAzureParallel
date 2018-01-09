@@ -19,7 +19,7 @@
     rAzureBatch::uploadBlob(jobId, file.path(getwd(), envFile))
     file.remove(envFile)
 
-    readToken <- AzureBatch::createSasToken("r", "c", jobId)
+    readToken <- rAzureBatch::createSasToken("r", "c", jobId)
     envFileUrl <-
       rAzureBatch::createBlobUrl(storageCredentials$name, jobId, envFile, readToken)
     resourceFiles <-
@@ -98,7 +98,7 @@
 
   commands <-
     c(commands,
-      dockerRunCommand(containerImage, rCommand, paste0("task-", taskId)))
+      dockerRunCommand(containerImage, rCommand))
 
   commands <- linuxWrapCommands(commands)
 

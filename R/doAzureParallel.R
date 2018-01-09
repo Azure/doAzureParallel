@@ -536,9 +536,9 @@ setHttpTraffic <- function(value = FALSE) {
     endIndex <- endIndices[i]
     taskId <- as.character(i)
 
-    argsList <- NULL
+    args <- NULL
     if (isDataSet) {
-      argsList <- argsList[startIndex:endIndex]
+      args <- argsList[startIndex:endIndex]
     }
 
     .addTask(
@@ -553,7 +553,7 @@ setHttpTraffic <- function(value = FALSE) {
       packages = obj$packages,
       outputFiles = obj$options$azure$outputFiles,
       containerImage = data$containerImage,
-      args = argsList
+      args = args
     )
 
     cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")
@@ -564,10 +564,9 @@ setHttpTraffic <- function(value = FALSE) {
 
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
-    mergeTaskId <- "merge"
     .addTask(
       jobId = id,
-      taskId = mergeTaskId,
+      taskId = "merge",
       rCommand = sprintf(
         "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
         length(tasks),

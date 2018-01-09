@@ -112,7 +112,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
 
       saveRDS(results, file = file.path(
         batchTaskWorkingDirectory,
-        paste0(batchJobId, "-merge-result.rds")
+        paste0(batchTaskId, "-result.rds")
       ))
     }
 
