@@ -247,6 +247,7 @@ areShallowEqual <- function(a, b) {
 hasDataSet <- function(list) {
   if (length(list) > 0) {
     for (arg in list[[1]]) {
+      # Data frames are shown as list in the foreach iterator
       if (typeof(arg) == "list") {
         return(TRUE)
       }
