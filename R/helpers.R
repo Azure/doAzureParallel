@@ -3,8 +3,8 @@
 
   args <- list(...)
   .doAzureBatchGlobals <- args$envir
-  argsList <- args$args
   dependsOn <- args$dependsOn
+  argsList <- args$args
   cloudCombine <- args$cloudCombine
   userOutputFiles <- args$outputFiles
   containerImage <- args$containerImage
@@ -12,8 +12,18 @@
   resultFile <- paste0(taskId, "-result", ".rds")
   accountName <- storageCredentials$name
 
+  resourceFiles <- NULL
   if (!is.null(argsList)) {
-    assign("argsList", argsList, .doAzureBatchGlobals)
+    envFile <- paste0(taskId, ".rds")
+    saveRDS(argsList, file = envFile)
+    rAzureBatch::uploadBlob(jobId, file.path(getwd(), envFile))
+    file.remove(envFile)
+
+    readToken <- rAzureBatch::createSasToken("r", "c", jobId)
+    envFileUrl <-
+      rAzureBatch::createBlobUrl(storageCredentials$name, jobId, envFile, readToken)
+    resourceFiles <-
+      list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
   }
 
   # Only use the download command if cloudCombine is enabled
@@ -34,22 +44,9 @@
     commands <- c(downloadCommand)
   }
 
-  envFile <- paste0(taskId, ".rds")
-  saveRDS(argsList, file = envFile)
-  rAzureBatch::uploadBlob(jobId, paste0(getwd(), "/", envFile))
-  file.remove(envFile)
-
-  sasToken <- rAzureBatch::createSasToken("r", "c", jobId)
-  writeToken <- rAzureBatch::createSasToken("w", "c", jobId)
-
-  envFileUrl <-
-    rAzureBatch::createBlobUrl(storageCredentials$name, jobId, envFile, sasToken)
-  resourceFiles <-
-    list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
-
   exitConditions <- NULL
   if (!is.null(args$dependsOn)) {
-    dependsOn <- list(taskIds = dependsOn)
+    dependsOn <- args$dependsOn
   }
   else {
     exitConditions <- list(default = list(dependencyAction = "satisfy"))
@@ -59,7 +56,7 @@
     rAzureBatch::createBlobUrl(
       storageAccount = storageCredentials$name,
       containerName = jobId,
-      sasToken = writeToken
+      sasToken = rAzureBatch::createSasToken("w", "c", jobId)
     )
 
   outputFiles <- list(
@@ -101,7 +98,7 @@
 
   commands <-
     c(commands,
-      dockerRunCommand(containerImage, rCommand, taskId))
+      dockerRunCommand(containerImage, rCommand))
 
   commands <- linuxWrapCommands(commands)
 

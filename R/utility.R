@@ -243,3 +243,16 @@ readMetadataBlob <- function(jobId) {
 areShallowEqual <- function(a, b) {
   !is.null(a) && !is.null(b) && a == b
 }
+
+hasDataSet <- function(list) {
+  if (length(list) > 0) {
+    for (arg in list[[1]]) {
+      # Data frames are shown as list in the foreach iterator
+      if (typeof(arg) == "list") {
+        return(TRUE)
+      }
+    }
+  }
+
+  return(FALSE)
+}
