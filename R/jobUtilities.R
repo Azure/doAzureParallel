@@ -258,18 +258,28 @@ getJobResult <- function(jobId) {
 #' deleteJob("job-001")
 #' }
 #' @export
-deleteJob <- function(jobId) {
-  deleteStorageContainer(jobId)
+deleteJob <- function(jobId, verbose = TRUE) {
+  deleteStorageContainer(jobId, verbose)
 
   response <- rAzureBatch::deleteJob(jobId, content = "response")
 
-  if (response$status_code == 202) {
-    cat(sprintf("Your job '%s' has been deleted.", jobId),
-        fill = TRUE)
-  } else if (response$status_code == 404) {
-    cat(sprintf("Job '%s' does not exist.", jobId),
-        fill = TRUE)
-  }
+  tryCatch({
+      httr::stop_for_status(response)
+
+      if (verbose) {
+        cat(sprintf("Your job '%s' has been deleted.", jobId),
+            fill = TRUE)
+      }
+    },
+    error = function(e) {
+      if (verbose) {
+        response <- httr::content(response, encoding = "UTF-8")
+        cat("Call: deleteJob", fill = TRUE)
+        cat(sprintf("Exception: %s", response$message$value),
+            fill = TRUE)
+      }
+    }
+  )
 }
 
 #' Terminate a job
@@ -301,7 +311,7 @@ terminateJob <- function(jobId) {
 #' @export
 waitForTasksToComplete <-
   function(jobId, timeout, errorHandling = "stop") {
-    cat("Waiting for tasks to complete. . .", fill = TRUE)
+    cat("\nWaiting for tasks to complete. . .", fill = TRUE)
 
     totalTasks <- 0
     currentTasks <- rAzureBatch::listTask(jobId)
@@ -454,7 +464,7 @@ waitForTasksToComplete <-
       # Wait for merge task to complete
       repeat {
         # Verify that the merge cloud task didn't have any errors
-        mergeTask <- rAzureBatch::getTask(jobId, paste0(jobId, "-merge"))
+        mergeTask <- rAzureBatch::getTask(jobId, "merge")
 
         # This test needs to go first as Batch service will not return an execution info as null
         if (is.null(mergeTask$executionInfo$result)) {

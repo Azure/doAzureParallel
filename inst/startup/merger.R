@@ -13,6 +13,7 @@ chunkSize <- as.integer(args[2])
 errorHandling <- args[3]
 
 batchJobId <- Sys.getenv("AZ_BATCH_JOB_ID")
+batchTaskId <- Sys.getenv("AZ_BATCH_TASK_ID")
 batchJobPreparationDirectory <-
   Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 batchTaskWorkingDirectory <- Sys.getenv("AZ_BATCH_TASK_WORKING_DIR")

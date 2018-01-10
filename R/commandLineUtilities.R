@@ -21,8 +21,6 @@ getJobPackageInstallationCommand <- function(type, packages) {
 }
 
 getPoolPackageInstallationCommand <- function(type, packages) {
-  poolInstallationCommand <- character(length(packages))
-
   sharedPackagesDirectory <- "/mnt/batch/tasks/shared/R/packages"
 
   libPathsCommand <- paste0('\'.libPaths( c( \\\"',
@@ -35,33 +33,33 @@ getPoolPackageInstallationCommand <- function(type, packages) {
 
   # At this point we cannot use install_cran.R and install_github.R because they are not yet available.
   if (type == "cran") {
-    script <-
+    poolInstallationCommand <-
       paste(installCommand,
             paste("-e",
                   libPathsCommand,
-                  "install.packages(args[1])\' %s")
+                  "install.packages(args)\'")
             )
   }
   else if (type == "github") {
-    script <-
+    poolInstallationCommand <-
       paste(
         installCommand,
         paste(
           "-e",
           libPathsCommand,
-          "devtools::install_github(args[1])\' %s"
+          "devtools::install_github(args)\'"
         )
       )
   }
   else if (type == "bioconductor") {
-    script <- "Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R %s"
+    poolInstallationCommand <- "Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R"
   }
   else {
     stop("Using an incorrect package source")
   }
 
   for (i in 1:length(packages)) {
-    poolInstallationCommand[i] <- sprintf(script, packages[i])
+    poolInstallationCommand <- paste(poolInstallationCommand, packages[i])
   }
 
   poolInstallationCommand
