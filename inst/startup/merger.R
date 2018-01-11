@@ -85,7 +85,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
         file.path(
           batchTaskWorkingDirectory,
           "result",
-          paste0(batchJobId, "-task", i, "-result.rds")
+          paste0(i, "-result.rds")
         )
       task <- tryCatch({
         readRDS(taskFileName)
@@ -105,7 +105,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           result
           next
         }
-        else if (errorHandling == "remove"){
+        else if (errorHandling == "remove") {
           next
         }
         else {
@@ -132,7 +132,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
 
     saveRDS(results, file = file.path(
       batchTaskWorkingDirectory,
-      paste0(batchJobId, "-merge-result.rds")
+      "merge-result.rds"
     ))
 
     0
