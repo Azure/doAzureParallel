@@ -5,7 +5,7 @@ test_that("Async cluster scenario test", {
   testthat::skip("Live test")
   testthat::skip_on_travis()
   credentialsFileName <- "credentials.json"
-  clusterFileName <- "test_cluster.json"
+  clusterFileName <- "cluster.json"
 
   doAzureParallel::generateCredentialsConfig(credentialsFileName)
   doAzureParallel::generateClusterConfig(clusterFileName)
@@ -13,16 +13,22 @@ test_that("Async cluster scenario test", {
   # set your credentials
   doAzureParallel::setCredentials(credentialsFileName)
 
-  clusterName <-
+  cluster <-
     doAzureParallel::makeCluster(clusterSetting = clusterFileName, wait = FALSE)
 
-  while (is.null(getCluster(clusterName))) {
-    Sys.sleep(30)
-  }
-
-  cat("\ncluster is ready")
-  cluster <- getCluster(clusterName)
+  cluster <- getCluster(cluster$poolId)
   doAzureParallel::registerDoAzureParallel(cluster)
+
+  '%dopar%' <- foreach::'%dopar%'
+  res <-
+    foreach::foreach(i = 1:4) %dopar% {
+      mean(1:3)
+    }
+
+  res
+
+  testthat::expect_equal(length(res), 4)
+  testthat::expect_equal(res, list(2, 2, 2, 2))
 
   stopCluster(cluster)
 })

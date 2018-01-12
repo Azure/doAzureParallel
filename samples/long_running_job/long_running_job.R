@@ -11,7 +11,7 @@ install_github("azure/doazureparallel")
 library(doAzureParallel)
 
 credentialsFileName <- "credentials.json"
-clusterFileName <- "test_cluster.json"
+clusterFileName <- "cluster.json"
 
 # generate a credentials json file
 generateCredentialsConfig(credentialsFileName)

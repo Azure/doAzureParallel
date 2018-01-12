@@ -239,8 +239,7 @@ makeCluster <-
                     poolConfig$name),
             fill = TRUE)
 
-        while (areShallowEqual(rAzureBatch::getPool(poolConfig$name)$state,
-                               "deleting")) {
+        while (rAzureBatch::getPool(poolConfig$name)$state == "deleting") {
           cat(".")
           Sys.sleep(10)
         }
@@ -321,26 +320,9 @@ makeCluster <-
       if (!grepl("PoolExists", response)) {
         waitForNodesToComplete(poolConfig$name, 60000)
       }
-
-      cat("Your cluster has been registered.", fill = TRUE)
-      cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
-          fill = TRUE)
-      cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
-          fill = TRUE)
-
-      config$poolId <- poolConfig$name
-      options("az_config" = config)
-      return(getOption("az_config"))
-    } else {
-      print(
-        paste0(
-          "Because the 'wait' parameter is set to FALSE, the returned value is cluster name ",
-          "Use this returned value with getCluster(clusterName) to get the cluster when the ",
-          "cluster is created in Azure"
-        )
-      )
-      return (poolConfig$name)
     }
+
+    return(getCluster(poolConfig$name))
   }
 
 #' Gets the cluster from your Azure account.
@@ -352,7 +334,7 @@ makeCluster <-
 #' cluster <- getCluster("myCluster")
 #' }
 #' @export
-getCluster <- function(clusterName) {
+getCluster <- function(clusterName, verbose = TRUE) {
   pool <- rAzureBatch::getPool(clusterName)
 
   if (!is.null(pool$code) && !is.null(pool$message)) {
@@ -360,11 +342,8 @@ getCluster <- function(clusterName) {
   }
 
   if (pool$targetDedicatedNodes + pool$targetLowPriorityNodes <= 0) {
-    stop("Pool count needs to be greater than 0.")
+    stop("Cluster node count needs to be greater than 0.")
   }
-
-  totalNodes <-
-    pool$targetDedicatedNodes + pool$targetLowPriorityNodes
 
   if (!is.null(pool$resizeErrors)) {
     cat("\n")
@@ -387,31 +366,39 @@ getCluster <- function(clusterName) {
 
   nodes <- rAzureBatch::listPoolNodes(clusterName)
 
-  currentNodeCount <- 0
   if (!is.null(nodes$value) && length(nodes$value) > 0) {
-    nodesStatus <- .processNodeCount(nodes)
+    nodesInfo <- .processNodeCount(nodes)
+    nodesState <- nodesInfo$nodesState
+    nodesWithFailures <- nodesInfo$nodesWithFailures
 
-    currentNodeCount <- nodesStatus$currentNodeCount
-    nodesWithFailures <- nodesStatus$nodesWithFailures
+    if (verbose == TRUE) {
+      cat("\nnodes:", fill = TRUE)
+      cat(sprintf("\tidle:                %s", nodesState$idle), fill = TRUE)
+      cat(sprintf("\tcreating:            %s", nodesState$creating), fill = TRUE)
+      cat(sprintf("\tstarting:            %s", nodesState$starting), fill = TRUE)
+      cat(sprintf("\twaitingforstarttask: %s", nodesState$waitingforstarttask), fill = TRUE)
+      cat(sprintf("\tstarttaskfailed:     %s", nodesState$starttaskfailed), fill = TRUE)
+      cat(sprintf("\tpreempted:           %s", nodesState$preempted), fill = TRUE)
+      cat(sprintf("\trunning:             %s", nodesState$running), fill = TRUE)
+    }
 
     .showNodesFailure(nodesWithFailures)
   }
 
-  if (currentNodeCount >= totalNodes) {
-    config <- getOption("az_config")
-    cat("Your cluster has been registered.", fill = TRUE)
-    cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
-        fill = TRUE)
-    cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
-        fill = TRUE)
+  cat("Your cluster has been registered.", fill = TRUE)
 
-    config$poolId <- clusterName
-    options("az_config" = config)
-    return(getOption("az_config"))
-  } else {
-    cat("Your cluster is not ready yet.", fill = TRUE)
-    return (NULL)
-  }
+  config <- getOption("az_config")
+  config$nodesState <- nodesState
+  config$targetDedicatedNodes <- pool$targetDedicatedNodes
+  config$targetLowPriorityNodes <- pool$targetLowPriorityNodes
+  cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
+      fill = TRUE)
+  cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
+      fill = TRUE)
+
+  config$poolId <- clusterName
+  options("az_config" = config)
+  return(getOption("az_config"))
 }
 
 #' Deletes the cluster from your Azure account.
