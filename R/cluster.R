@@ -322,7 +322,14 @@ makeCluster <-
       }
     }
 
-    return(getCluster(poolConfig$name))
+    cat("Your cluster has been registered.", fill = TRUE)
+    cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
+        fill = TRUE)
+    cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
+        fill = TRUE)
+    config$poolId <- poolConfig$name
+    options("az_config" = config)
+    return(getOption("az_config"))
   }
 
 #' Gets the cluster from your Azure account.
@@ -388,7 +395,6 @@ getCluster <- function(clusterName, verbose = TRUE) {
   cat("Your cluster has been registered.", fill = TRUE)
 
   config <- getOption("az_config")
-  config$nodesState <- nodesState
   config$targetDedicatedNodes <- pool$targetDedicatedNodes
   config$targetLowPriorityNodes <- pool$targetLowPriorityNodes
   cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
@@ -398,7 +404,7 @@ getCluster <- function(clusterName, verbose = TRUE) {
 
   config$poolId <- clusterName
   options("az_config" = config)
-  return(getOption("az_config"))
+  return (config)
 }
 
 #' Deletes the cluster from your Azure account.
