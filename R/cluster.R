@@ -255,8 +255,7 @@ makeCluster <-
         )
       } else {
         stop(sprintf(message,
-                     poolConfig$name),
-             fill = TRUE)
+                     poolConfig$name))
       }
     }
 
