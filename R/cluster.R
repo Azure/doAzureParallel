@@ -406,6 +406,77 @@ getCluster <- function(clusterName, verbose = TRUE) {
   return (config)
 }
 
+#' Get a list of clusters by state from the given filter
+#'
+#' @param filter A filter containing cluster state
+#'
+#' @examples
+#' \dontrun{
+#' getClusterList()
+#' }
+#' @export
+getClusterList <- function(filter = NULL) {
+  filterClause <- ""
+
+  if (!is.null(filter)) {
+    if (!is.null(filter$state)) {
+      for (i in 1:length(filter$state)) {
+        filterClause <-
+          paste0(filterClause,
+                 sprintf("state eq '%s'", filter$state[i]),
+                 " or ")
+      }
+
+      filterClause <-
+        substr(filterClause, 1, nchar(filterClause) - 3)
+    }
+  }
+
+  pools <-
+    rAzureBatch::listPools(
+      query = list("$filter" = filterClause, "$select" = "id,state,allocationState,vmSize,currentDedicatedNodes,targetDedicatedNodes,currentLowPriorityNodes,targetLowPriorityNodes")
+    )
+
+  count <- length(pools$value)
+  id <- character(count)
+  state <- character(count)
+  allocationState <- character(count)
+  vmSize <- integer(count)
+  currentDedicatedNodes <- integer(count)
+  targetDedicatedNodes <- integer(count)
+  currentLowPriorityNodes <- integer(count)
+  targetLowPriorityNodes <- integer(count)
+
+  if (count > 0) {
+    if (is.null(pools$value[[1]]$id)) {
+      stop(pools$value)
+    }
+    for (j in 1:length(pools$value)) {
+      id[j] <- pools$value[[j]]$id
+      state[j] <- pools$value[[j]]$state
+      allocationState[j] <- pools$value[[j]]$allocationState
+      vmSize[j] <- pools$value[[j]]$vmSize
+      currentDedicatedNodes[j] <- pools$value[[j]]$currentDedicatedNodes
+      targetDedicatedNodes[j] <- pools$value[[j]]$targetDedicatedNodes
+      currentLowPriorityNodes[j] <- pools$value[[j]]$currentLowPriorityNodes
+      targetLowPriorityNodes[j] <- pools$value[[j]]$targetLowPriorityNodes
+    }
+  }
+
+  return (
+    data.frame(
+      Id = id,
+      State = state,
+      AllocationState = allocationState,
+      VmSize = vmSize,
+      CurrentDedicatedNodes = currentDedicatedNodes,
+      targetDedicatedNodes = targetDedicatedNodes,
+      currentLowPriorityNodes = currentLowPriorityNodes,
+      targetLowPriorityNodes = targetLowPriorityNodes
+    )
+  )
+}
+
 #' Deletes the cluster from your Azure account.
 #'
 #' @param cluster The cluster configuration that was created in \code{makeCluster}
