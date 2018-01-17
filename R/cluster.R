@@ -434,7 +434,11 @@ getClusterList <- function(filter = NULL) {
 
   pools <-
     rAzureBatch::listPools(
-      query = list("$filter" = filterClause, "$select" = "id,state,allocationState,vmSize,currentDedicatedNodes,targetDedicatedNodes,currentLowPriorityNodes,targetLowPriorityNodes")
+      query = list(
+        "$filter" = filterClause,
+        "$select" = "id,state,allocationState,vmSize,currentDedicatedNodes" +
+                    ",targetDedicatedNodes,currentLowPriorityNodes,targetLowPriorityNodes"
+      )
     )
 
   count <- length(pools$value)
