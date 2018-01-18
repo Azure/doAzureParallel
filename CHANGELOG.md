@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.6.2] 2018-01-05
+### Added
+- Support for users to create cluster asynchronously using makeCluster with wait = TRUE parameter and use getCluster to check cluster creation progress
+
 ## [0.6.1] 2017-12-05
 ### Added
 - Support for users to use programmatically generated credentials and cluster config

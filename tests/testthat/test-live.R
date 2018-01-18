@@ -5,7 +5,7 @@ test_that("Basic scenario test", {
   testthat::skip("Live test")
   testthat::skip_on_travis()
   credentialsFileName <- "credentials.json"
-  clusterFileName <- "test_cluster.json"
+  clusterFileName <- "cluster.json"
 
   doAzureParallel::generateCredentialsConfig(credentialsFileName)
   doAzureParallel::generateClusterConfig(clusterFileName)

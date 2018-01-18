@@ -56,63 +56,16 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     nodes <- rAzureBatch::listPoolNodes(poolId)
 
     if (!is.null(nodes$value) && length(nodes$value) > 0) {
-      nodesWithFailures <- c()
-      currentProgressBarCount <- 0
+      nodesInfo <- .processNodeCount(nodes)
 
-      for (i in 1:length(nodes$value)) {
-        # The progress total count is the number of the nodes. Each node counts as 1.
-        # If a node is not in idle, prempted, running, or start task failed, the value is
-        # less than 1. The default value is 0 because the node has not been allocated to
-        # the pool yet.
-        nodeValue <- switch(
-          nodes$value[[i]]$state,
-          "idle" = {
-            1
-          },
-          "creating" = {
-            0.25
-          },
-          "starting" = {
-            0.50
-          },
-          "waitingforstartask" = {
-            0.75
-          },
-          "starttaskfailed" = {
-            nodesWithFailures <- c(nodesWithFailures, nodes$value[[i]]$id)
-            1
-          },
-          "preempted" = {
-            1
-          },
-          "running" = {
-            1
-          },
-          0
-        )
-
-        currentProgressBarCount <-
-          currentProgressBarCount + nodeValue
-      }
+      currentProgressBarCount <- nodesInfo$currentNodeCount
+      nodesWithFailures <- nodesInfo$nodesWithFailures
 
       if (currentProgressBarCount >= pb$getVal()) {
         setTxtProgressBar(pb, currentProgressBarCount)
       }
 
-      if (length(nodesWithFailures) > 0) {
-        nodesFailureWarningLabel <-
-          sprintf(
-            "The following %i nodes failed while running the start task:\n",
-            length(nodesWithFailures)
-          )
-        for (i in 1:length(nodesWithFailures)) {
-          nodesFailureWarningLabel <-
-            paste0(nodesFailureWarningLabel,
-                   sprintf("%s\n", nodesWithFailures[i]))
-        }
-
-        warning(nodesFailureWarningLabel)
-      }
+      .showNodesFailure(nodesWithFailures)
     }
 
     if (pb$getVal() >= totalNodes) {
@@ -125,6 +78,82 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
 
   rAzureBatch::deletePool(poolId)
   stop("Timeout expired")
+}
+
+.processNodeCount <- function(nodes) {
+  nodesWithFailures <- c()
+  currentNodeCount <- 0
+  nodesState <- list(
+    idle = as.integer(0),
+    creating = as.integer(0),
+    starting = as.integer(0),
+    waitingforstarttask = as.integer(0),
+    starttaskfailed = as.integer(0),
+    preempted = as.integer(0),
+    running = as.integer(0),
+    other = as.integer(0)
+  )
+
+  for (i in 1:length(nodes$value)) {
+    state <- nodes$value[[i]]$state
+    if (is.null(nodesState[[state]])) {
+      nodesState[["other"]] <- nodesState[["other"]] + 1
+    } else {
+      nodesState[[state]] <- nodesState[[state]] + as.integer(1)
+    }
+
+    # The progress total count is the number of the nodes. Each node counts as 1.
+    # If a node is not in idle, prempted, running, or start task failed, the value is
+    # less than 1. The default value is 0 because the node has not been allocated to
+    # the pool yet.
+    nodeValue <- switch(
+      nodes$value[[i]]$state,
+      "idle" = {
+        1
+      },
+      "creating" = {
+        0.25
+      },
+      "starting" = {
+        0.50
+      },
+      "waitingforstarttask" = {
+        0.75
+      },
+      "starttaskfailed" = {
+        nodesWithFailures <- c(nodesWithFailures, nodes$value[[i]]$id)
+        1
+      },
+      "preempted" = {
+        1
+      },
+      "running" = {
+        1
+      },
+      0
+    )
+
+    currentNodeCount <-
+      currentNodeCount + nodeValue
+  }
+  return(list(currentNodeCount = currentNodeCount, nodesWithFailures = nodesWithFailures, nodesState = nodesState))
+}
+
+.showNodesFailure <- function(nodesWithFailures) {
+  if (length(nodesWithFailures) > 0) {
+    nodesFailureWarningLabel <-
+      sprintf(
+        "The following %i nodes failed while running the start task:\n",
+        length(nodesWithFailures)
+      )
+    for (i in 1:length(nodesWithFailures)) {
+      nodesFailureWarningLabel <-
+        paste0(nodesFailureWarningLabel,
+               sprintf("%s\n", nodesWithFailures[i]))
+    }
+
+    warning(nodesFailureWarningLabel)
+  }
 }
 
 #' Utility function for creating an output file
@@ -238,10 +267,6 @@ readMetadataBlob <- function(jobId) {
   } else {
     return(NULL)
   }
-}
-
-areShallowEqual <- function(a, b) {
-  !is.null(a) && !is.null(b) && a == b
 }
 
 hasDataSet <- function(list) {

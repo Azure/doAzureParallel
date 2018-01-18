@@ -4,7 +4,7 @@
 \alias{deleteStorageContainer}
 \title{Delete a storage container from Azure Storage}
 \usage{
-deleteStorageContainer(container)
+deleteStorageContainer(container, verbose = TRUE)
 }
 \arguments{
 \item{container}{The name of the container}
