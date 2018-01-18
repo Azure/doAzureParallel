@@ -248,6 +248,7 @@
       startTask = startTask,
       virtualMachineConfiguration = virtualMachineConfiguration,
       enableAutoScale = TRUE,
+      metadata = list(list(name = "origin", value = "doAzureParallel")),
       autoscaleFormula = getAutoscaleFormula(
         pool$poolSize$autoscaleFormula,
         pool$poolSize$dedicatedNodes$min,

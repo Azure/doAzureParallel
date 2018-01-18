@@ -4,7 +4,7 @@
 \alias{getCluster}
 \title{Gets the cluster from your Azure account.}
 \usage{
-getCluster(clusterName)
+getCluster(clusterName, verbose = TRUE)
 }
 \arguments{
 \item{clusterName}{The cluster configuration that was created in \code{makeCluster}}

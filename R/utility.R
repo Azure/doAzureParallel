@@ -56,10 +56,10 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     nodes <- rAzureBatch::listPoolNodes(poolId)
 
     if (!is.null(nodes$value) && length(nodes$value) > 0) {
-      nodesStatus <- .processNodeCount(nodes)
+      nodesInfo <- .processNodeCount(nodes)
 
-      currentProgressBarCount <- nodesStatus$currentNodeCount
-      nodesWithFailures <- nodesStatus$nodesWithFailures
+      currentProgressBarCount <- nodesInfo$currentNodeCount
+      nodesWithFailures <- nodesInfo$nodesWithFailures
 
       if (currentProgressBarCount >= pb$getVal()) {
         setTxtProgressBar(pb, currentProgressBarCount)
@@ -83,7 +83,25 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
 .processNodeCount <- function(nodes) {
   nodesWithFailures <- c()
   currentNodeCount <- 0
+  nodesState <- list(
+    idle = as.integer(0),
+    creating = as.integer(0),
+    starting = as.integer(0),
+    waitingforstarttask = as.integer(0),
+    starttaskfailed = as.integer(0),
+    preempted = as.integer(0),
+    running = as.integer(0),
+    other = as.integer(0)
+  )
+
   for (i in 1:length(nodes$value)) {
+    state <- nodes$value[[i]]$state
+    if (is.null(nodesState[[state]])) {
+      nodesState[["other"]] <- nodesState[["other"]] + 1
+    } else {
+      nodesState[[state]] <- nodesState[[state]] + as.integer(1)
+    }
+
     # The progress total count is the number of the nodes. Each node counts as 1.
     # If a node is not in idle, prempted, running, or start task failed, the value is
     # less than 1. The default value is 0 because the node has not been allocated to
@@ -99,7 +117,7 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
       "starting" = {
         0.50
       },
-      "waitingforstartask" = {
+      "waitingforstarttask" = {
         0.75
       },
       "starttaskfailed" = {
@@ -118,7 +136,7 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     currentNodeCount <-
       currentNodeCount + nodeValue
   }
-  return(list(currentNodeCount = currentNodeCount, nodesWithFailures = nodesWithFailures))
+  return(list(currentNodeCount = currentNodeCount, nodesWithFailures = nodesWithFailures, nodesState = nodesState))
 }
 
 .showNodesFailure <- function(nodesWithFailures) {
@@ -249,8 +267,4 @@ readMetadataBlob <- function(jobId) {
   } else {
     return(NULL)
   }
-}
-
-areShallowEqual <- function(a, b) {
-  !is.null(a) && !is.null(b) && a == b
 }
