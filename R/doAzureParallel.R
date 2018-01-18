@@ -224,6 +224,12 @@ setHttpTraffic <- function(value = FALSE) {
   assign("bioconductor", bioconductorPackages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
 
+  isDataSet <- hasDataSet(argsList)
+
+  if (!isDataSet) {
+    assign("argsList", argsList, .doAzureBatchGlobals)
+  }
+
   if (!is.null(obj$options$azure$job)) {
     id <- obj$options$azure$job
   }
@@ -528,18 +534,26 @@ setHttpTraffic <- function(value = FALSE) {
   tasks <- lapply(1:length(endIndices), function(i) {
     startIndex <- startIndices[i]
     endIndex <- endIndices[i]
-    taskId <- paste0(id, "-task", i)
+    taskId <- as.character(i)
+
+    args <- NULL
+    if (isDataSet) {
+      args <- argsList[startIndex:endIndex]
+    }
 
     .addTask(
       jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R > $AZ_BATCH_TASK_ID.txt"),
-      args = argsList[startIndex:endIndex],
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i > $AZ_BATCH_TASK_ID.txt",
+        startIndex,
+        endIndex,
+        isDataSet),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
       outputFiles = obj$options$azure$outputFiles,
-      containerImage = data$containerImage
+      containerImage = data$containerImage,
+      args = args
     )
 
     cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")
@@ -548,14 +562,11 @@ setHttpTraffic <- function(value = FALSE) {
     return(taskId)
   })
 
-  rAzureBatch::updateJob(id)
-
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
-    mergeTaskId <- paste0(id, "-merge")
     .addTask(
       jobId = id,
-      taskId = mergeTaskId,
+      taskId = "merge",
       rCommand = sprintf(
         "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
         length(tasks),
@@ -564,13 +575,16 @@ setHttpTraffic <- function(value = FALSE) {
       ),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
-      dependsOn = tasks,
+      dependsOn = list(taskIdRanges = list(list(start = 1, end = length(tasks)))),
       cloudCombine = cloudCombine,
       outputFiles = obj$options$azure$outputFiles,
       containerImage = data$containerImage
     )
     cat(". . .")
   }
+
+  # Updating the job to terminate after all tasks are completed
+  rAzureBatch::updateJob(id)
 
   if (wait) {
     if (!is.null(obj$packages) ||
@@ -588,7 +602,7 @@ setHttpTraffic <- function(value = FALSE) {
           response <-
             rAzureBatch::downloadBlob(
               id,
-              paste0("result/", id, "-merge-result.rds"),
+              paste0("result/", "merge-result.rds"),
               sasToken = sasToken,
               accountName = storageCredentials$name,
               downloadPath = tempFile,
