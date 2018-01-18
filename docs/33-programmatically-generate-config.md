@@ -17,30 +17,14 @@ You can generate credentials by creating a R object as shown below:
       "name" = "storageaccountname",
       "key" = "storageaccountkey"
     ),
-    "githubAuthenticationToken" = ""
+    "githubAuthenticationToken" = "",
+    "dockerAuthentication" = list("username" = "",
+                                  "password" = "",
+                                  "registry" = "")
   )
   doAzureParallel::setCredentials(credentials)
 ```
 
-If using a private docker registry, add the docker authentication section
-
-```R
-  credentials <- list(
-    "batchAccount" = list(
-      "name" = "batchaccountname",
-      "key" = "batchaccountkey",
-      "url" = "https://batchaccountname.region.batch.azure.com"
-    ),
-    "storageAccount" = list(
-      "name" = "storageaccountname",
-      "key" = "storageaccountkey"
-    ),
-    "githubAuthenticationToken" = "",
-    "dockerAuthentication" = list("username" = "registryusername",
-                                  "password" = "registrypassword",
-                                  "registry" = "registryurl")
-  )
-```
 
 ## Programmatically generated cluster configuration
 
