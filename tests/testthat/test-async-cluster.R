@@ -17,6 +17,10 @@ test_that("Async cluster scenario test", {
     doAzureParallel::makeCluster(clusterSetting = clusterFileName, wait = FALSE)
 
   cluster <- getCluster(cluster$poolId)
+  getClusterList()
+  filter <- filter <- list()
+  filter$state <- c("active", "deleting")
+  getClusterList(filter)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'

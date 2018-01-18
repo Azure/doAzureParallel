@@ -386,6 +386,7 @@ getCluster <- function(clusterName, verbose = TRUE) {
       cat(sprintf("\tstarttaskfailed:     %s", nodesState$starttaskfailed), fill = TRUE)
       cat(sprintf("\tpreempted:           %s", nodesState$preempted), fill = TRUE)
       cat(sprintf("\trunning:             %s", nodesState$running), fill = TRUE)
+      cat(sprintf("\tother:               %s", nodesState$other), fill = TRUE)
     }
 
     .showNodesFailure(nodesWithFailures)

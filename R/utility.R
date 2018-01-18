@@ -90,11 +90,17 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     waitingforstarttask = as.integer(0),
     starttaskfailed = as.integer(0),
     preempted = as.integer(0),
-    running = as.integer(0)
+    running = as.integer(0),
+    other = as.integer(0)
   )
 
   for (i in 1:length(nodes$value)) {
-    nodesState[[nodes$value[[i]]$state]] <- nodesState[[nodes$value[[i]]$state]] + as.integer(1)
+    state <- nodes$value[[i]]$state
+    if (is.null(nodesState[[state]])) {
+      nodesState[["other"]] <- nodesState[["other"]] + 1
+    } else {
+      nodesState[[state]] <- nodesState[[state]] + as.integer(1)
+    }
 
     # The progress total count is the number of the nodes. Each node counts as 1.
     # If a node is not in idle, prempted, running, or start task failed, the value is
