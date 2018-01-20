@@ -171,24 +171,17 @@ getJobResult <- function(jobId) {
   metadata <- readMetadataBlob(jobId)
 
   if (!is.null(metadata)) {
-    if (metadata$enableCloudCombine == "FALSE") {
-      cat("enalbeCloudCombine is set to FALSE, no job merge result is available",
-          fill = TRUE)
-
-      return()
-    }
-
     if (metadata$wait == "FALSE") {
       job <- getJob(jobId, verbose = FALSE)
 
       if (job$jobState == "active") {
         stop(sprintf(
-          "job %s is not finished yet, please try again later",
+          "job %s has not finished yet, please try again later",
           job$jobId
         ))
       } else if (job$jobState != "completed") {
         stop(sprintf(
-          "job %s is %s state, no job result is available",
+          "job %s is in %s state, no job result is available",
           job$jobId,
           job$jobState
         ))
@@ -212,6 +205,66 @@ getJobResult <- function(jobId) {
           }
         }
       }
+    }
+
+    if (metadata$enableCloudCombine == "FALSE") {
+      cat("enalbeCloudCombine is set to FALSE, we will merge job result locally",
+          fill = TRUE)
+      inputs <- FALSE
+      if (!exists("inputs", envir = .doAzureBatchGlobals)) {
+        storageCredentials <- rAzureBatch::getStorageCredentials()
+        sasToken <- rAzureBatch::createSasToken("r", "c", inputs)
+
+        assign(
+          "inputs",
+          list(name = storageCredentials$name,
+               sasToken = sasToken),
+          .doAzureBatchGlobals
+        )
+      }
+      xmlResponse <- rAzureBatch::listBlobs(containerName = jobId, prefix = 'result/')
+
+      blobs <- xml2::xml_text(xml2::xml_find_all(xmlResponse, './/Blob//Name'))
+
+      blobs
+      inputs <- get("inputs", envir = .doAzureBatchGlobals)
+      accountName <- inputs$name
+      sasToken <-  inputs$sasToken
+
+      # Create an iterator for all the blobs
+      itx <- iter(blobs)
+
+      # Iterate over each blob and merge the results locally
+      output.final <- foreach(blobPath = itx) %do% {
+        # Create a temporary file on disk
+        tempFile <- tempfile(fileext = ".rds")
+
+        # Create the temporary file's directory if it doesn't exist
+        dir.create(dirname(tempFile), showWarnings = FALSE)
+
+        # Download the blob to the temporary file
+        rAzureBatch::downloadBlob(
+          containerName = opt$job,
+          blobName = blobPath,
+          downloadPath = tempFile,
+          sasToken = sasToken,
+          accountName = accountName,
+          overwrite = TRUE)
+        cat(tempFile)
+        cat("\r\n")
+        # Read the rds as an object in memory
+        #results <- readRDS(tempFile)
+      #
+      #   # Delete the temporary file
+      #   file.remove(tempFile)
+      #
+      #   # Return the object
+      #   return(results)
+      }
+
+      #output.final
+      #return(output.final)
+      return()
     }
   }
 
