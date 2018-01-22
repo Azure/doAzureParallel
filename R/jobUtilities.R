@@ -227,9 +227,6 @@ getJobResult <- function(jobId) {
       blobs <- xml2::xml_text(xml2::xml_find_all(xmlResponse, './/Blob//Name'))
 
       blobs
-      inputs <- get("inputs", envir = .doAzureBatchGlobals)
-      accountName <- inputs$name
-      sasToken <-  inputs$sasToken
 
       # Create an iterator for all the blobs
       itx <- iter(blobs)
@@ -244,27 +241,24 @@ getJobResult <- function(jobId) {
 
         # Download the blob to the temporary file
         rAzureBatch::downloadBlob(
-          containerName = opt$job,
+          containerName = jobId,
           blobName = blobPath,
           downloadPath = tempFile,
-          sasToken = sasToken,
-          accountName = accountName,
           overwrite = TRUE)
         cat(tempFile)
         cat("\r\n")
-        # Read the rds as an object in memory
-        #results <- readRDS(tempFile)
-      #
-      #   # Delete the temporary file
-      #   file.remove(tempFile)
-      #
-      #   # Return the object
-      #   return(results)
+        #Read the rds as an object in memory
+        results <- readRDS(tempFile)
+
+        # Delete the temporary file
+        file.remove(tempFile)
+
+        # Return the object
+        return(results)
       }
 
-      #output.final
-      #return(output.final)
-      return()
+      output.final
+      return(output.final)
     }
   }
 
@@ -287,7 +281,7 @@ getJobResult <- function(jobId) {
 
     results <- rAzureBatch::downloadBlob(
       jobId,
-      paste0("result/", jobId, "-merge-result.rds"),
+      "result/merge-result.rds",
       downloadPath = tempFile,
       overwrite = TRUE
     )
