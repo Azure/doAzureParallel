@@ -210,7 +210,7 @@ getJobResult <- function(jobId) {
       results <- vector("list", job$tasks$completed)
       count <- 1
 
-      for(i in 1:job$tasks$completed) {
+      for (i in 1:job$tasks$completed) {
         # Create a temporary file on disk
         tempFile <- tempfile(fileext = ".rds")
 
