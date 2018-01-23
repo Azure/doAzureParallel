@@ -22,7 +22,6 @@ test_that("merge job result locally test", {
       .errorhandling = "pass",
       .options.azure = list(
         enableCloudCombine = FALSE,
-        autoDeleteJob = FALSE,
         wait = FALSE
       )
     ) %dopar% {
@@ -38,4 +37,6 @@ test_that("merge job result locally test", {
     testthat::expect_equal(res[[i]],
                            i)
   }
+
+  stopCluster(cluster)
 })
