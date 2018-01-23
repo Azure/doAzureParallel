@@ -171,48 +171,46 @@ getJobResult <- function(jobId) {
   metadata <- readMetadataBlob(jobId)
 
   if (!is.null(metadata)) {
-    if (metadata$wait == "FALSE") {
-      job <- getJob(jobId, verbose = FALSE)
+    job <- getJob(jobId, verbose = FALSE)
 
-      if (job$jobState == "active") {
-        stop(sprintf(
-          "job %s has not finished yet, please try again later",
-          job$jobId
-        ))
-      } else if (job$jobState != "completed") {
-        stop(sprintf(
-          "job %s is in %s state, no job result is available",
-          job$jobId,
-          job$jobState
-        ))
-      }
+    if (job$jobState == "active") {
+      stop(sprintf("job %s has not finished yet, please try again later",
+                   job$jobId))
+    } else if (job$jobState != "completed") {
+      stop(sprintf(
+        "job %s is in %s state, no job result is available",
+        job$jobId,
+        job$jobState
+      ))
+    }
 
-      # if the job has failed task
-      if (job$tasks$failed > 0) {
-        if (metadata$errorHandling == "stop") {
-          stop(
-            sprintf(
-              "job %s has failed tasks and error handling is set to 'stop', no result will be avaialble",
-              job$jobId
-            )
+    # if the job has failed task
+    if (job$tasks$failed > 0) {
+      if (metadata$errorHandling == "stop") {
+        stop(
+          sprintf(
+            "job %s has failed tasks and error handling is set to 'stop', no result will be avaialble",
+            job$jobId
           )
-        } else {
-          if (job$tasks$succeeded == 0) {
-            stop(sprintf(
-              "all tasks failed for job %s, no result will be avaialble",
-              job$jobId
-            ))
-          }
+        )
+      } else {
+        if (job$tasks$succeeded == 0) {
+          stop(sprintf(
+            "all tasks failed for job %s, no result will be avaialble",
+            job$jobId
+          ))
         }
       }
     }
 
     if (metadata$enableCloudCombine == "FALSE") {
-      cat("enalbeCloudCombine is set to FALSE, we will merge job result locally",
+      cat("enableCloudCombine is set to FALSE, we will merge job result locally",
           fill = TRUE)
 
-      # Iterate over each blob and merge the results locally
-      outputFinal <- foreach(i = 1:job$tasks$completed) %do% {
+      results <- vector("list", job$tasks$completed)
+      count <- 1
+
+      for(i in 1:job$tasks$completed) {
         # Create a temporary file on disk
         tempFile <- tempfile(fileext = ".rds")
 
@@ -228,16 +226,29 @@ getJobResult <- function(jobId) {
         )
 
         #Read the rds as an object in memory
-        results <- readRDS(tempFile)
+        taskResult <- readRDS(tempFile)
+
+        for (t in 1:length(taskResult)) {
+          if (isError(taskResult[[t]])) {
+            if (metadata$errorHandling == "stop") {
+              stop("Error found")
+            }
+            else if (metadata$errorHandling == "pass") {
+              results[[count]] <- NA
+              count <- count + 1
+            }
+          } else {
+            results[[count]] <- taskResult[[t]]
+            count <- count + 1
+          }
+        }
 
         # Delete the temporary file
         file.remove(tempFile)
-
-        # Return the object
-        return(results)
       }
 
-      return(outputFinal)
+      # Return the object
+      return(results)
     }
   }
 
@@ -562,4 +573,8 @@ waitForJobPreparation <- function(jobId, poolId) {
   }
 
   cat("\n")
+}
+
+isError <- function(x) {
+  inherits(x, "simpleError") || inherits(x, "try-error")
 }

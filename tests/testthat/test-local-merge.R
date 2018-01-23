@@ -19,6 +19,7 @@ test_that("merge job result locally test", {
   jobId <-
     foreach::foreach(
       i = 1:10,
+      .errorhandling = "pass",
       .options.azure = list(
         enableCloudCombine = FALSE,
         autoDeleteJob = FALSE,
@@ -28,9 +29,7 @@ test_that("merge job result locally test", {
       i
     }
 
-  res <- getJobResult("job20180122222741")
   res <- getJobResult(jobId)
-  res1 <- getJobResult("job20180122190816")
 
   testthat::expect_equal(length(res),
                          10)
