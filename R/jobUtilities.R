@@ -212,7 +212,7 @@ getJobResult <- function(jobId) {
           fill = TRUE)
 
       # Iterate over each blob and merge the results locally
-      output.final <- foreach(i = 1:job$tasks$completed) %do% {
+      outputFinal <- foreach(i = 1:job$tasks$completed) %do% {
         # Create a temporary file on disk
         tempFile <- tempfile(fileext = ".rds")
 
@@ -224,9 +224,9 @@ getJobResult <- function(jobId) {
           containerName = jobId,
           blobName = paste0("result/", i, "-result.rds"),
           downloadPath = tempFile,
-          overwrite = TRUE)
-        cat(tempFile)
-        cat("\r\n")
+          overwrite = TRUE
+        )
+
         #Read the rds as an object in memory
         results <- readRDS(tempFile)
 
@@ -237,8 +237,7 @@ getJobResult <- function(jobId) {
         return(results)
       }
 
-      output.final
-      return(output.final)
+      return(outputFinal)
     }
   }
 
