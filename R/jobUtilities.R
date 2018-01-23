@@ -210,29 +210,9 @@ getJobResult <- function(jobId) {
     if (metadata$enableCloudCombine == "FALSE") {
       cat("enalbeCloudCombine is set to FALSE, we will merge job result locally",
           fill = TRUE)
-      inputs <- FALSE
-      if (!exists("inputs", envir = .doAzureBatchGlobals)) {
-        storageCredentials <- rAzureBatch::getStorageCredentials()
-        sasToken <- rAzureBatch::createSasToken("r", "c", inputs)
-
-        assign(
-          "inputs",
-          list(name = storageCredentials$name,
-               sasToken = sasToken),
-          .doAzureBatchGlobals
-        )
-      }
-      xmlResponse <- rAzureBatch::listBlobs(containerName = jobId, prefix = 'result/')
-
-      blobs <- xml2::xml_text(xml2::xml_find_all(xmlResponse, './/Blob//Name'))
-
-      blobs
-
-      # Create an iterator for all the blobs
-      itx <- iter(blobs)
 
       # Iterate over each blob and merge the results locally
-      output.final <- foreach(blobPath = itx) %do% {
+      output.final <- foreach(i = 1:job$tasks$completed) %do% {
         # Create a temporary file on disk
         tempFile <- tempfile(fileext = ".rds")
 
@@ -242,7 +222,7 @@ getJobResult <- function(jobId) {
         # Download the blob to the temporary file
         rAzureBatch::downloadBlob(
           containerName = jobId,
-          blobName = blobPath,
+          blobName = paste0("result/", i, "-result.rds"),
           downloadPath = tempFile,
           overwrite = TRUE)
         cat(tempFile)

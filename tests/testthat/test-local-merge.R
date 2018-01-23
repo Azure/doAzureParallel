@@ -14,12 +14,13 @@ test_that("merge job result locally test", {
   cluster <- doAzureParallel::makeCluster(clusterFileName)
   doAzureParallel::registerDoAzureParallel(cluster)
 
+  setChunkSize(2)
   '%dopar%' <- foreach::'%dopar%'
   jobId <-
     foreach::foreach(
       i = 1:10,
       .options.azure = list(
-        enableCloudCombine = TRUE,
+        enableCloudCombine = FALSE,
         autoDeleteJob = FALSE,
         wait = FALSE
       )
@@ -27,8 +28,9 @@ test_that("merge job result locally test", {
       i
     }
 
-  res <- getJobResult("job20180119223411")
+  res <- getJobResult("job20180122222741")
   res <- getJobResult(jobId)
+  res1 <- getJobResult("job20180122190816")
 
   testthat::expect_equal(length(res),
                          10)
