@@ -3,18 +3,35 @@
 
 programname=$0
 print_usage() {
-    echo "$programname allows you to easily create and manage the resources required to use doAzureParallel."
-    echo "There are several actions you can take:"
-    echo "   create: creates a new set of resources required for doAzureParallel"
-    echo "   options:"
-    echo "            region:           (required)"
-    echo "            resource_group:   (optional: default= 'doazureparallel)"
-    echo "            batch_account:    (optional: default= 'doazureparallel_ba)"
-    echo "            storage_account:  (optional: default= 'doazureparallel_sa)"
+    echo "-----------------"
+    echo "$programname"
+    echo "-----------------"
     echo ""
-    echo "   example usage:"
+    echo "Management tool for the resources required to use doAzureParalle"
+    echo ""
+    echo "Commands:"
+    echo ""
+    echo "  create:     creates a new set of resources required for doAzureParallel"
+    echo "  get-keys:   get the keys required to run doAzureParallel in json format"
+    echo ""
+    echo "Usage:"
+    echo "  create <region> [resource_group] [batch_account] [storage_account]"
+    echo "      region:           <required>"
+    echo "      resource_group:   [optional: default = 'doazureparallel]"
+    echo "      batch_account:    [optional: default = 'doazureparallel_ba]"
+    echo "      storage_account:  [optional: default = 'doazureparallel_sa]"
+    echo ""
+    echo "  get-keys [resource_group] [batch_account] [storage_account]"
+    echo "      resource_group:   [optional: default = 'doazureparallel]"
+    echo "      batch_account:    [optional: default = 'doazureparallel_ba]"
+    echo "      storage_account:  [optional: default = 'doazureparallel_sa]"
+    echo ""
+    echo ""
+    echo "Examples"
     echo "   $programname create westus"
     echo "   $programname create westus my_resource_group_name my_batch_account_name my_storage_account_name"
+    echo "   $programname get-keys"
+    echo "   $programname get-keys my_resource_group_name my_batch_account_name my_storage_account_name"
 }
 
 # Parameters
@@ -47,9 +64,6 @@ get_credentials() {
     resource_group=$1
     batch_account_name=$2
     storage_account_name=$3
-
-    echo "debug: getting keys for $resource_group, $batch_account_name, $storage_account_name"
-    exit 1
 
     batch_account_key="$(az batch account keys list \
             --name $batch_account_name \
@@ -118,7 +132,7 @@ if [ "$COMMAND" = "create" ]; then
 
 fi
 
-if [ "$COMMAND" = "get"  ]; then
+if [ "$COMMAND" = "get-keys"  ]; then
     resource_group=$2
     batch_account_name=$3
     storage_account_name=$4
@@ -138,6 +152,18 @@ if [ "$COMMAND" = "get"  ]; then
 
     get_credentials $resource_group $batch_account_name $storage_account_name
     
+fi
+
+if [ "$COMMAND" = "-h" ] || [ "$COMMAND" = "--help" ] || [ "$COMMAND" = "h" ] |
+    [ "$COMMAND" = "help" ] || [ "$COMMAND" = "?" ]; then
+    print_usage
+    exit 0
+fi
+
+if [ "$COMMAND" != "" ]; then
+    echo "Unknown command '$COMMAND'"
+    print_usage
+    exit 1
 fi
 
 exit 0
