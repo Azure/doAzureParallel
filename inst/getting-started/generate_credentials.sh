@@ -18,6 +18,34 @@ print_usage() {
 }
 
 # Parameters
+# $1 region
+# $2 resource group
+# $3 batch account
+# $4 storage account
+create_accounts() {
+    location=$1
+    resource_group=$2
+    batch_account=$3
+    storage_account=$4
+    # Create resource group    
+    az group create -n $resource_group -l $location
+
+    # Create storage account
+    az storage account create \
+	--name $storage_account \
+	--sku Standard_LRS \
+	--location $location \
+	--resource-group $resource_group
+
+    # Create batch account
+    az batch account create \
+	--name $batch_account \
+	--location $location \
+	--resource-group $resource_group \
+	--storage-account $storage_account
+}
+
+# Parameters
 # $1 resource group
 # $2 batch account
 # $3 storage account
@@ -76,7 +104,26 @@ if [ "$COMMAND" = "create" ]; then
         print_usage
         exit 1
     fi
-    exit 0
+
+    resource_group=$2
+    batch_account_name=$3
+    storage_account_name=$4
+
+    # Set defaults
+    if [ "$resource_group" = "" ]; then
+        resource_group="doazureparallel"
+    fi
+
+    if [ "$batch_account_name" = "" ]; then
+        batch_account_name="doazureparallel_ba"
+    fi
+
+    if [ "$storage_account_name" = "" ]; then
+        storage_account_name="doazureparallel_sa"
+    fi
+
+    create_accounts $location $resource_group $batch_account $storage_account
+
 fi
 
 if [ "$COMMAND" = "get"  ]; then
@@ -99,5 +146,6 @@ if [ "$COMMAND" = "get"  ]; then
 
     get_credentials $resource_group $batch_account_name $storage_account_name
     
-    exit 0
 fi
+
+exit 0
