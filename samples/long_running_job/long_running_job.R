@@ -35,7 +35,7 @@ getDoParWorkers()
 # === Create long running job and get progress/result ===
 # =======================================================
 
-options <- list(wait = FALSE)
+opt <- list(wait = FALSE)
 '%dopar%' <- foreach::'%dopar%'
 jobId <-
   foreach::foreach(
