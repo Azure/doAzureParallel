@@ -27,22 +27,15 @@ create_accounts() {
     resource_group=$2
     batch_account=$3
     storage_account=$4
+
     # Create resource group    
     az group create -n $resource_group -l $location
 
     # Create storage account
-    az storage account create \
-	--name $storage_account \
-	--sku Standard_LRS \
-	--location $location \
-	--resource-group $resource_group
+    az storage account create --name $storage_account --sku Standard_LRS --location $location --resource-group $resource_group
 
     # Create batch account
-    az batch account create \
-	--name $batch_account \
-	--location $location \
-	--resource-group $resource_group \
-	--storage-account $storage_account
+    az batch account create --name $batch_account --location $location --resource-group $resource_group --storage-account $storage_account
 }
 
 # Parameters
@@ -56,6 +49,7 @@ get_credentials() {
     storage_account_name=$3
 
     echo "debug: getting keys for $resource_group, $batch_account_name, $storage_account_name"
+    exit 1
 
     batch_account_key="$(az batch account keys list \
             --name $batch_account_name \
@@ -95,8 +89,6 @@ fi
 COMMAND=$1
 
 if [ "$COMMAND" = "create" ]; then
-    echo "not implemented"
-
     location=$2
 
     if [ "$location" = "" ]; then
@@ -105,9 +97,9 @@ if [ "$COMMAND" = "create" ]; then
         exit 1
     fi
 
-    resource_group=$2
-    batch_account_name=$3
-    storage_account_name=$4
+    resource_group=$3
+    batch_account_name=$4
+    storage_account_name=$5
 
     # Set defaults
     if [ "$resource_group" = "" ]; then
@@ -122,7 +114,7 @@ if [ "$COMMAND" = "create" ]; then
         storage_account_name="doazureparallel_sa"
     fi
 
-    create_accounts $location $resource_group $batch_account $storage_account
+    create_accounts $location $resource_group $batch_account_name $storage_account_name
 
 fi
 
