@@ -107,11 +107,11 @@ if [ "$COMMAND" = "create" ]; then
     fi
 
     if [ "$batch_account_name" = "" ]; then
-        batch_account_name="doazureparallel_ba"
+        batch_account_name="doazureparallelbatch"
     fi
 
     if [ "$storage_account_name" = "" ]; then
-        storage_account_name="doazureparallel_sa"
+        storage_account_name="doazureparallelstorage"
     fi
 
     create_accounts $location $resource_group $batch_account_name $storage_account_name
@@ -129,11 +129,11 @@ if [ "$COMMAND" = "get"  ]; then
     fi
 
     if [ "$batch_account_name" = "" ]; then
-        batch_account_name="doazureparallel_ba"
+        batch_account_name="doazureparallelbatch"
     fi
 
     if [ "$storage_account_name" = "" ]; then
-        storage_account_name="doazureparallel_sa"
+        storage_account_name="doazureparallelstorage"
     fi
 
     get_credentials $resource_group $batch_account_name $storage_account_name
