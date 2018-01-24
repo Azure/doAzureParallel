@@ -1,20 +1,34 @@
 #!/bin/sh
 # Parse arguments
 
-COMMAND=$1
+programname=$0
+print_usage() {
+    echo "$programname allows you to easily create and manage the resources required to use doAzureParallel."
+    echo "There are several actions you can take:"
+    echo "   create: creates a new set of resources required for doAzureParallel"
+    echo "   options:"
+    echo "            region:           (required)"
+    echo "            resource_group:   (optional: default= 'doazureparallel)"
+    echo "            batch_account:    (optional: default= 'doazureparallel_ba)"
+    echo "            storage_account:  (optional: default= 'doazureparallel_sa)"
+    echo ""
+    echo "   example usage:"
+    echo "   $programname create westus"
+    echo "   $programname create westus my_resource_group_name my_batch_account_name my_storage_account_name"
+}
 
-if [[COMMAND == "create"]]; then
-    echo "not implemented"
-    exit 0
-fi
-
-if [[COMMAND == "get" || COMMAND == ""]]; then
-    resource_group=$2
-    location=$3
-    batch_account_name=$4
-    storage_account_name=$5
-
+# Parameters
+# $1 resource group
+# $2 batch account
+# $3 storage account
+get_credentials() {
     # Get keys and urls
+    resource_group=$1
+    batch_account_name=$2
+    storage_account_name=$3
+
+    echo "debug: getting keys for $resource_group, $batch_account_name, $storage_account_name"
+
     batch_account_key="$(az batch account keys list \
             --name $batch_account_name \
             --resource-group $resource_group \
@@ -43,6 +57,47 @@ if [[COMMAND == "get" || COMMAND == ""]]; then
             "url": '$storage_account_url' \n
         }\n}'
     echo $JSON
+}
+
+if [ "$#" -eq 0 ]; then
+    print_usage
+    exit 1
+fi
+
+COMMAND=$1
+
+if [ "$COMMAND" = "create" ]; then
+    echo "not implemented"
+
+    location=$2
+
+    if [ "$location" = "" ]; then
+        echo "missing required input 'region'"
+        print_usage
+        exit 1
+    fi
     exit 0
 fi
 
+if [ "$COMMAND" = "get"  ]; then
+    resource_group=$2
+    batch_account_name=$3
+    storage_account_name=$4
+
+    # Set defaults
+    if [ "$resource_group" = "" ]; then
+        resource_group="doazureparallel"
+    fi
+
+    if [ "$batch_account_name" = "" ]; then
+        batch_account_name="doazureparallel_ba"
+    fi
+
+    if [ "$storage_account_name" = "" ]; then
+        storage_account_name="doazureparallel_sa"
+    fi
+
+    get_credentials $resource_group $batch_account_name $storage_account_name
+    
+    exit 0
+fi
