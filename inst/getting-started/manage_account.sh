@@ -7,7 +7,7 @@ print_usage() {
     echo "$programname"
     echo "-----------------"
     echo ""
-    echo "Management tool for the resources required to use doAzureParalle"
+    echo "Management tool for the resources required to use doAzureParallel"
     echo ""
     echo "Commands:"
     echo ""
@@ -18,20 +18,20 @@ print_usage() {
     echo "  create <region> [resource_group] [batch_account] [storage_account]"
     echo "      region:           <required>"
     echo "      resource_group:   [optional: default = 'doazureparallel]"
-    echo "      batch_account:    [optional: default = 'doazureparallel_ba]"
-    echo "      storage_account:  [optional: default = 'doazureparallel_sa]"
+    echo "      batch_account:    [optional: default = 'doazureparallelbatch]"
+    echo "      storage_account:  [optional: default = 'doazureparallelstorage]"
     echo ""
     echo "  get-keys [resource_group] [batch_account] [storage_account]"
     echo "      resource_group:   [optional: default = 'doazureparallel]"
-    echo "      batch_account:    [optional: default = 'doazureparallel_ba]"
-    echo "      storage_account:  [optional: default = 'doazureparallel_sa]"
+    echo "      batch_account:    [optional: default = 'doazureparallelbatch]"
+    echo "      storage_account:  [optional: default = 'doazureparallelstorage]"
     echo ""
     echo ""
     echo "Examples"
     echo "   $programname create westus"
-    echo "   $programname create westus my_resource_group_name my_batch_account_name my_storage_account_name"
+    echo "   $programname create westus resource_group_name batch_account_name storage_account_name"
     echo "   $programname get-keys"
-    echo "   $programname get-keys my_resource_group_name my_batch_account_name my_storage_account_name"
+    echo "   $programname get-keys resource_group_name batch_account_name storage_account_name"
 }
 
 # Parameters
@@ -45,14 +45,19 @@ create_accounts() {
     batch_account=$3
     storage_account=$4
 
-    # Create resource group    
-    az group create -n $resource_group -l $location
+    # Create resource group
+    echo "Creating resource group."
+    az group create -n $resource_group -l $location -o table
 
     # Create storage account
-    az storage account create --name $storage_account --sku Standard_LRS --location $location --resource-group $resource_group
+    echo "\nCreating storage account."
+    az storage account create --name $storage_account --sku Standard_LRS --location $location --resource-group $resource_group -o table
 
     # Create batch account
-    az batch account create --name $batch_account --location $location --resource-group $resource_group --storage-account $storage_account
+    echo "\nCreating batch account."
+    az batch account create --name $batch_account --location $location --resource-group $resource_group --storage-account $storage_account -o table
+
+   echo "\nDone creating accounts. Run '$0 get-keys' to view your account credentials."
 }
 
 # Parameters
@@ -77,8 +82,8 @@ get_credentials() {
             --resource-group $resource_group \
             | jq '.[0].value')"
     storage_account_url="$(az storage account show \
-        --resource-group abc \
-        --name prodtest5 \
+        --resource-group $resource_group \
+        --name $storage_account_name \
         | jq .primaryEndpoints.blob)"
 
     export JSON='{\n
@@ -106,7 +111,7 @@ if [ "$COMMAND" = "create" ]; then
     location=$2
 
     if [ "$location" = "" ]; then
-        echo "missing required input 'region'"
+        echo "missing required input 'location'"
         print_usage
         exit 1
     fi
@@ -129,7 +134,7 @@ if [ "$COMMAND" = "create" ]; then
     fi
 
     create_accounts $location $resource_group $batch_account_name $storage_account_name
-
+    exit 0
 fi
 
 if [ "$COMMAND" = "get-keys"  ]; then
@@ -151,7 +156,7 @@ if [ "$COMMAND" = "get-keys"  ]; then
     fi
 
     get_credentials $resource_group $batch_account_name $storage_account_name
-    
+    exit 0
 fi
 
 if [ "$COMMAND" = "-h" ] || [ "$COMMAND" = "--help" ] || [ "$COMMAND" = "h" ] |
