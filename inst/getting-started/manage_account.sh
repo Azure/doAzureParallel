@@ -17,14 +17,14 @@ print_usage() {
     echo "Usage:"
     echo "  create <region> [resource_group] [batch_account] [storage_account]"
     echo "      region:           <required>"
-    echo "      resource_group:   [optional: default = 'doazureparallel]"
-    echo "      batch_account:    [optional: default = 'doazureparallelbatch]"
-    echo "      storage_account:  [optional: default = 'doazureparallelstorage]"
+    echo "      resource_group:   [optional: default = 'doazureparallel']"
+    echo "      batch_account:    [optional: default = 'doazureparallelbatch']"
+    echo "      storage_account:  [optional: default = 'doazureparallelstorage']"
     echo ""
     echo "  get-keys [resource_group] [batch_account] [storage_account]"
-    echo "      resource_group:   [optional: default = 'doazureparallel]"
-    echo "      batch_account:    [optional: default = 'doazureparallelbatch]"
-    echo "      storage_account:  [optional: default = 'doazureparallelstorage]"
+    echo "      resource_group:   [optional: default = 'doazureparallel']"
+    echo "      batch_account:    [optional: default = 'doazureparallelbatch']"
+    echo "      storage_account:  [optional: default = 'doazureparallelstorage']"
     echo ""
     echo ""
     echo "Examples"
@@ -88,19 +88,22 @@ get_credentials() {
 
     export JSON='{\n
         "batchAccount": { \n
-            "name": "'"$batch_account_name"'", \n
-            "key": '$batch_account_key', \n
-            "url": '$batch_account_url' \n
+            \t"name": "'"$batch_account_name"'", \n
+            \t"key": '$batch_account_key', \n
+            \t"url": '$batch_account_url' \n
         }, \n
         "storageAccount": { \n
-            "name": "'"$storage_account_name"'", \n
-            "key": '$storage_account_key', \n
-            "url": '$storage_account_url' \n
+            \t"name": "'"$storage_account_name"'", \n
+            \t"key": '$storage_account_key', \n
+            \t"url": '$storage_account_url' \n
         }\n}'
     echo $JSON
 }
 
+
+# Main program
 if [ "$#" -eq 0 ]; then
+    # No parameters
     print_usage
     exit 1
 fi
@@ -108,6 +111,7 @@ fi
 COMMAND=$1
 
 if [ "$COMMAND" = "create" ]; then
+    # Handle 'create' command
     location=$2
 
     if [ "$location" = "" ]; then
@@ -138,6 +142,7 @@ if [ "$COMMAND" = "create" ]; then
 fi
 
 if [ "$COMMAND" = "get-keys"  ]; then
+    # Handle 'get-keys' command
     resource_group=$2
     batch_account_name=$3
     storage_account_name=$4
@@ -161,11 +166,13 @@ fi
 
 if [ "$COMMAND" = "-h" ] || [ "$COMMAND" = "--help" ] || [ "$COMMAND" = "h" ] |
     [ "$COMMAND" = "help" ] || [ "$COMMAND" = "?" ]; then
+    # Handle 'help' command
     print_usage
     exit 0
 fi
 
 if [ "$COMMAND" != "" ]; then
+    # Handle unknown commands
     echo "Unknown command '$COMMAND'"
     print_usage
     exit 1
