@@ -545,7 +545,7 @@ setHttpTraffic <- function(value = FALSE) {
       jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i > $AZ_BATCH_TASK_ID.txt",
+        "Rscript --no-save --no-environ --no-restore --no-site-file --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i > $AZ_BATCH_TASK_ID.txt",
         startIndex,
         endIndex,
         isDataSet),
@@ -568,7 +568,7 @@ setHttpTraffic <- function(value = FALSE) {
       jobId = id,
       taskId = "merge",
       rCommand = sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
+        "Rscript --no-save --no-environ --no-restore --no-site-file --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
         length(tasks),
         chunkSize,
         as.character(obj$errorHandling)
