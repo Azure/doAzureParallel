@@ -6,16 +6,18 @@ test_that("DEoptim integration test", {
   testthat::skip_on_travis()
   credentialsFileName <- "credentials.json"
   clusterFileName <- "cluster.json"
-  
+
   doAzureParallel::generateCredentialsConfig(credentialsFileName)
   doAzureParallel::generateClusterConfig(clusterFileName)
-  
+
   # set your credentials
   doAzureParallel::setCredentials(credentialsFileName)
   cluster <-
     doAzureParallel::makeCluster(clusterFileName, wait = FALSE)
   doAzureParallel::registerDoAzureParallel(cluster)
-  
+  #setChunkSize(2) #36
+  setChunkSize(1) #72
+
   install.packages("quantmod")
   install.packages("DEoptim")
   install.packages("PerformanceAnalytics")
@@ -145,14 +147,13 @@ test_that("DEoptim integration test", {
   dim(R)
   mu <- colMeans(R)
   sigma <- cov(R)
-  
-  library("PerformanceAnalytics")
-  obj <- function(w) {
+
+  obj <- function(w, mu, sigma) {
+    library(PerformanceAnalytics)
     if (sum(w) == 0) {
       w <- w + 1e-2
     }
     w <- w / sum(w)
-    library(PerformanceAnalytics)
     CVaR <- ES(
       weights = w,
       method = "gaussian",
@@ -165,13 +166,13 @@ test_that("DEoptim integration test", {
     out <- tmp1 + 1e3 * tmp2
     return(out)
   }
-  
+
   N <- ncol(R)
   minw <- 0
   maxw <- 1
   lower <- rep(minw, N)
   upper <- rep(maxw, N)
-  
+
   library("PortfolioAnalytics")
   eps <- 0.025
   weight_seq <-
@@ -193,20 +194,21 @@ test_that("DEoptim integration test", {
   set.seed(1234)
   rp <-
     random_portfolios_v1(rpconstraints = rpconstraint, permutations = N * 10)
-  
+
   rp <- rp / rowSums(rp)
-  
+
   options <- list(wait = TRUE, autoDeleteJob = FALSE)
+  #options <- list(wait = FALSE, autoDeleteJob = FALSE)
   foreachArgs <-
     list(
-      .options.azure = options,
-      .packages = c('DEoptim', 'PerformanceAnalytics')
+      #.packages = c('DEoptim', 'PerformanceAnalytics'),
+      .options.azure = options
     )
   controlDE <-
     list(
       reltol = .000001,
       steptol = 150,
-      itermax = 5000,
+      itermax = 5,#5000,
       trace = 250,
       NP = as.numeric(nrow(rp)),
       initialpop = rp,
@@ -220,7 +222,9 @@ test_that("DEoptim integration test", {
       fn = obj,
       lower = lower,
       upper = upper,
-      control = controlDE
+      control = controlDE,
+      mu,
+      sigma
     )
   stoptime <- Sys.time()
 })
