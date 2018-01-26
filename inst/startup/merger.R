@@ -18,6 +18,7 @@ chunkSize <- as.integer(args[2])
 errorHandling <- args[3]
 
 batchJobId <- Sys.getenv("AZ_BATCH_JOB_ID")
+batchTaskId <- Sys.getenv("AZ_BATCH_TASK_ID")
 batchJobPreparationDirectory <-
   Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 batchTaskWorkingDirectory <- Sys.getenv("AZ_BATCH_TASK_WORKING_DIR")
@@ -62,8 +63,19 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
 
       results <- vector("list", length(files))
 
-      for (i in 1:length(files)) {
-        task <- readRDS(files[i])
+      for (i in 1:batchTasksCount) {
+        taskPath <- file.path(
+          batchTaskWorkingDirectory,
+          "result",
+          paste0(i, "-result.rds")
+        )
+
+        # Remove file from task list
+        if (!file.exists(taskPath)) {
+          next
+        }
+
+        task <- readRDS(taskPath)
 
         if (isError(task)) {
           if (errorHandling == "stop") {
@@ -75,27 +87,27 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
         }
 
         for (t in 1:length(task)) {
-          results[count] <- task[t]
+          results[[count]] <- task[[t]]
           count <- count + 1
         }
       }
 
       saveRDS(results, file = file.path(
         batchTaskWorkingDirectory,
-        paste0(batchJobId, "-merge-result.rds")
+        paste0(batchTaskId, "-result.rds")
       ))
     }
     else if (errorHandling == "pass") {
       for (i in 1:batchTasksCount) {
-        taskResult <-
+        taskPath <-
           file.path(
             batchTaskWorkingDirectory,
             "result",
-            paste0(batchJobId, "-task", i, "-result.rds")
+            paste0(i, "-result.rds")
           )
 
-        if (file.exists(taskResult)) {
-          task <- readRDS(taskResult)
+        if (file.exists(taskPath)) {
+          task <- readRDS(taskPath)
           for (t in 1:length(task)) {
             results[count] <- task[t]
             count <- count + 1
@@ -111,7 +123,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
 
       saveRDS(results, file = file.path(
         batchTaskWorkingDirectory,
-        paste0(batchJobId, "-merge-result.rds")
+        paste0(batchTaskId, "-result.rds")
       ))
     }
 
