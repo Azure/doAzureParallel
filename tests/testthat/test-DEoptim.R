@@ -15,7 +15,7 @@ test_that("DEoptim integration test", {
   cluster <-
     doAzureParallel::makeCluster(clusterFileName, wait = FALSE)
   doAzureParallel::registerDoAzureParallel(cluster)
-  setChunkSize(10000)
+  setChunkSize(1)
 
   # install.packages("quantmod")
   # install.packages("DEoptim")
@@ -197,10 +197,11 @@ test_that("DEoptim integration test", {
   rp <- rp / rowSums(rp)
 
   options <- list(wait = TRUE, autoDeleteJob = FALSE)
+  #options <- list(wait = FALSE, autoDeleteJob = FALSE)
   foreachArgs <-
     list(
-      .options.azure = options,
-      .packages = c('DEoptim', 'PerformanceAnalytics')
+      #.packages = c('DEoptim', 'PerformanceAnalytics'),
+      .options.azure = options
     )
   controlDE <-
     list(
