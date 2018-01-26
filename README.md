@@ -57,29 +57,31 @@ To run your R code across a cluster in Azure, we'll need to get keys and account
 ### Setup Azure Account
 First, set up your Azure Account ([Get started for free!](https://azure.microsoft.com/en-us/free/))
 
-Once you have an Azure account, you'll need to create the following two services in the Azure portal:
-- Azure Batch Account ([Create an Azure Batch Account in the Portal](https://docs.microsoft.com/en-us/azure/Batch/batch-account-create-portal))
-- Azure Storage Account (this can be created with the Batch Account)
+Once you have an Azure account, you'll need to create the following resources in Azure:
+- Azure Batch Account
+- Azure Storage Account
 
-### Get Keys and Account Information
-For your Azure Batch Account, we need to get:
-- Batch Account Name
-- Batch Account URL
-- Batch Account Access Key
+#### Using Azure CLI
+You can either download the [Azure CLI V2](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) or use Azure Cloud Shell. This example will show the steps to get started using the Azure Cloud Shell.
 
-This information can be found in the Azure Portal inside your Batch Account:
+Open a broswer and navigate to [Azure Cloud Shell](https://shell.azure.com). Make sure you have selected a **Bash** shell and run the following commands
 
-![Azure Batch Acccount in the Portal](./vignettes/doAzureParallel-azurebatch-instructions.PNG "Azure Batch Acccount in the Portal")
+```sh
+# Download the required setup scripts
+wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/gettingstarted/inst/getting-started/manage_account.sh
 
-For your Azure Storage Account, we need to get:
-- Storage Account Name
-- Storage Account Access Key
+# Create resources in West US (westus). You can find a list of locations by running
+# 'az account list-locations'
+# Make sure to use the 'name' field and not the 'displayName' field
 
-This information can be found in the Azure Portal inside your Azure Storage Account:
+# Create a resource group, batch account and storage account
+/bin/sh manage_account.sh create westus
 
-![Azure Storage Acccount in the Portal](./vignettes/doAzureParallel-azurestorage-instructions.PNG "Azure Storage Acccount in the Portal")
+# Get the keys needed for doAzureParallel
+/bin/sh manage_account.sh list-keys
+```
 
-Keep track of the above keys and account information as it will be used to connect your R session with Azure.
+Once they keys are listed, simply copy and paste them into your credentials.json file explained in the Getting Started section. If you lose track of your keys, you can simply re-run the 'list-keys' command any time to get them again.
 
 ## Getting Started
 
