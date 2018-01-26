@@ -1,8 +1,37 @@
 # Getting started
-TODO
+
+doAzureParallel requires a few resources to be created in Azure. These include a Batch account and a Storage account. These exist inside of a container called a Resource Group which is simply a wrapper for a collection of resources to provide simpler resource management in Azure. The Batch Account is used as the Clustering and Scheduling service. It will manage the cluster(s) of Virtual Machines in Azure. This includes health monitoring, healing failed VMs, auto scaling the cluster and scheduling work. The Storage Account is used to store data between your local R client and the cloud, as well as save the outputs of jobs running foreach using doAzureParallel.
 
 ## Azure CLI
-TODO
+
+You can either download the [Azure CLI V2](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) or use Azure Cloud Shell. This example will show the steps to get started using the Azure Cloud Shell.
+
+Open a broswer and navigate to [Azure Cloud Shell](https://shell.azure.com). Make sure you have selected a **Bash** shell and run the commands listed below.
+
+```sh
+# Download the required setup scripts
+wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/gettingstarted/inst/getting-started/manage_account.sh
+
+# Create resources in West US (westus). You can find a list of locations by running
+# 'az account list-locations'
+# Make sure to use the 'name' field and not the 'displayName' field
+
+# Create a resource group, batch account and storage account
+/bin/sh manage_account.sh create westus
+
+# Get the keys needed for doAzureParallel
+/bin/sh manage_account.sh list-keys
+```
+
+These commands will create 3 objects in Azure automatically.
+1. A Resource Group that will contain a collection of resources called 'doazureparallel'.
+2. A Batch Account within the Resource Group called 'doazureparallelbatch'
+3. A Storage Account withing the Resource Group called 'doazureparallelstorage'
+
+You can change the default names by passing additional parameters into the manage_account.sh script. More information is available by running the command below.
+```sh
+/bin/sh manage_account --help
+```
 
 ## Azure Portal
 TODO
