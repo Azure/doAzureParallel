@@ -524,9 +524,9 @@ setHttpTraffic <- function(value = FALSE) {
     {
       c(length(argsList))
     }
-  else {
-    seq(chunkSize, length(argsList), chunkSize)
-  }
+    else {
+      seq(chunkSize, length(argsList), chunkSize)
+    }
 
   if (length(startIndices) > length(endIndices)) {
     endIndices[length(startIndices)] <- ntasks
@@ -546,10 +546,11 @@ setHttpTraffic <- function(value = FALSE) {
       jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i > $AZ_BATCH_TASK_ID.txt",
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i %s > $AZ_BATCH_TASK_ID.txt",
         startIndex,
         endIndex,
-        isDataSet),
+        isDataSet,
+        as.character(obj$errorHandling)),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
       outputFiles = obj$options$azure$outputFiles,
@@ -565,7 +566,29 @@ setHttpTraffic <- function(value = FALSE) {
 
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
-    .addTask(
+
+    # workers <- foreach::getDoParWorkers()
+    #
+    # for (i in 1:workers) {
+    #   addSubMergeTask(
+    #     jobId = id,
+    #     taskId = paste0(m, i),
+    #     rCommand = sprintf(
+    #       "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
+    #       length(tasks),
+    #       chunkSize,
+    #       as.character(obj$errorHandling)
+    #     ),
+    #     envir = .doAzureBatchGlobals,
+    #     packages = obj$packages,
+    #     dependsOn = list(taskIdRanges = list(list(start = 1, end = length(tasks)))),
+    #     cloudCombine = cloudCombine,
+    #     outputFiles = obj$options$azure$outputFiles,
+    #     containerImage = data$containerImage
+    #   )
+    # }
+
+    addFinalMergeTask(
       jobId = id,
       taskId = "merge",
       rCommand = sprintf(
@@ -581,6 +604,7 @@ setHttpTraffic <- function(value = FALSE) {
       outputFiles = obj$options$azure$outputFiles,
       containerImage = data$containerImage
     )
+
     cat(". . .")
   }
 
