@@ -16,7 +16,7 @@ addFinalMergeTask <- function(jobId, taskId, rCommand, ...){
   if (!is.null(cloudCombine)) {
     assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
     copyCommand <- sprintf(
-      "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds",
+      "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include m*/*-result.rds",
       accountName,
       jobId,
       "$AZ_BATCH_TASK_WORKING_DIR"
@@ -124,10 +124,11 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
   containerImage <- args$containerImage
 
   copyCommand <- sprintf(
-    "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds",
+    "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include %s/*.rds",
     accountName,
     jobId,
-    "$AZ_BATCH_TASK_WORKING_DIR"
+    "$AZ_BATCH_TASK_WORKING_DIR",
+    taskId
   )
 
   downloadCommand <-

@@ -594,9 +594,7 @@ setHttpTraffic <- function(value = FALSE) {
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
 
-    # workers <- foreach::getDoParWorkers()
-    #
-    # for (i in 1:workers) {
+    # for (i in 1:buckets) {
     #   addSubMergeTask(
     #     jobId = id,
     #     taskId = paste0(m, i),
