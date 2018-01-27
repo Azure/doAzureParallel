@@ -5,6 +5,7 @@ workerErrorStatus <- 0
 startIndex <- as.integer(args[1])
 endIndex <- as.integer(args[2])
 isDataSet <- as.logical(as.integer(args[3]))
+errorHandling <- args[4]
 
 
 jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
@@ -114,7 +115,6 @@ if (!is.null(azbatchenv$gather) && length(argsList) > 1) {
 }
 
 names(result) <- seq(startIndex, endIndex)
-print(result)
 
 saveRDS(result,
         file = file.path(

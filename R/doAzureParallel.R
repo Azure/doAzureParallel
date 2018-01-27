@@ -532,15 +532,42 @@ setHttpTraffic <- function(value = FALSE) {
     endIndices[length(startIndices)] <- ntasks
   }
 
-  tasks <- lapply(1:length(endIndices), function(i) {
-    startIndex <- startIndices[i]
-    endIndex <- endIndices[i]
+  indices <- cbind(startIndices, endIndices)
+  mergeSize <- 10
+  buckets <- ceiling(nrow(indices) / mergeSize)
+  bucketSeq <- rep(1:buckets, each = mergeSize, length.out = nrow(indices))
+  indices <- cbind(indices, bucketSeq)
+
+  tasks <- lapply(1:nrow(indices), function(i) {
+    storageCredentials <- rAzureBatch::getStorageCredentials()
+
+    startIndex <- indices[i,][1]
+    endIndex <- indices[i,][2]
     taskId <- as.character(i)
 
     args <- NULL
     if (isDataSet) {
       args <- argsList[startIndex:endIndex]
     }
+
+    resultFile <- paste0(taskId, "-result", ".rds")
+    containerUrl <-
+      rAzureBatch::createBlobUrl(
+        storageAccount = storageCredentials$name,
+        containerName = id,
+        sasToken = rAzureBatch::createSasToken("w", "c", id)
+      )
+
+    mergeOutput <- list(
+      list(
+        filePattern = resultFile,
+        destination = list(container = list(
+          path = paste0("m", indices[i,][3], "/", resultFile),
+          containerUrl = containerUrl
+        )),
+        uploadOptions = list(uploadCondition = "taskCompletion")
+      )
+    )
 
     .addTask(
       jobId = id,
@@ -553,7 +580,7 @@ setHttpTraffic <- function(value = FALSE) {
         as.character(obj$errorHandling)),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
-      outputFiles = obj$options$azure$outputFiles,
+      outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
       containerImage = data$containerImage,
       args = args
     )
