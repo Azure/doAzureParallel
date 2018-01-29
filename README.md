@@ -81,7 +81,9 @@ wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/gettingstar
 /bin/sh manage_account.sh list-keys
 ```
 
-Once they keys are listed, simply copy and paste them into your credentials.json file explained in the Getting Started section. If you lose track of your keys, you can simply re-run the 'list-keys' command any time to get them again.
+Once they keys are listed, simply copy and paste them into your credentials.json file explained in the [Getting Started](#getting-started) section. If you lose track of your keys, you can simply re-run the 'list-keys' command any time to get them again.
+
+More information on using the setup scripts can be found [here](./docs/01-getting-started.md).
 
 ## Getting Started
 
