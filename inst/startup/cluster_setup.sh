@@ -16,6 +16,9 @@ add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(
 apt-get -y update
 apt-get -y install docker-ce
 
+# Unzip resource files and set permissions
+apt-get -y install zip unzip
+
 # Check docker is running
 docker info > /dev/null 2>&1
 if [ $? -ne 0 ]; then

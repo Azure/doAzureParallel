@@ -148,7 +148,10 @@
   poolInfo <- list("poolId" = poolId)
 
   # Default command for job preparation task
-  commands <- c("unzip $AZ_BATCH_JOB_PREP_WORKING_DIR/node_scripts.zip")
+  commands <- c(
+    "mkdir -p node_scripts",
+    "unzip -j $AZ_BATCH_JOB_PREP_WORKING_DIR/node_scripts.zip -d node_scripts "
+  )
   if (!is.null(packages)) {
     jobPackages <-
       dockerRunCommand(containerImage,
