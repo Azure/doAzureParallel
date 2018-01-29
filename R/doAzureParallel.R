@@ -358,7 +358,7 @@ setHttpTraffic <- function(value = FALSE) {
 
   retryCounter <- 0
   maxRetryCount <- 5
-  startupFolderName <- "startup"
+
   repeat {
     if (retryCounter > maxRetryCount) {
       stop(
@@ -394,18 +394,19 @@ setHttpTraffic <- function(value = FALSE) {
       containerContent <- xml2::as_list(httr::content(containerResponse))
       stop(paste0("Error creating job: ", containerContent$message$value))
     }
-    
+
     nodeScriptsDir <- system.file("startup", package = "doAzureParallel")
     nodeScriptsFiles <- list.files(nodeScriptsDir, full.names = TRUE)
-    
+
     nodeScriptsZip <- "node_scripts.zip"
+    # Zip Flags: Keeping console output clean and removing junk paths
     utils::zip(nodeScriptsZip, files = nodeScriptsFiles, extras = "-j -q")
 
     # Uploading common job files for the worker node
     rAzureBatch::uploadBlob(id,
                             nodeScriptsZip)
     file.remove(nodeScriptsZip)
-    
+
     # Creating common job environment for all tasks
     jobFileName <- paste0(id, ".rds")
     saveRDS(.doAzureBatchGlobals, file = jobFileName)
