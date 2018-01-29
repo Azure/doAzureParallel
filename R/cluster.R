@@ -437,8 +437,8 @@ getClusterList <- function(filter = NULL) {
     rAzureBatch::listPools(
       query = list(
         "$filter" = filterClause,
-        "$select" = "id,state,allocationState,vmSize,currentDedicatedNodes" +
-                    ",targetDedicatedNodes,currentLowPriorityNodes,targetLowPriorityNodes"
+        "$select" = paste("id,state,allocationState,vmSize,currentDedicatedNodes",
+                    ",targetDedicatedNodes,currentLowPriorityNodes,targetLowPriorityNodes")
       )
     )
 
