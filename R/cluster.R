@@ -139,10 +139,11 @@ makeCluster <-
     config$containerImage <- dockerImage
     installAndStartContainerCommand <- "cluster_setup.sh"
 
+    # Note: Revert it to master once PR is approved
     dockerInstallCommand <- c(
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "master/inst/startup/cluster_setup.sh"
+        "fix/node_scripts/inst/startup/cluster_setup.sh"
       ),
       "chmod u+x cluster_setup.sh",
       paste0(

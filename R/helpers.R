@@ -149,9 +149,9 @@
 
   # Default command for job preparation task
   commands <- c(
-    "mkdir -p node_scripts",
-    "unzip -j $AZ_BATCH_JOB_PREP_WORKING_DIR/node_scripts.zip -d node_scripts "
+    "unzip -j $AZ_BATCH_JOB_PREP_WORKING_DIR/node_scripts.zip"
   )
+
   if (!is.null(packages)) {
     jobPackages <-
       dockerRunCommand(containerImage,

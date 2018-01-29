@@ -399,11 +399,7 @@ setHttpTraffic <- function(value = FALSE) {
     nodeScriptsFiles <- list.files(nodeScriptsDir, full.names = TRUE)
     
     nodeScriptsZip <- "node_scripts.zip"
-    invisible(
-      capture.output(
-          utils::zip(nodeScriptsZip, files = nodeScriptsFiles, extras = "-j")
-        )
-      )
+    utils::zip(nodeScriptsZip, files = nodeScriptsFiles, extras = "-j -q")
 
     # Uploading common job files for the worker node
     rAzureBatch::uploadBlob(id,
