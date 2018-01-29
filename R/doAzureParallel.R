@@ -414,13 +414,13 @@ setHttpTraffic <- function(value = FALSE) {
 
     # Creating read-only SAS token blob resource file urls
     sasToken <- rAzureBatch::createSasToken("r", "c", id)
-    nodeScriptsTarUrl <-
+    nodeScriptsZipUrl <-
       rAzureBatch::createBlobUrl(storageCredentials$name, id, nodeScriptsZip, sasToken)
     jobCommonFileUrl <-
       rAzureBatch::createBlobUrl(storageCredentials$name, id, jobFileName, sasToken)
 
     requiredJobResourceFiles <- list(
-      rAzureBatch::createResourceFile(url = nodeScriptsTarUrl, fileName = nodeScriptsZip),
+      rAzureBatch::createResourceFile(url = nodeScriptsZipUrl, fileName = nodeScriptsZip),
       rAzureBatch::createResourceFile(url = jobCommonFileUrl, fileName = jobFileName)
     )
 
