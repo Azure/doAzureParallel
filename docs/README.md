@@ -41,7 +41,7 @@ This section will provide information about how Azure works, how best to take ad
 
    Best practices for managing long running jobs
 
-10. **Programmatically generated config** [(linik)](.33-programmatically-generate-config.md)
+10. **Programmatically generated config** [(link)](./33-programmatically-generate-config.md)
 
    Generate credentials and cluster config at runtime programmatically
 
