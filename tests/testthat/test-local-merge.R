@@ -18,7 +18,7 @@ test_that("merge job result locally test", {
   '%dopar%' <- foreach::'%dopar%'
   jobId <-
     foreach::foreach(
-      i = 1:10,
+      i = 1:11,
       .errorhandling = "pass",
       .options.azure = list(
         enableCloudCombine = FALSE,

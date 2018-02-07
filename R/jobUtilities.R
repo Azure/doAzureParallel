@@ -207,47 +207,7 @@ getJobResult <- function(jobId) {
       cat("enableCloudCombine is set to FALSE, we will merge job result locally",
           fill = TRUE)
 
-      results <- vector("list", job$tasks$completed)
-      count <- 1
-
-      for (i in 1:job$tasks$completed) {
-        # Create a temporary file on disk
-        tempFile <- tempfile(fileext = ".rds")
-
-        # Create the temporary file's directory if it doesn't exist
-        dir.create(dirname(tempFile), showWarnings = FALSE)
-
-        # Download the blob to the temporary file
-        rAzureBatch::downloadBlob(
-          containerName = jobId,
-          blobName = paste0("result/", i, "-result.rds"),
-          downloadPath = tempFile,
-          overwrite = TRUE
-        )
-
-        #Read the rds as an object in memory
-        taskResult <- readRDS(tempFile)
-
-        for (t in 1:length(taskResult)) {
-          if (isError(taskResult[[t]])) {
-            if (metadata$errorHandling == "stop") {
-              stop("Error found")
-            }
-            else if (metadata$errorHandling == "pass") {
-              results[[count]] <- NA
-              count <- count + 1
-            }
-          } else {
-            results[[count]] <- taskResult[[t]]
-            count <- count + 1
-          }
-        }
-
-        # Delete the temporary file
-        file.remove(tempFile)
-      }
-
-      # Return the object
+      results <- .getJobResultLocal(job)
       return(results)
     }
   }
@@ -284,6 +244,70 @@ getJobResult <- function(jobId) {
     # wait for 5 seconds for the result to be available
     Sys.sleep(5)
   }
+}
+
+.getJobResultLocal <- function(job) {
+  results <- vector("list", job$tasks$completed)
+  count <- 1
+
+  for (i in 1:job$tasks$completed) {
+    retryCounter <- 0
+    maxRetryCount <- 3
+    repeat {
+      if (retryCounter > maxRetryCount) {
+        stop(
+          sprintf("Error getting job result: Maxmium number of retries (%d) reached\r\n",
+                  maxRetryCount)
+        )
+      } else {
+        retryCounter <- retryCounter + 1
+      }
+
+      tryCatch({
+        # Create a temporary file on disk
+        tempFile <- tempfile(fileext = ".rds")
+
+        # Create the temporary file's directory if it doesn't exist
+        dir.create(dirname(tempFile), showWarnings = FALSE)
+
+        # Download the blob to the temporary file
+        rAzureBatch::downloadBlob(
+          containerName = jobId,
+          blobName = paste0("result/", i, "-result.rds"),
+          downloadPath = tempFile,
+          overwrite = TRUE
+        )
+
+        #Read the rds as an object in memory
+        taskResult <- readRDS(tempFile)
+
+        for (t in 1:length(taskResult)) {
+          if (isError(taskResult[[t]])) {
+            if (metadata$errorHandling == "stop") {
+              stop("Error found")
+            }
+            else if (metadata$errorHandling == "pass") {
+              results[[count]] <- NA
+              count <- count + 1
+            }
+          } else {
+            results[[count]] <- taskResult[[t]]
+            count <- count + 1
+          }
+        }
+
+        # Delete the temporary file
+        file.remove(tempFile)
+
+        break
+      },
+      error = function(e) {
+        warning(sprintf("error downloading task result %s from blob, retrying...\r\n%s", paste0(jobId, "result/", i, "-result.rds"), e))
+      })
+    }
+  }
+  # Return the object
+  return(results)
 }
 
 #' Delete a job
