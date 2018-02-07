@@ -189,14 +189,14 @@ getJobResult <- function(jobId) {
       if (metadata$errorHandling == "stop") {
         stop(
           sprintf(
-            "job %s has failed tasks and error handling is set to 'stop', no result will be avaialble",
+            "job %s has failed tasks and error handling is set to 'stop', no result will be available",
             job$jobId
           )
         )
       } else {
         if (job$tasks$succeeded == 0) {
           stop(sprintf(
-            "all tasks failed for job %s, no result will be avaialble",
+            "all tasks failed for job %s, no result will be available",
             job$jobId
           ))
         }
@@ -272,7 +272,7 @@ getJobResult <- function(jobId) {
 
         # Download the blob to the temporary file
         rAzureBatch::downloadBlob(
-          containerName = jobId,
+          containerName = job$jobId,
           blobName = paste0("result/", i, "-result.rds"),
           downloadPath = tempFile,
           overwrite = TRUE
@@ -302,7 +302,11 @@ getJobResult <- function(jobId) {
         break
       },
       error = function(e) {
-        warning(sprintf("error downloading task result %s from blob, retrying...\r\n%s", paste0(jobId, "result/", i, "-result.rds"), e))
+        warning(sprintf(
+          "error downloading task result %s from blob, retrying...\r\n%s",
+          paste0(job$jobId, "result/", i, "-result.rds"),
+          e
+        ))
       })
     }
   }
