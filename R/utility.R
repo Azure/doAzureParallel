@@ -246,7 +246,7 @@ readMetadataBlob <- function(jobId) {
 
   if (is.vector(result)) {
     result <- readRDS(tempFile)
-    result <- xml2::as_xml_document(result)
+    result <- xml2::read_xml(result)
     chunkSize <- getXmlValues(result, ".//chunkSize")
     packages <- getXmlValues(result, ".//packages")
     errorHandling <- getXmlValues(result, ".//errorHandling")
