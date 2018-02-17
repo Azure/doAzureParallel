@@ -122,7 +122,8 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
   args <- list(...)
   dependsOn <- args$dependsOn
   containerImage <- args$containerImage
-
+  outputFiles <- args$outputFiles
+  
   copyCommand <- sprintf(
     "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include %s/*.rds",
     accountName,
@@ -131,6 +132,14 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
     taskId
   )
 
+  exitConditions <- NULL
+  if (!is.null(args$dependsOn)) {
+    dependsOn <- args$dependsOn
+  }
+  else {
+    exitConditions <- list(default = list(dependencyAction = "satisfy"))
+  }
+  
   downloadCommand <-
     dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
   commands <- c(downloadCommand)
