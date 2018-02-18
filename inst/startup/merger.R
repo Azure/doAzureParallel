@@ -62,7 +62,8 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
     files <- list.files(file.path(batchTaskWorkingDirectory,
                                   batchTaskId),
                         full.names = TRUE)
-
+    files<- files[order(as.numeric(gsub("[^0-9]","",files)))]
+    
     if (errorHandling == "stop" &&
         length(files) != batchTasksCount) {
       stop(
@@ -81,14 +82,10 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
                                                                     "chunkSize",
                                                                    "errorHandling",
                                                                    "isError")) %dopar% {
-      taskFileName <-
-        file.path(
-          batchTaskWorkingDirectory,
-          batchTaskId,
-          paste0(i, "-result.rds")
-        )
       task <- tryCatch({
-        readRDS(files[i])
+        t <- readRDS(files[i])
+        print(t)
+        t
       }, error = function(e) {
         e
       })

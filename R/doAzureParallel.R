@@ -354,9 +354,15 @@ setHttpTraffic <- function(value = FALSE) {
       list(name = "wait",
            value = as.character(obj$options$azure$wait))
 
-    metadata[[length(metadata) + 1]] <- waitKeyValuePair
   }
-
+  else {
+    waitKeyValuePair <-
+      list(name = "wait",
+           value = as.character(FALSE))
+  }
+  
+  metadata[[length(metadata) + 1]] <- waitKeyValuePair
+  
   retryCounter <- 0
   maxRetryCount <- 5
   startupFolderName <- "startup"
@@ -599,79 +605,86 @@ setHttpTraffic <- function(value = FALSE) {
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
 
-    bucket <- 1
-    bucketIndex <- 1
-    
-    while (bucket <= buckets) {
-      subTaskId <- paste0("m", bucket)
-      resultFile <- paste0(subTaskId, "-result", ".rds")
-      
-      mergeOutput <- list(
-        list(
-          filePattern = resultFile,
-          destination = list(container = list(
-            path = paste0("merge", "/", resultFile),
-            containerUrl = outputContainerUrl
-          )),
-          uploadOptions = list(uploadCondition = "taskCompletion")
-        )
-      )
-      
-      addSubMergeTask(
-        jobId = id,
-        taskId = subTaskId,
-        rCommand = sprintf(
-          "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
-          rle(bucketSeq)$lengths[bucket],
-          chunkSize,
-          as.character(obj$errorHandling)
-        ),
-        envir = .doAzureBatchGlobals,
-        packages = obj$packages,
-        dependsOn = list(taskIdRanges = list(list(
-          start = bucketIndex,
-          end = bucketIndex + rle(bucketSeq)$lengths[bucket] - 1))),
-        cloudCombine = cloudCombine,
-        outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
-        containerImage = data$containerImage
-      )
-      
-      bucketIndex <- bucketIndex + rle(bucketSeq)$lengths[bucket]
-      bucket <- bucket + 1
-    }
-
     if (buckets > 1) {
-      resultFile <- paste0("merge", "-result", ".rds")
+      taskDependencies <- list(taskIds = lapply(1:buckets, function(x) paste0("m", x)))
       
-      mergeOutput <- list(
-        list(
-          filePattern = resultFile,
-          destination = list(container = list(
-            path = paste0("result", "/", resultFile),
-            containerUrl = outputContainerUrl
-          )),
-          uploadOptions = list(uploadCondition = "taskCompletion")
+      bucket <- 1
+      bucketIndex <- 1
+      
+      while (bucket <= buckets) {
+        subTaskId <- paste0("m", bucket)
+        resultFile <- paste0(subTaskId, "-result", ".rds")
+        
+        mergeOutput <- list(
+          list(
+            filePattern = resultFile,
+            destination = list(container = list(
+              path = paste0("merge", "/", resultFile),
+              containerUrl = outputContainerUrl
+            )),
+            uploadOptions = list(uploadCondition = "taskCompletion")
+          )
         )
-      )
-      
-      addFinalMergeTask(
-        jobId = id,
-        taskId = "merge",
-        rCommand = sprintf(
-          "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
-          buckets,
-          chunkSize,
-          as.character(obj$errorHandling)
-        ),
-        envir = .doAzureBatchGlobals,
-        packages = obj$packages,
-        dependsOn = list(taskIds = lapply(1:buckets, function(x) paste0("m", x))),
-        cloudCombine = cloudCombine,
-        outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
-        containerImage = data$containerImage
-      )  
+        
+        addSubMergeTask(
+          jobId = id,
+          taskId = subTaskId,
+          rCommand = sprintf(
+            "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
+            rle(bucketSeq)$lengths[bucket],
+            chunkSize,
+            as.character(obj$errorHandling)
+          ),
+          envir = .doAzureBatchGlobals,
+          packages = obj$packages,
+          dependsOn = list(taskIdRanges = list(list(
+            start = bucketIndex,
+            end = bucketIndex + rle(bucketSeq)$lengths[bucket] - 1))),
+          cloudCombine = cloudCombine,
+          outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
+          containerImage = data$containerImage
+        )
+        
+        bucketIndex <- bucketIndex + rle(bucketSeq)$lengths[bucket]
+        bucket <- bucket + 1
+      }
+    }
+    else {
+      taskDependencies <- list(taskIdRanges = list(list(
+        start = 1,
+        end = length(tasks))))
     }
 
+    resultFile <- paste0("merge", "-result", ".rds")
+    
+    mergeOutput <- list(
+      list(
+        filePattern = resultFile,
+        destination = list(container = list(
+          path = paste0("result", "/", resultFile),
+          containerUrl = outputContainerUrl
+        )),
+        uploadOptions = list(uploadCondition = "taskCompletion")
+      )
+    )
+    
+    addFinalMergeTask(
+      jobId = id,
+      taskId = "merge",
+      rCommand = sprintf(
+        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
+        buckets,
+        chunkSize,
+        as.character(obj$errorHandling)
+      ),
+      envir = .doAzureBatchGlobals,
+      packages = obj$packages,
+      dependsOn = taskDependencies,
+      cloudCombine = cloudCombine,
+      outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
+      containerImage = data$containerImage
+    )
+    
     cat(". . .")
   }
 
@@ -689,7 +702,19 @@ setHttpTraffic <- function(value = FALSE) {
         waitForTasksToComplete(id, jobTimeout, obj$errorHandling)
 
         if (typeof(cloudCombine) == "list" && enableCloudCombine) {
-          results <- getJobResult(id)
+          tempFile <- tempfile("doAzureParallel", fileext = ".rds")
+          
+          response <-
+            rAzureBatch::downloadBlob(
+              id,
+              paste0("result/", "merge-result.rds"),
+              sasToken = sasToken,
+              accountName = storageCredentials$name,
+              downloadPath = tempFile,
+              overwrite = TRUE
+            )
+          
+          results <- readRDS(tempFile)
           failTasks <- sapply(results, .isError)
 
           numberOfFailedTasks <- sum(unlist(failTasks))

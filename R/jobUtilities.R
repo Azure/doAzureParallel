@@ -234,7 +234,7 @@ getJobResult <- function(jobId) {
 
     results <- rAzureBatch::downloadBlob(
       jobId,
-      paste0("result/", jobId, "-merge-result.rds"),
+      "result/merge-result.rds",
       downloadPath = tempFile,
       overwrite = TRUE
     )
