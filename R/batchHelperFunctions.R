@@ -16,7 +16,7 @@ addFinalMergeTask <- function(jobId, taskId, rCommand, ...){
   if (!is.null(cloudCombine)) {
     assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
     copyCommand <- sprintf(
-      "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include m*/*-result.rds",
+      "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include merge/*-result.rds",
       accountName,
       jobId,
       "$AZ_BATCH_TASK_WORKING_DIR"
@@ -142,12 +142,33 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
   
   downloadCommand <-
     dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
-  commands <- c(downloadCommand)
-
+  
+  commands <- c(downloadCommand, dockerRunCommand(containerImage, rCommand))
+  commands <- linuxWrapCommands(commands)
+  
+  sasToken <- rAzureBatch::createSasToken("rwcl", "c", jobId)
+  queryParameterUrl <- "?"
+  
+  for (query in names(sasToken)) {
+    queryParameterUrl <-
+      paste0(queryParameterUrl,
+             query,
+             "=",
+             RCurl::curlEscape(sasToken[[query]]),
+             "&")
+  }
+  
+  queryParameterUrl <-
+    substr(queryParameterUrl, 1, nchar(queryParameterUrl) - 1)
+  
+  setting <- list(name = "BLOBXFER_SASKEY",
+                  value = queryParameterUrl)
+  
   rAzureBatch::addTask(
     jobId,
     taskId,
     commandLine = commands,
+    environmentSettings = list(setting),
     dependsOn = dependsOn,
     outputFiles = outputFiles,
     exitConditions = exitConditions

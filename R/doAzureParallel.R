@@ -602,7 +602,7 @@ setHttpTraffic <- function(value = FALSE) {
     bucket <- 1
     bucketIndex <- 1
     
-    while (bucket < buckets) {
+    while (bucket <= buckets) {
       subTaskId <- paste0("m", bucket)
       resultFile <- paste0(subTaskId, "-result", ".rds")
       
@@ -610,7 +610,7 @@ setHttpTraffic <- function(value = FALSE) {
         list(
           filePattern = resultFile,
           destination = list(container = list(
-            path = paste0("final", "/", resultFile),
+            path = paste0("merge", "/", resultFile),
             containerUrl = outputContainerUrl
           )),
           uploadOptions = list(uploadCondition = "taskCompletion")
@@ -622,7 +622,7 @@ setHttpTraffic <- function(value = FALSE) {
         taskId = subTaskId,
         rCommand = sprintf(
           "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
-          length(tasks),
+          rle(bucketSeq)$lengths[bucket],
           chunkSize,
           as.character(obj$errorHandling)
         ),
@@ -641,20 +641,33 @@ setHttpTraffic <- function(value = FALSE) {
     }
 
     if (buckets > 1) {
+      resultFile <- paste0("merge", "-result", ".rds")
+      
+      mergeOutput <- list(
+        list(
+          filePattern = resultFile,
+          destination = list(container = list(
+            path = paste0("result", "/", resultFile),
+            containerUrl = outputContainerUrl
+          )),
+          uploadOptions = list(uploadCondition = "taskCompletion")
+        )
+      )
+      
       addFinalMergeTask(
         jobId = id,
         taskId = "merge",
         rCommand = sprintf(
           "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
-          length(tasks),
+          buckets,
           chunkSize,
           as.character(obj$errorHandling)
         ),
         envir = .doAzureBatchGlobals,
         packages = obj$packages,
-        dependsOn = list(taskIdRanges = list(list(start = 1, end = length(tasks)))),
+        dependsOn = list(taskIds = lapply(1:buckets, function(x) paste0("m", x))),
         cloudCombine = cloudCombine,
-        outputFiles = obj$options$azure$outputFiles,
+        outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
         containerImage = data$containerImage
       )  
     }

@@ -60,7 +60,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
     count <- 1
 
     files <- list.files(file.path(batchTaskWorkingDirectory,
-                                  "result"),
+                                  batchTaskId),
                         full.names = TRUE)
 
     if (errorHandling == "stop" &&
@@ -76,7 +76,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
       )
     }
 
-    results <- foreach::foreach(i = 1:batchTasksCount, .export = c("batchTaskWorkingDirectory",
+    results <- foreach::foreach(i = 1:length(files), .export = c("batchTaskWorkingDirectory",
                                                                    "batchJobId",
                                                                     "chunkSize",
                                                                    "errorHandling",
@@ -84,11 +84,11 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
       taskFileName <-
         file.path(
           batchTaskWorkingDirectory,
-          "result",
+          batchTaskId,
           paste0(i, "-result.rds")
         )
       task <- tryCatch({
-        readRDS(taskFileName)
+        readRDS(files[i])
       }, error = function(e) {
         e
       })
@@ -132,7 +132,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
 
     saveRDS(results, file = file.path(
       batchTaskWorkingDirectory,
-      "merge-result.rds"
+      paste0(batchTaskId, "-result.rds")
     ))
 
     0
