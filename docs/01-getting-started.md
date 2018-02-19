@@ -10,17 +10,17 @@ Open a broswer and navigate to [Azure Cloud Shell](https://shell.azure.com). Mak
 
 ```sh
 # Download the required setup scripts
-wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/gettingstarted/inst/getting-started/manage_account.sh
+wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/gettingstarted/inst/getting-started/manage_account
 
 # Create resources in West US (westus). You can find a list of locations by running
 # 'az account list-locations'
 # Make sure to use the 'name' field and not the 'displayName' field
 
 # Create a resource group, batch account and storage account
-/bin/sh manage_account.sh create westus
+/bin/sh manage_account create westus
 
 # Get the keys needed for doAzureParallel
-/bin/sh manage_account.sh list-keys
+/bin/sh manage_account list-keys
 ```
 
 These commands will create 3 objects in Azure automatically.
@@ -28,7 +28,7 @@ These commands will create 3 objects in Azure automatically.
 2. A Batch Account within the Resource Group called 'doazureparallelbatch'
 3. A Storage Account withing the Resource Group called 'doazureparallelstorage'
 
-You can change the default names by passing additional parameters into the manage_account.sh script. More information is available by running the command below.
+You can change the default names by passing additional parameters into the manage_account script. More information is available by running the command below.
 ```sh
 /bin/sh manage_account --help
 ```
@@ -42,7 +42,7 @@ TODO
 
 This information can also be found in the Azure Portal inside your Batch Account:
 
-![Azure Batch Acccount in the Portal](./vignettes/doAzureParallel-azurebatch-instructions.PNG "Azure Batch Acccount in the Portal")
+![Azure Batch Acccount in the Portal](../vignettes/doAzureParallel-azurebatch-instructions.PNG "Azure Batch Acccount in the Portal")
 
 For your Azure Storage Account, we need to get:
 - Storage Account Name
@@ -50,6 +50,6 @@ For your Azure Storage Account, we need to get:
 
 This information can be found in the Azure Portal inside your Azure Storage Account:
 
-![Azure Storage Acccount in the Portal](./vignettes/doAzureParallel-azurestorage-instructions.PNG "Azure Storage Acccount in the Portal")
+![Azure Storage Acccount in the Portal](../vignettes/doAzureParallel-azurestorage-instructions.PNG "Azure Storage Acccount in the Portal")
 
 Keep track of the above keys and account information as it will be used to connect your R session with Azure.
