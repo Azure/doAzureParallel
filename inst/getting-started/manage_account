@@ -1,6 +1,6 @@
 #!/bin/sh
-# Parse arguments
 
+# Parse arguments
 programname=$0
 print_usage() {
     echo "-----------------"
@@ -25,6 +25,11 @@ print_usage() {
     echo "      resource_group:   [optional: default = 'doazureparallel']"
     echo "      batch_account:    [optional: default = 'doazureparallelbatch']"
     echo "      storage_account:  [optional: default = 'doazureparallelstorage']"
+    echo ""
+    echo ""
+    echo "For a list of valid regions to create resources in run:"
+    /bin/echo -e "  \e[1;33mIMPORTANT\e[0m: Use the 'Name' field, not the 'Friendly name'"
+    echo "  az account list-locations --output table"
     echo ""
     echo ""
     echo "Examples"
@@ -70,6 +75,8 @@ get_credentials() {
     batch_account_name=$2
     storage_account_name=$3
 
+   echo "Getting account key for Resource Group: $resource_group. Batch account: $batch_account_name and Storage account: $storage_account_name\n"
+
     batch_account_key="$(az batch account keys list \
             --name $batch_account_name \
             --resource-group $resource_group \
@@ -86,6 +93,8 @@ get_credentials() {
         --name $storage_account_name \
         | jq .primaryEndpoints.blob)"
 
+    echo "Copy the following json into your local credentials.json file:\n"
+
     export JSON='{\n
         "batchAccount": { \n
             \t"name": "'"$batch_account_name"'", \n
@@ -100,10 +109,7 @@ get_credentials() {
     echo $JSON
 }
 
-
-# Main program
 if [ "$#" -eq 0 ]; then
-    # No parameters
     print_usage
     exit 1
 fi
@@ -111,7 +117,6 @@ fi
 COMMAND=$1
 
 if [ "$COMMAND" = "create" ]; then
-    # Handle 'create' command
     location=$2
 
     if [ "$location" = "" ]; then
@@ -142,7 +147,6 @@ if [ "$COMMAND" = "create" ]; then
 fi
 
 if [ "$COMMAND" = "get-keys"  ]; then
-    # Handle 'get-keys' command
     resource_group=$2
     batch_account_name=$3
     storage_account_name=$4
@@ -166,13 +170,11 @@ fi
 
 if [ "$COMMAND" = "-h" ] || [ "$COMMAND" = "--help" ] || [ "$COMMAND" = "h" ] |
     [ "$COMMAND" = "help" ] || [ "$COMMAND" = "?" ]; then
-    # Handle 'help' command
     print_usage
     exit 0
 fi
 
 if [ "$COMMAND" != "" ]; then
-    # Handle unknown commands
     echo "Unknown command '$COMMAND'"
     print_usage
     exit 1
