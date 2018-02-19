@@ -5,7 +5,8 @@ addFinalMergeTask <- function(jobId, taskId, rCommand, ...){
   dependsOn <- args$dependsOn
   cloudCombine <- args$cloudCombine
   containerImage <- args$containerImage
-
+  buckets <- args$buckets
+  
   resultFile <- paste0(taskId, "-result", ".rds")
   accountName <- storageCredentials$name
 
@@ -15,8 +16,9 @@ addFinalMergeTask <- function(jobId, taskId, rCommand, ...){
 
   if (!is.null(cloudCombine)) {
     assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
+
     copyCommand <- sprintf(
-      "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include merge/*-result.rds",
+      "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include results/*.rds",
       accountName,
       jobId,
       "$AZ_BATCH_TASK_WORKING_DIR"
@@ -24,6 +26,7 @@ addFinalMergeTask <- function(jobId, taskId, rCommand, ...){
 
     downloadCommand <-
       dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
+    
     commands <- c(downloadCommand)
   }
 
@@ -46,7 +49,7 @@ addFinalMergeTask <- function(jobId, taskId, rCommand, ...){
     list(
       filePattern = resultFile,
       destination = list(container = list(
-        path = paste0("result/", resultFile),
+        path = paste0("results/", resultFile),
         containerUrl = containerUrl
       )),
       uploadOptions = list(uploadCondition = "taskCompletion")
@@ -237,14 +240,14 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
     )
 
   outputFiles <- list(
-    list(
-      filePattern = resultFile,
-      destination = list(container = list(
-        path = paste0("result/", resultFile),
-        containerUrl = containerUrl
-      )),
-      uploadOptions = list(uploadCondition = "taskCompletion")
-    ),
+    # list(
+    #   filePattern = resultFile,
+    #   destination = list(container = list(
+    #     path = paste0("result/", resultFile),
+    #     containerUrl = containerUrl
+    #   )),
+    #   uploadOptions = list(uploadCondition = "taskCompletion")
+    # ),
     list(
       filePattern = paste0(taskId, ".txt"),
       destination = list(container = list(

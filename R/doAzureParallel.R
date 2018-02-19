@@ -568,18 +568,34 @@ setHttpTraffic <- function(value = FALSE) {
     }
 
     resultFile <- paste0(taskId, "-result", ".rds")
-
-    mergeOutput <- list(
-      list(
-        filePattern = resultFile,
-        destination = list(container = list(
-          path = paste0("m", indices[i,][3], "/", resultFile),
-          containerUrl = outputContainerUrl
-        )),
-        uploadOptions = list(uploadCondition = "taskCompletion")
+    
+    if (buckets > 1) {
+      mergeOutput <- list(
+        list(
+          filePattern = resultFile,
+          destination = list(container = list(
+            path = paste0("m", indices[i,][3], "/", resultFile),
+            containerUrl = outputContainerUrl
+          )),
+          uploadOptions = list(uploadCondition = "taskCompletion")
+        )
       )
-    )
+    }
+    else {
+      mergeOutput <- list(
+        list(
+          filePattern = resultFile,
+          destination = list(container = list(
+            path = paste0("results", "/", resultFile),
+            containerUrl = outputContainerUrl
+          )),
+          uploadOptions = list(uploadCondition = "taskCompletion")
+        )
+      )
+    }
 
+    mergeOutput <- append(obj$options$azure$outputFiles, mergeOutput)
+    
     .addTask(
       jobId = id,
       taskId = taskId,
@@ -591,7 +607,7 @@ setHttpTraffic <- function(value = FALSE) {
         as.character(obj$errorHandling)),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
-      outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
+      outputFiles = mergeOutput,
       containerImage = data$containerImage,
       args = args
     )
@@ -619,7 +635,7 @@ setHttpTraffic <- function(value = FALSE) {
           list(
             filePattern = resultFile,
             destination = list(container = list(
-              path = paste0("merge", "/", resultFile),
+              path = paste0("results", "/", resultFile),
               containerUrl = outputContainerUrl
             )),
             uploadOptions = list(uploadCondition = "taskCompletion")
@@ -648,11 +664,15 @@ setHttpTraffic <- function(value = FALSE) {
         bucketIndex <- bucketIndex + rle(bucketSeq)$lengths[bucket]
         bucket <- bucket + 1
       }
+      
+      tasksCount <- buckets
     }
     else {
       taskDependencies <- list(taskIdRanges = list(list(
         start = 1,
         end = length(tasks))))
+      
+      tasksCount <- length(tasks)
     }
 
     resultFile <- paste0("merge", "-result", ".rds")
@@ -661,7 +681,7 @@ setHttpTraffic <- function(value = FALSE) {
       list(
         filePattern = resultFile,
         destination = list(container = list(
-          path = paste0("result", "/", resultFile),
+          path = paste0("results", "/", resultFile),
           containerUrl = outputContainerUrl
         )),
         uploadOptions = list(uploadCondition = "taskCompletion")
@@ -673,7 +693,7 @@ setHttpTraffic <- function(value = FALSE) {
       taskId = "merge",
       rCommand = sprintf(
         "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
-        buckets,
+        as.character(tasksCount),
         chunkSize,
         as.character(obj$errorHandling)
       ),
@@ -682,7 +702,8 @@ setHttpTraffic <- function(value = FALSE) {
       dependsOn = taskDependencies,
       cloudCombine = cloudCombine,
       outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
-      containerImage = data$containerImage
+      containerImage = data$containerImage,
+      buckets = buckets
     )
     
     cat(". . .")
@@ -707,7 +728,7 @@ setHttpTraffic <- function(value = FALSE) {
           response <-
             rAzureBatch::downloadBlob(
               id,
-              paste0("result/", "merge-result.rds"),
+              paste0("results/", "merge-result.rds"),
               sasToken = sasToken,
               accountName = storageCredentials$name,
               downloadPath = tempFile,
