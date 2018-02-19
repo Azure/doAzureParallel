@@ -12,7 +12,7 @@ Open a broswer and navigate to [Azure Cloud Shell](https://shell.azure.com). Mak
 
 ```sh
 # Download the required setup scripts
-wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/gettingstarted/inst/getting-started/manage_account
+wget https://raw.githubusercontent.com/Azure/doAzureParallel/inst/getting-started/manage_account
 
 # Create resources in West US (westus). You can find a list of locations by running
 # 'az account list-locations'
