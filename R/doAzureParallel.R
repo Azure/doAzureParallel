@@ -358,7 +358,7 @@ setHttpTraffic <- function(value = FALSE) {
 
   retryCounter <- 0
   maxRetryCount <- 5
-  startupFolderName <- "startup"
+
   repeat {
     if (retryCounter > maxRetryCount) {
       stop(
@@ -395,23 +395,17 @@ setHttpTraffic <- function(value = FALSE) {
       stop(paste0("Error creating job: ", containerContent$message$value))
     }
 
+    nodeScriptsDir <- system.file("startup", package = "doAzureParallel")
+    nodeScriptsFiles <- list.files(nodeScriptsDir, full.names = TRUE)
+
+    nodeScriptsZip <- "node_scripts.zip"
+    # Zip Flags: Keeping console output clean and removing junk paths
+    utils::zip(nodeScriptsZip, files = nodeScriptsFiles, extras = "-j -q")
+
     # Uploading common job files for the worker node
     rAzureBatch::uploadBlob(id,
-                            system.file(startupFolderName, "worker.R", package = "doAzureParallel"))
-    rAzureBatch::uploadBlob(id,
-                            system.file(startupFolderName, "merger.R", package = "doAzureParallel"))
-    rAzureBatch::uploadBlob(
-      id,
-      system.file(startupFolderName, "install_github.R", package = "doAzureParallel")
-    )
-    rAzureBatch::uploadBlob(
-      id,
-      system.file(startupFolderName, "install_cran.R", package = "doAzureParallel")
-    )
-    rAzureBatch::uploadBlob(
-      id,
-      system.file(startupFolderName, "install_bioconductor.R", package = "doAzureParallel")
-    )
+                            nodeScriptsZip)
+    file.remove(nodeScriptsZip)
 
     # Creating common job environment for all tasks
     jobFileName <- paste0(id, ".rds")
@@ -421,28 +415,13 @@ setHttpTraffic <- function(value = FALSE) {
 
     # Creating read-only SAS token blob resource file urls
     sasToken <- rAzureBatch::createSasToken("r", "c", id)
-    workerScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "worker.R", sasToken)
-    mergerScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "merger.R", sasToken)
-    installGithubScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name,
-                                 id,
-                                 "install_github.R",
-                                 sasToken)
-    installCranScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_cran.R", sasToken)
-    installBioConductorScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_bioconductor.R", sasToken)
+    nodeScriptsZipUrl <-
+      rAzureBatch::createBlobUrl(storageCredentials$name, id, nodeScriptsZip, sasToken)
     jobCommonFileUrl <-
       rAzureBatch::createBlobUrl(storageCredentials$name, id, jobFileName, sasToken)
 
     requiredJobResourceFiles <- list(
-      rAzureBatch::createResourceFile(url = workerScriptUrl, fileName = "worker.R"),
-      rAzureBatch::createResourceFile(url = mergerScriptUrl, fileName = "merger.R"),
-      rAzureBatch::createResourceFile(url = installGithubScriptUrl, fileName = "install_github.R"),
-      rAzureBatch::createResourceFile(url = installCranScriptUrl, fileName = "install_cran.R"),
-      rAzureBatch::createResourceFile(url = installBioConductorScriptUrl, fileName = "install_bioconductor.R"),
+      rAzureBatch::createResourceFile(url = nodeScriptsZipUrl, fileName = nodeScriptsZip),
       rAzureBatch::createResourceFile(url = jobCommonFileUrl, fileName = jobFileName)
     )
 
@@ -494,7 +473,6 @@ setHttpTraffic <- function(value = FALSE) {
       stop("Error in creating job: ", jobContent$message$value)
     }
   }
-
 
   job <- rAzureBatch::getJob(id)
 
