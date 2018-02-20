@@ -92,9 +92,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
                                                                    "errorHandling",
                                                                    "isError")) %dopar% {
       task <- tryCatch({
-        t <- readRDS(files[i])
-        print(t)
-        t
+        readRDS(files[i])
       }, error = function(e) {
         e
       })
