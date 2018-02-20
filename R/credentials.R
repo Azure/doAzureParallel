@@ -25,7 +25,7 @@
 #'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
 #' }
 #' @export
-generateCredentialsConfig <- function(fileName, ...) {
+generateCredentialsConfig <- function(fileName, authenticationType = c("SharedKey", "ServicePrincipal"), ...) {
   args <- list(...)
 
   batchAccount <-
@@ -72,17 +72,35 @@ generateCredentialsConfig <- function(fileName, ...) {
            args$dockerRegistry)
 
   if (!file.exists(paste0(getwd(), "/", fileName))) {
-    config <- list(
-      batchAccount = list(name = batchAccount,
-                          key = batchKey,
-                          url = batchUrl),
-      storageAccount = list(name = storageName,
-                            key = storageKey),
-      githubAuthenticationToken = githubAuthenticationToken,
-      dockerAuthentication = list(username = dockerUsername,
-                                  password = dockerPassword,
-                                  registry = dockerRegistry)
-    )
+    if (authenticationType == "SharedKey") {
+      config <- list(
+        Authentication = list(
+          batchAccount = list(name = batchAccount,
+                              key = batchKey,
+                              url = batchUrl),
+          storageAccount = list(name = storageName,
+                                key = storageKey)
+        ),
+        githubAuthenticationToken = githubAuthenticationToken,
+        dockerAuthentication = list(username = dockerUsername,
+                                    password = dockerPassword,
+                                    registry = dockerRegistry)
+      )
+    }
+    else {
+      config <- list(
+        ServicePrincipal = list(
+          tenantId = "tenant",
+          clientId = "client",
+          credential = "credential",
+          batchAccountResourceId = "batchAccountResource",
+          storageAccountResourceId = "storageAccountResource"),
+        githubAuthenticationToken = githubAuthenticationToken,
+        dockerAuthentication = list(username = dockerUsername,
+                                    password = dockerPassword,
+                                    registry = dockerRegistry)
+      )
+    }
 
     configJson <-
       jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
@@ -102,7 +120,7 @@ generateCredentialsConfig <- function(fileName, ...) {
 #' @param credentials The credentials object or json file
 #'
 #' @export
-setCredentials <- function(credentials = "az_config.json") {
+setCredentials <- function(credentials = "az_config.json", verbose = TRUE) {
   if (class(credentials) == "character") {
     fileName <- credentials
     if (file.exists(fileName)) {
@@ -121,5 +139,16 @@ setCredentials <- function(credentials = "az_config.json") {
   }
 
   options("az_config" = config)
-  print("Your azure credentials have been set.")
+
+  cat(strrep('=', options("width")), fill = TRUE)
+  cat(sprintf("Batch Account: %s", config$batchAccount$name), fill = TRUE)
+  cat(sprintf("Batch Account Url: %s", config$batchAccount$url), fill = TRUE)
+
+  cat(sprintf("Storage Account: %s", config$storageAccount$name), fill = TRUE)
+  cat(sprintf("Storage Account Url: %s", sprintf("https://%s.blob.core.windows.net",
+                                                 config$storageAccount$name)),
+      fill = TRUE)
+
+  cat(strrep('=', options("width")), fill = TRUE)
+  cat("Your credentials have been successfully set.", fill = TRUE)
 }
