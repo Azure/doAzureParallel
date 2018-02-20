@@ -143,7 +143,7 @@ makeCluster <-
     dockerInstallCommand <- c(
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "fix/node_scripts/inst/startup/cluster_setup.sh"
+        "master/inst/startup/cluster_setup.sh"
       ),
       "chmod u+x cluster_setup.sh",
       paste0(
