@@ -74,7 +74,7 @@ generateCredentialsConfig <- function(fileName, authenticationType = c("SharedKe
   if (!file.exists(paste0(getwd(), "/", fileName))) {
     if (authenticationType == "SharedKey") {
       config <- list(
-        Authentication = list(
+        sharedKey = list(
           batchAccount = list(name = batchAccount,
                               key = batchKey,
                               url = batchUrl),
@@ -89,12 +89,12 @@ generateCredentialsConfig <- function(fileName, authenticationType = c("SharedKe
     }
     else {
       config <- list(
-        ServicePrincipal = list(
+        servicePrincipal = list(
           tenantId = "tenant",
           clientId = "client",
           credential = "credential",
-          batchAccountResourceId = "batchAccountResource",
-          storageAccountResourceId = "storageAccountResource"),
+          batchUrl = "batchUrl",
+          storageUrl = "storageUrl"),
         githubAuthenticationToken = githubAuthenticationToken,
         dockerAuthentication = list(username = dockerUsername,
                                     password = dockerPassword,
