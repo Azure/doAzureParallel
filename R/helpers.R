@@ -148,12 +148,7 @@
   poolInfo <- list("poolId" = poolId)
 
   # Default command for job preparation task
-  # Supports backwards compatibility if zip packages are missing, it will be installed
-  # Eventually, apt-get install command will be deprecated
-  commands <- c(
-    "apt-get -y install zip unzip",
-    "unzip -j $AZ_BATCH_JOB_PREP_WORKING_DIR/node_scripts.zip"
-  )
+  commands <- c("ls")
 
   if (!is.null(packages)) {
     jobPackages <-
