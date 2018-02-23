@@ -39,13 +39,7 @@ resource_files <- list(
   rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-3.csv"), fileName = "yellow_tripdata_2016-3.csv"),
   rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-4.csv"), fileName = "yellow_tripdata_2016-4.csv"),
   rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-5.csv"), fileName = "yellow_tripdata_2016-5.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-6.csv"), fileName = "yellow_tripdata_2016-6.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-7.csv"), fileName = "yellow_tripdata_2016-7.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-8.csv"), fileName = "yellow_tripdata_2016-8.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-9.csv"), fileName = "yellow_tripdata_2016-9.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-10.csv"), fileName = "yellow_tripdata_2016-10.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-11.csv"), fileName = "yellow_tripdata_2016-11.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-12.csv"), fileName = "yellow_tripdata_2016-12.csv")
+  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-6.csv"), fileName = "yellow_tripdata_2016-6.csv")
 )
 
 # add the parameter 'resourceFiles' to download files to nodes
@@ -78,7 +72,7 @@ outputSas <- rAzureBatch::createSasToken(permission = "rw", sr = "c", outputsCon
 # === Foreach with resourceFiles & writing to storage ===
 # =======================================================
 
-results <- foreach(i = 1:12) %dopar% {
+results <- foreach(i = 1:6) %dopar% {
 
   library(data.table)
   library(ggplot2)
@@ -123,6 +117,8 @@ results <- foreach(i = 1:12) %dopar% {
   blob$url
 }
 
+# The results object is a list of pointers to files in Azure Storage. Copy and paste the links into your favorite browser
+# to see the output per run.
 results
 
 # deprovision your cluster after your work is complete
