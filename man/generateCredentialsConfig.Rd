@@ -4,7 +4,8 @@
 \alias{generateCredentialsConfig}
 \title{Creates a credentials file for rAzureBatch package authentication}
 \usage{
-generateCredentialsConfig(fileName, ...)
+generateCredentialsConfig(fileName, authenticationType = c("SharedKey",
+  "ServicePrincipal"), ...)
 }
 \arguments{
 \item{fileName}{Credentials file name}

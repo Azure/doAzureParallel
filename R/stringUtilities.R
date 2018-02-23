@@ -26,6 +26,19 @@ getJobPackageSummary <- function(packages) {
   }
 }
 
+printSharedKeyInformation <- function(config) {
+  cat(sprintf("Batch Account: %s",
+              config$batchAccount$name), fill = TRUE)
+  cat(sprintf("Batch Account Url: %s",
+              config$batchAccount$url),fill = TRUE)
+
+  cat(sprintf("Storage Account: %s",
+              config$storageAccount$name), fill = TRUE)
+  cat(sprintf("Storage Account Url: %s", sprintf("https://%s.blob.core.windows.net",
+                                                 config$storageAccount$name)),
+      fill = TRUE)
+}
+
 printJobInformation <- function(jobId,
                                 chunkSize,
                                 enableCloudCombine,
@@ -49,4 +62,18 @@ printJobInformation <- function(jobId,
   cat(sprintf("wait: %s", as.character(wait)), fill = TRUE)
   cat(sprintf("autoDeleteJob: %s", as.character(autoDeleteJob)), fill = TRUE)
   cat(strrep('=', options("width")), fill = TRUE)
+}
+
+extractResourceGroupname <- function(x) gsub(".*?/resourceGroups/(.*?)(/.*)*$",  "\\1", x)
+
+extractSubscriptionID <- function(x) gsub(".*?/subscriptions/(.*?)(/.*)*$",   "\\1", x)
+
+extractAccount <- function(x) gsub(".*?/*Accounts/(.*?)(/.*)*$", "\\1", x)
+
+getAccountInformation <- function(x) {
+  list(
+    account = extractAccount(x),
+    resourceGroup = extractResourceGroupname(x),
+    subscriptionId = extractSubscriptionID(x)
+  )
 }

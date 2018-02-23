@@ -213,7 +213,7 @@ makeCluster <-
                  e))
     })
 
-    response <- .addPool(
+    response <- BatchUtilitiesOperations$addPool(
       pool = poolConfig,
       packages = packages,
       environmentSettings = environmentSettings,
@@ -247,7 +247,7 @@ makeCluster <-
 
         cat("\n")
 
-        response <- .addPool(
+        response <- BatchUtilitiesOperations$addPool(
           pool = poolConfig,
           packages = packages,
           environmentSettings = environmentSettings,

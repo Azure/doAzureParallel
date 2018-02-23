@@ -428,7 +428,7 @@ setHttpTraffic <- function(value = FALSE) {
     resourceFiles <-
       append(resourceFiles, requiredJobResourceFiles)
 
-    response <- .addJob(
+    response <- BatchUtilitiesOperations$addJob(
       jobId = id,
       poolId = data$poolId,
       resourceFiles = resourceFiles,
@@ -519,12 +519,12 @@ setHttpTraffic <- function(value = FALSE) {
       args <- argsList[startIndex:endIndex]
     }
 
-    .addTask(
+    BatchUtilitiesOperations$addTask(
       jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
         paste("Rscript --no-save --no-environ --no-restore --no-site-file",
-        "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i > $AZ_BATCH_TASK_ID.txt"),
+              "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i > $AZ_BATCH_TASK_ID.txt"),
         startIndex,
         endIndex,
         isDataSet),
@@ -543,12 +543,12 @@ setHttpTraffic <- function(value = FALSE) {
 
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
-    .addTask(
+    BatchUtilitiesOperations$addTask(
       jobId = id,
       taskId = "merge",
       rCommand = sprintf(
         paste("Rscript --no-save --no-environ --no-restore --no-site-file",
-        "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt"),
+              "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt"),
         length(tasks),
         chunkSize,
         as.character(obj$errorHandling)

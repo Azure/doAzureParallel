@@ -4,7 +4,7 @@
 \alias{setCredentials}
 \title{Set azure credentials to R session from credentials object or json file.}
 \usage{
-setCredentials(credentials = "az_config.json")
+setCredentials(credentials = "az_config.json", verbose = TRUE)
 }
 \arguments{
 \item{credentials}{The credentials object or json file}

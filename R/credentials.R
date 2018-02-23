@@ -92,9 +92,9 @@ generateCredentialsConfig <- function(fileName, authenticationType = c("SharedKe
         servicePrincipal = list(
           tenantId = "tenant",
           clientId = "client",
-          credential = "credential",
-          batchUrl = "batchUrl",
-          storageUrl = "storageUrl"),
+          clientSecret = "credential",
+          batchAccountResourceId = "batchAccountResourceId",
+          storageAccountResourceId = "storageAccountResourceId"),
         githubAuthenticationToken = githubAuthenticationToken,
         dockerAuthentication = list(username = dockerUsername,
                                     password = dockerPassword,
@@ -138,17 +138,112 @@ setCredentials <- function(credentials = "az_config.json", verbose = TRUE) {
     ))
   }
 
+  batchServiceClient <- makeBatchClient(config)
+  storageServiceClient <- makeStorageClient(config)
+
   options("az_config" = config)
 
   cat(strrep('=', options("width")), fill = TRUE)
-  cat(sprintf("Batch Account: %s", config$batchAccount$name), fill = TRUE)
-  cat(sprintf("Batch Account Url: %s", config$batchAccount$url), fill = TRUE)
-
-  cat(sprintf("Storage Account: %s", config$storageAccount$name), fill = TRUE)
-  cat(sprintf("Storage Account Url: %s", sprintf("https://%s.blob.core.windows.net",
-                                                 config$storageAccount$name)),
-      fill = TRUE)
+  if (!is.null(config$sharedKey)) {
+    printSharedKeyInformation(config$sharedKey)
+  }
+  else if (!is.null(config$servicePrincipal)) {
+    cat(sprintf("Tenant Id: %s",
+                config$servicePrincipal$tenantId), fill = TRUE)
+    cat(sprintf("Client Id: %s",
+                config$servicePrincipal$clientId),fill = TRUE)
+    cat(sprintf("Client Secret: %s",
+                rep(config$servicePrincipal$clientSecret)), fill = TRUE)
+    cat(sprintf("Batch Account Resource Id: %s",
+                config$servicePrincipal$batchAccountResourceId), fill = TRUE)
+    cat(sprintf("Storage Account Resource Id: %s",
+                config$servicePrincipal$storageAccountResourceId), fill = TRUE)
+  }
+  else {
+    printSharedKeyInformation(config)
+  }
 
   cat(strrep('=', options("width")), fill = TRUE)
+  if (!is.null(config$batchAccountName) &&
+      !is.null(config$storageAccount) &&
+      packageVersion("doAzureParallel") != '0.6.2') {
+    warning("Old version of credentials file: Generate new credentials file.")
+  }
+
   cat("Your credentials have been successfully set.", fill = TRUE)
+}
+
+makeBatchClient <- function(config) {
+  batchCredentials <- NULL
+
+  # Set up SharedKeyCredentials
+  if (!is.null(config$sharedKey) ||
+      !is.null(config$batchAccount) && !is.null(config$storageAccount)) {
+    credentials <- config
+    if (!is.null(config$sharedKey)) {
+      credentials <- config$sharedKey
+    }
+
+    batchCredentials <- rAzureBatch::SharedKeyCredentials$new(
+      name = credentials$batchAccountName,
+      key = credentials$batchAccountKey
+    )
+
+    baseUrl <- config$batchAccountUrl
+  }
+  # Set up ServicePrincipalCredentials
+  else {
+    info <-
+      getAccountInformation(config$servicePrincipal$batchAccountResourceId)
+
+    batchCredentials <- rAzureBatch::ServicePrincipalCredentials$new(
+      tenantId = config$servicePrincipal$tenantId,
+      clientId = config$servicePrincipal$clientId,
+      clientSecrets = config$servicePrincipal$clientSecrets
+    )
+
+    baseUrl <- sprintf("https://%s/", config)
+  }
+
+  rAzureBatch::BatchServiceClient$new(
+    url = baseUrl,
+    authentication = batchCredentials
+  )
+}
+
+makeStorageClient <- function(config) {
+  if (!is.null(config$sharedKey) ||
+      !is.null(config$storageAccount)) {
+    credentials <- config
+    if (!is.null(config$sharedKey)) {
+      credentials <- config$sharedKey
+    }
+
+    storageCredentials <- rAzureBatch::SharedKeyCredentials$new(
+      name = credentials$storageAccountName,
+      key = credentials$storageAccountKey
+    )
+  }
+  # Set up ServicePrincipalCredentials
+  else {
+    info <-
+      getAccountInformation(config$servicePrincipal$storageAccountResourceId)
+
+    storageCredentials <- rAzureBatch::ServicePrincipalCredentials$new(
+      tenantId = config$servicePrincipal$tenantId,
+      clientId = config$servicePrincipal$clientId,
+      clientSecrets = config$servicePrincipal$clientSecrets
+    )
+
+    AzureSMR::createAzureContext(
+      tenantID = config$servicePrincipal$tenantId,
+      clientID = config$servicePrincipal$clientId,
+      authKey = config$servicePrincipal$clientSecrets
+    )
+
+  }
+
+  rAzureBatch::StorageServiceClient$new(
+    authentication = storageCredentials
+  )
 }
