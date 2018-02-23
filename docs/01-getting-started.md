@@ -15,8 +15,8 @@ Open a broswer and navigate to [Azure Cloud Shell](https://shell.azure.com). Mak
 wget https://raw.githubusercontent.com/Azure/doAzureParallel/inst/getting-started/manage_account
 
 # Create resources in West US (westus). You can find a list of locations by running
-# 'az account list-locations'
-# Make sure to use the 'name' field and not the 'displayName' field
+# 'az account list-locations --output table'
+# Make sure to use the 'Name' field and not the 'DisplayName' field
 
 # Create a resource group, batch account and storage account
 /bin/sh manage_account create westus
@@ -43,7 +43,7 @@ You can manage all of your cloud resources using the [Azure Portal](http://porta
 
 This information can also be found in the Azure Portal inside your Batch Account:
 
-![Azure Batch Acccount in the Portal](../vignettes/doAzureParallel-azurebatch-instructions.PNG "Azure Batch Acccount in the Portal")
+![Azure Batch Account in the Portal](../vignettes/doAzureParallel-azurebatch-instructions.PNG "Azure Batch Acccount in the Portal")
 
 For your Azure Storage Account, we need to get:
 - Storage Account Name
@@ -51,4 +51,4 @@ For your Azure Storage Account, we need to get:
 
 This information can be found in the Azure Portal inside your Azure Storage Account:
 
-![Azure Storage Acccount in the Portal](../vignettes/doAzureParallel-azurestorage-instructions.PNG "Azure Storage Acccount in the Portal")
+![Azure Storage Account in the Portal](../vignettes/doAzureParallel-azurestorage-instructions.PNG "Azure Storage Acccount in the Portal")

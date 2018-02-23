@@ -70,18 +70,18 @@ Open a broswer and navigate to [Azure Cloud Shell](https://shell.azure.com). Mak
 # Download the required setup scripts
 wget https://raw.githubusercontent.com/Azure/doAzureParallel/inst/getting-started/manage_account.sh
 
-# Create resources in West US (westus). You can find a list of locations by running
-# 'az account list-locations'
-# Make sure to use the 'name' field and not the 'displayName' field
+# Create resources in any of the Azure regions. You can find a list of locations by running
+# 'az account list-locations --output table'
+# Make sure to use the 'Name' field and not the 'DisplayName' field
 
-# Create a resource group, batch account and storage account
+# Create a resource group, batch account and storage account in West US.
 /bin/sh manage_account.sh create westus
 
 # Get the keys needed for doAzureParallel
 /bin/sh manage_account.sh list-keys
 ```
 
-Once they keys are listed, simply copy and paste them into your credentials.json file explained in the [Getting Started](#getting-started) section. If you lose track of your keys, you can simply re-run the 'list-keys' command any time to get them again.
+Once the keys are listed, simply copy and paste them into your credentials.json file explained in the [Getting Started](#getting-started) section. If you lose track of your keys, you can simply re-run the 'list-keys' command any time to get them again.
 
 More information on using the setup scripts can be found [here](./docs/01-getting-started.md).
 

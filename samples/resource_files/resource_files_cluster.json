@@ -1,6 +1,6 @@
 {
-  "name": "resource_files",
-  "vmSize": "Standard_D11_v2",
+  "name": "resource_files_f4",
+  "vmSize": "Standard_F4",
   "maxTasksPerNode": 1,
   "poolSize": {
     "dedicatedNodes": {
