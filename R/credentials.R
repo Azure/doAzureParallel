@@ -268,3 +268,7 @@ makeStorageClient <- function(config) {
     authentication = storageCredentials
   )
 }
+
+getConfiguration <- function(){
+  return(options("az_config"))
+}

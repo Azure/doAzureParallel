@@ -1,8 +1,13 @@
 BatchUtilities <- R6::R6Class(
   "BatchUtilities",
   public = list(
+    initialize = function(){
+
+    },
     addTask = function(jobId, taskId, rCommand, ...) {
-      storageCredentials <- rAzureBatch::getStorageCredentials()
+      config <- getConfiguration()
+      storageClient <- config$storageClient
+      batchClient <- config$batchClient
 
       args <- list(...)
       .doAzureBatchGlobals <- args$envir
@@ -19,7 +24,10 @@ BatchUtilities <- R6::R6Class(
       if (!is.null(argsList)) {
         envFile <- paste0(taskId, ".rds")
         saveRDS(argsList, file = envFile)
-        rAzureBatch::uploadBlob(jobId, file.path(getwd(), envFile))
+        storageClient$blobOperations$uploadBlob(
+          jobId,
+          file.path(getwd(), envFile)
+        )
         file.remove(envFile)
 
         readToken <- rAzureBatch::createSasToken("r", "c", jobId)
@@ -126,7 +134,7 @@ BatchUtilities <- R6::R6Class(
       containerEnv <- list(name = "CONTAINER_NAME",
                            value = jobId)
 
-      rAzureBatch::addTask(
+      batchClient$taskOperations$addTask(
         jobId,
         taskId,
         environmentSettings = list(setting, containerEnv),
@@ -148,6 +156,9 @@ BatchUtilities <- R6::R6Class(
       bioconductor <- args$bioconductor
       containerImage <- args$containerImage
       poolInfo <- list("poolId" = poolId)
+
+      config <- getConfiguration()
+      batchClient <- config$batchClient
 
       # Default command for job preparation task
       # Supports backwards compatibility if zip packages are missing, it will be installed
@@ -195,7 +206,7 @@ BatchUtilities <- R6::R6Class(
 
       usesTaskDependencies <- TRUE
 
-      response <- rAzureBatch::addJob(
+      response <- batchClient$jobOperations$addJob(
         jobId,
         poolInfo = poolInfo,
         jobPreparationTask = jobPreparationTask,
@@ -246,7 +257,7 @@ BatchUtilities <- R6::R6Class(
           nodeAgentSKUId = "batch.node.ubuntu 16.04"
         )
 
-        response <- rAzureBatch::addPool(
+        response <- batchClient$poolOperations$addPool(
           pool$name,
           pool$vmSize,
           startTask = startTask,
