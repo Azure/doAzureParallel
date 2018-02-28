@@ -142,6 +142,8 @@ setHttpTraffic <- function(value = FALSE) {
 
 .doAzureParallel <- function(obj, expr, envir, data) {
   stopifnot(inherits(obj, "foreach"))
+  config <- getConfiguration()
+  storageClient <- config$storageClient
 
   githubPackages <- eval(obj$args$github)
   bioconductorPackages <- eval(obj$args$bioconductor)
@@ -154,8 +156,6 @@ setHttpTraffic <- function(value = FALSE) {
   if (!is.null(obj$args[["bioconductor"]])) {
     obj$args[["bioconductor"]] <- NULL
   }
-
-  storageCredentials <- rAzureBatch::getStorageCredentials()
 
   it <- iterators::iter(obj)
   argsList <- as.list(it)
@@ -266,12 +266,11 @@ setHttpTraffic <- function(value = FALSE) {
 
   inputs <- FALSE
   if (!is.null(obj$options$azure$inputs)) {
-    storageCredentials <- rAzureBatch::getStorageCredentials()
     sasToken <- rAzureBatch::createSasToken("r", "c", inputs)
 
     assign(
       "inputs",
-      list(name = storageCredentials$name,
+      list(name = storageClient$authentication$name,
            sasToken = sasToken),
       .doAzureBatchGlobals
     )
@@ -372,7 +371,9 @@ setHttpTraffic <- function(value = FALSE) {
       retryCounter <- retryCounter + 1
     }
 
-    containerResponse <- rAzureBatch::createContainer(id, content = "response")
+    containerResponse <- storageClient$containerOperations$createContainer(
+      id, content = "response"
+    )
 
     if (containerResponse$status_code >= 400 && containerResponse$status_code <= 499) {
       containerContent <- xml2::as_list(httr::content(containerResponse))
@@ -403,22 +404,33 @@ setHttpTraffic <- function(value = FALSE) {
     utils::zip(nodeScriptsZip, files = nodeScriptsFiles, extras = "-j -q")
 
     # Uploading common job files for the worker node
-    rAzureBatch::uploadBlob(id,
-                            nodeScriptsZip)
+    storageClient$blobOperations$uploadBlob(
+      id,
+      nodeScriptsZip
+    )
     file.remove(nodeScriptsZip)
 
     # Creating common job environment for all tasks
     jobFileName <- paste0(id, ".rds")
     saveRDS(.doAzureBatchGlobals, file = jobFileName)
-    rAzureBatch::uploadBlob(id, paste0(getwd(), "/", jobFileName))
+    storageClient$blobOperations$uploadBlob(
+      id,
+      paste0(getwd(), "/", jobFileName)
+    )
     file.remove(jobFileName)
 
     # Creating read-only SAS token blob resource file urls
     sasToken <- rAzureBatch::createSasToken("r", "c", id)
     nodeScriptsZipUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, nodeScriptsZip, sasToken)
+      rAzureBatch::createBlobUrl(storageClient$authentication$name,
+                                 id,
+                                 nodeScriptsZip,
+                                 sasToken)
     jobCommonFileUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, jobFileName, sasToken)
+      rAzureBatch::createBlobUrl(storageClient$authentication$name,
+                                 id,
+                                 jobFileName,
+                                 sasToken)
 
     requiredJobResourceFiles <- list(
       rAzureBatch::createResourceFile(url = nodeScriptsZipUrl, fileName = nodeScriptsZip),
@@ -474,6 +486,7 @@ setHttpTraffic <- function(value = FALSE) {
     }
   }
 
+  job <-
   job <- rAzureBatch::getJob(id)
 
   printJobInformation(
@@ -579,15 +592,14 @@ setHttpTraffic <- function(value = FALSE) {
         if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           tempFile <- tempfile("doAzureParallel", fileext = ".rds")
 
-          response <-
-            rAzureBatch::downloadBlob(
-              id,
-              paste0("result/", "merge-result.rds"),
-              sasToken = sasToken,
-              accountName = storageCredentials$name,
-              downloadPath = tempFile,
-              overwrite = TRUE
-            )
+          response <- storageClient$blobOperations$downloadBlob(
+            id,
+            paste0("result/", "merge-result.rds"),
+            sasToken = sasToken,
+            accountName = storageClient$authentication$name,
+            downloadPath = tempFile,
+            overwrite = TRUE
+          )
 
           results <- readRDS(tempFile)
 

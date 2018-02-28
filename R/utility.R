@@ -10,7 +10,8 @@
 #' @export
 waitForNodesToComplete <- function(poolId, timeout = 86400) {
   cat("Booting compute nodes. . . ", fill = TRUE)
-  pool <- rAzureBatch::getPool(poolId)
+  config <- getConfiguration()
+  pool <- config$batchClient$poolOperations$getPool(poolId)
 
   # Validate the getPool request first, before setting the progress bar
   if (!is.null(pool$code) && !is.null(pool$message)) {
@@ -32,7 +33,7 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
   timeToTimeout <- Sys.time() + timeout
 
   while (Sys.time() < timeToTimeout) {
-    pool <- rAzureBatch::getPool(poolId)
+    pool <- config$batchClient$poolOperations$getPool(poolId)
 
     if (!is.null(pool$resizeErrors)) {
       cat("\n")
@@ -53,7 +54,8 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
       stop(resizeErrors)
     }
 
-    nodes <- rAzureBatch::listPoolNodes(poolId)
+    nodes <- pool <- config$batchClient$poolOperations$listPoolNodes(
+      poolId)
 
     if (!is.null(nodes$value) && length(nodes$value) > 0) {
       nodesInfo <- .processNodeCount(nodes)

@@ -13,7 +13,8 @@ getJob <- function(jobId, verbose = TRUE) {
     stop("must specify the jobId parameter")
   }
 
-  job <- rAzureBatch::getJob(jobId = jobId)
+  config <- getConfiguration()
+  job <- config$batchClient$jobOperations$getJob(jobId)
 
   metadata <-
     list(
@@ -45,7 +46,8 @@ getJob <- function(jobId, verbose = TRUE) {
         fill = TRUE)
   }
 
-  taskCounts <- rAzureBatch::getJobTaskCounts(jobId = jobId)
+  taskCounts <- config$batchClient$jobOperations$getJobTaskCounts(
+    jobId)
 
   tasks <- list(
     active = taskCounts$active,

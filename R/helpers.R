@@ -226,6 +226,9 @@ BatchUtilities <- R6::R6Class(
         args <- list(...)
         commands <- c()
 
+        config <- getConfiguration()
+        batchClient <- config$batchClient
+
         if (!is.null(args$commandLine)) {
           commands <- c(commands, args$commandLine)
         }

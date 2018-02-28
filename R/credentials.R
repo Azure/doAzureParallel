@@ -201,7 +201,8 @@ makeBatchClient <- function(config) {
     batchCredentials <- rAzureBatch::ServicePrincipalCredentials$new(
       tenantId = config$servicePrincipal$tenantId,
       clientId = config$servicePrincipal$clientId,
-      clientSecrets = config$servicePrincipal$credential
+      clientSecrets = config$servicePrincipal$credential,
+      resource = 'https://batch.core.windows.net/'
     )
 
     azureContext <- AzureSMR::createAzureContext(
@@ -270,5 +271,6 @@ makeStorageClient <- function(config) {
 }
 
 getConfiguration <- function(){
-  return(options("az_config"))
+  config <- options("az_config")
+  return(config$az_config)
 }

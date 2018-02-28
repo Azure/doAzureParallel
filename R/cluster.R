@@ -49,7 +49,7 @@ generateClusterConfig <- function(fileName) {
 
 #' Creates an Azure cloud-enabled cluster.
 #'
-#' @param clusterSetting Cluster configuration object or file name
+#' @param cluster Cluster configuration object or file name
 #' @param fullName A boolean flag for checking the file full name
 #' @param wait A boolean flag to wait for all nodes to boot up
 #' @param resourceFiles A list of files that Batch will download to the compute node before running the command line
@@ -61,7 +61,7 @@ generateClusterConfig <- function(fileName) {
 #' }
 #' @export
 makeCluster <-
-  function(clusterSetting = "cluster_settings.json",
+  function(clusterSetting = "cluster.json",
            fullName = FALSE,
            wait = TRUE,
            resourceFiles = list()) {
@@ -234,15 +234,19 @@ makeCluster <-
       )
 
       if (wait == TRUE) {
-        pool <- rAzureBatch::getPool(poolConfig$name)
+        pool <- config$batchClient$poolOperations$getPool(
+          poolConfig$name)
 
         cat(sprintf(message,
                     poolConfig$name),
             fill = TRUE)
 
-        while (rAzureBatch::getPool(poolConfig$name)$state == "deleting") {
+        while (pool$state == "deleting") {
           cat(".")
           Sys.sleep(10)
+
+          pool <- config$batchClient$poolOperations$getPool(
+            poolConfig$name)
         }
 
         cat("\n")
@@ -260,7 +264,8 @@ makeCluster <-
       }
     }
 
-    pool <- rAzureBatch::getPool(poolConfig$name)
+    pool <- config$batchClient$poolOperations$getPool(
+      poolConfig$name)
 
     if (grepl("PoolExists", response)) {
       cat(
