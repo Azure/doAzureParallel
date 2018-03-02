@@ -144,7 +144,8 @@ setHttpTraffic <- function(value = FALSE) {
   stopifnot(inherits(obj, "foreach"))
   config <- getConfiguration()
   storageClient <- config$storageClient
-
+  batchClient <- config$batchClient
+  
   githubPackages <- eval(obj$args$github)
   bioconductorPackages <- eval(obj$args$bioconductor)
 
@@ -266,8 +267,12 @@ setHttpTraffic <- function(value = FALSE) {
 
   inputs <- FALSE
   if (!is.null(obj$options$azure$inputs)) {
-    sasToken <- rAzureBatch::createSasToken("r", "c", inputs)
-
+    sasToken <- storageClient$generateSasToken(
+      "r",
+      "c",
+      inputs
+    )
+    
     assign(
       "inputs",
       list(name = storageClient$authentication$name,
@@ -420,7 +425,7 @@ setHttpTraffic <- function(value = FALSE) {
     file.remove(jobFileName)
 
     # Creating read-only SAS token blob resource file urls
-    sasToken <- rAzureBatch::createSasToken("r", "c", id)
+    sasToken <- storageClient$generateSasToken("r", "c", id)
     nodeScriptsZipUrl <-
       rAzureBatch::createBlobUrl(storageClient$authentication$name,
                                  id,
@@ -486,8 +491,7 @@ setHttpTraffic <- function(value = FALSE) {
     }
   }
 
-  job <-
-  job <- rAzureBatch::getJob(id)
+  job <- batchClient$jobOperations$getJob(id)
 
   printJobInformation(
     jobId = job$id,
