@@ -18,7 +18,7 @@ BatchUtilities <- R6::R6Class(
       containerImage <- args$containerImage
 
       resultFile <- paste0(taskId, "-result", ".rds")
-      accountName <- storageCredentials$name
+      accountName <- storageClient$authentication$name
 
       resourceFiles <- NULL
       if (!is.null(argsList)) {
@@ -32,7 +32,11 @@ BatchUtilities <- R6::R6Class(
 
         readToken <- rAzureBatch::createSasToken("r", "c", jobId)
         envFileUrl <-
-          rAzureBatch::createBlobUrl(storageCredentials$name, jobId, envFile, readToken)
+          rAzureBatch::createBlobUrl(
+            storageClient$authentication$name,
+            jobId,
+            envFile,
+            readToken)
         resourceFiles <-
           list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
       }
@@ -65,9 +69,9 @@ BatchUtilities <- R6::R6Class(
 
       containerUrl <-
         rAzureBatch::createBlobUrl(
-          storageAccount = storageCredentials$name,
+          storageAccount = storageClient$authentication$name,
           containerName = jobId,
-          sasToken = rAzureBatch::createSasToken("w", "c", jobId)
+          sasToken = storageClient$generateSasToken("w", "c", jobId)
         )
 
       outputFiles <- list(
@@ -113,7 +117,7 @@ BatchUtilities <- R6::R6Class(
 
       commands <- linuxWrapCommands(commands)
 
-      sasToken <- rAzureBatch::createSasToken("rwcl", "c", jobId)
+      sasToken <- storageClient$generateSasToken("rwcl", "c", jobId)
       queryParameterUrl <- "?"
 
       for (query in names(sasToken)) {
@@ -134,7 +138,7 @@ BatchUtilities <- R6::R6Class(
       containerEnv <- list(name = "CONTAINER_NAME",
                            value = jobId)
 
-      batchClient$taskOperations$addTask(
+      batchClient$taskOperations$add(
         jobId,
         taskId,
         environmentSettings = list(setting, containerEnv),
@@ -164,8 +168,7 @@ BatchUtilities <- R6::R6Class(
       # Supports backwards compatibility if zip packages are missing, it will be installed
       # Eventually, apt-get install command will be deprecated
       commands <- c(
-        "apt-get -y install zip unzip",
-        "unzip -j $AZ_BATCH_JOB_PREP_WORKING_DIR/node_scripts.zip"
+        "apt-get -y install zip unzip"
       )
 
       if (!is.null(packages)) {

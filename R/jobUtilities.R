@@ -326,9 +326,13 @@ getJobResult <- function(jobId) {
 #' }
 #' @export
 deleteJob <- function(jobId, verbose = TRUE) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+  batchClient <- config$batchClient
+
   deleteStorageContainer(jobId, verbose)
 
-  response <- rAzureBatch::deleteJob(jobId, content = "response")
+  response <- batchClient$jobOperations$deleteJob(jobId, content = "response")
 
   tryCatch({
       httr::stop_for_status(response)
@@ -379,9 +383,11 @@ terminateJob <- function(jobId) {
 waitForTasksToComplete <-
   function(jobId, timeout, errorHandling = "stop") {
     cat("\nWaiting for tasks to complete. . .", fill = TRUE)
+    config <- getConfiguration()
+    batchClient <- config$batchClient
 
     totalTasks <- 0
-    currentTasks <- rAzureBatch::listTask(jobId)
+    currentTasks <- batchClient$taskOperations$list(jobId)
 
     jobInfo <- getJob(jobId, verbose = FALSE)
     enableCloudCombine <- as.logical(jobInfo$metadata$enableCloudCombine)
@@ -408,7 +414,7 @@ waitForTasksToComplete <-
                nchar(skipTokenParameter))
 
       currentTasks <-
-        rAzureBatch::listTask(jobId, skipToken = URLdecode(skipTokenValue))
+        batchClient$taskOperations$list(jobId, skipToken = URLdecode(skipTokenValue))
 
       totalTasks <- totalTasks + length(currentTasks$value)
     }
@@ -420,7 +426,7 @@ waitForTasksToComplete <-
     timeToTimeout <- Sys.time() + timeout
 
     repeat {
-      taskCounts <- rAzureBatch::getJobTaskCounts(jobId)
+      taskCounts <- batchClient$jobOperations$getJobTaskCounts(jobId)
 
       # Assumption: Merge task will always be the last one in the queue
       if (enableCloudCombine) {
@@ -467,7 +473,7 @@ waitForTasksToComplete <-
 
         select <- "id, executionInfo"
         failedTasks <-
-          rAzureBatch::listTask(jobId, select = select)
+          batchClient$taskOperations$list(jobId, select = select)
 
         tasksFailureWarningLabel <-
           sprintf(
@@ -492,7 +498,7 @@ waitForTasksToComplete <-
         warning(sprintf(tasksFailureWarningLabel,
                         taskCounts$failed))
 
-        response <- rAzureBatch::terminateJob(jobId)
+        response <- batchClient$jobOperations$terminateJob(jobId)
         httr::stop_for_status(response)
 
         stop(sprintf(
@@ -531,7 +537,7 @@ waitForTasksToComplete <-
       # Wait for merge task to complete
       repeat {
         # Verify that the merge cloud task didn't have any errors
-        mergeTask <- rAzureBatch::getTask(jobId, "merge")
+        mergeTask <- batchClient$taskOperations$get(jobId, "merge")
 
         # This test needs to go first as Batch service will not return an execution info as null
         if (is.null(mergeTask$executionInfo$result)) {
@@ -544,7 +550,7 @@ waitForTasksToComplete <-
           break
         }
         else {
-          rAzureBatch::terminateJob(jobId)
+          batchClient$jobOperations$terminateJob(jobId)
 
           # The foreach will not be able to run properly if the merge task fails
           # Stopping the user from processing a merge task that has failed
