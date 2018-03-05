@@ -165,6 +165,8 @@ getJobList <- function(filter = NULL) {
 #' @export
 getJobResult <- function(jobId) {
   cat("Getting job results...", fill = TRUE)
+  config <- getConfiguration()
+  storageClient <- config$storageClient
 
   if (nchar(jobId) < 3) {
     stop("jobId must contain at least 3 characters.")
@@ -231,7 +233,7 @@ getJobResult <- function(jobId) {
       retryCounter <- retryCounter + 1
     }
 
-    results <- rAzureBatch::downloadBlob(
+    results <- storageClient$blobOperations$downloadBlob(
       jobId,
       "result/merge-result.rds",
       downloadPath = tempFile,
@@ -249,6 +251,9 @@ getJobResult <- function(jobId) {
 }
 
 .getJobResultLocal <- function(job) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
   results <- vector("list", job$tasks$completed)
   count <- 1
 
@@ -273,7 +278,7 @@ getJobResult <- function(jobId) {
         dir.create(dirname(tempFile), showWarnings = FALSE)
 
         # Download the blob to the temporary file
-        rAzureBatch::downloadBlob(
+        storageClient$blobOperations$downloadBlob(
           containerName = job$jobId,
           blobName = paste0("result/", i, "-result.rds"),
           downloadPath = tempFile,
@@ -327,7 +332,6 @@ getJobResult <- function(jobId) {
 #' @export
 deleteJob <- function(jobId, verbose = TRUE) {
   config <- getConfiguration()
-  storageClient <- config$storageClient
   batchClient <- config$batchClient
 
   deleteStorageContainer(jobId, verbose)
@@ -363,7 +367,10 @@ deleteJob <- function(jobId, verbose = TRUE) {
 #' }
 #' @export
 terminateJob <- function(jobId) {
-  response <- rAzureBatch::terminateJob(jobId, content = "response")
+  config <- getConfiguration()
+  batchClient <- config$batchClient
+
+  response <- batchClient$jobOperations$terminateJob(jobId, content = "response")
 
   if (response$status_code == 202) {
     cat(sprintf("Your job '%s' has been terminated.", jobId),
@@ -570,6 +577,8 @@ waitForTasksToComplete <-
 
 waitForJobPreparation <- function(jobId, poolId) {
   cat("Job Preparation Status: Package(s) being installed")
+  config <- getConfiguration()
+  batchClient <- config$batchClient
 
   filter <- paste(
     sprintf("poolId eq '%s' and", poolId),
@@ -579,10 +588,12 @@ waitForJobPreparation <- function(jobId, poolId) {
   select <- "jobPreparationTaskExecutionInfo"
 
   repeat {
-    statuses <- rAzureBatch::getJobPreparationStatus(jobId,
-                                                     content = "parsed",
-                                                     filter = filter,
-                                                     select = select)
+    statuses <- batchClient$jobOperations$getJobPreparationStatus(
+      jobId,
+      content = "parsed",
+      filter = filter,
+      select = select
+    )
 
     statuses <- sapply(statuses$value, function(x) {
       x$jobPreparationTaskExecutionInfo$result == "Success"
