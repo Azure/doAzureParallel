@@ -25,7 +25,7 @@
 #'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
 #' }
 #' @export
-generateCredentialsConfig <- function(fileName, authenticationType = c("SharedKey", "ServicePrincipal"), ...) {
+generateCredentialsConfig <- function(fileName, authenticationType = "ServicePrincipal", ...) {
   args <- list(...)
 
   batchAccount <-
