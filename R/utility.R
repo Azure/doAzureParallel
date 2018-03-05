@@ -231,15 +231,21 @@ saveMetadataBlob <- function(jobId, metadata) {
 }
 
 saveXmlBlob <- function(jobId, xmlBlock, name) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
   xmlFile <- paste0(jobId, "-", name, ".rds")
   saveRDS(xmlBlock, file = xmlFile)
-  rAzureBatch::uploadBlob(jobId, paste0(getwd(), "/", xmlFile))
+  storageClient$blobOperations$uploadBlob(jobId, paste0(getwd(), "/", xmlFile))
   file.remove(xmlFile)
 }
 
 readMetadataBlob <- function(jobId) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
   tempFile <- tempfile(paste0(jobId, "-metadata"), fileext = ".rds")
-  result <- rAzureBatch::downloadBlob(
+  result <- storageClient$blobOperations$downloadBlob(
     jobId,
     paste0(jobId, "-metadata.rds"),
     downloadPath = tempFile,
