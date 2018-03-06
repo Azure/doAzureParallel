@@ -150,12 +150,6 @@ setCredentials <- function(credentials = "az_config.json", verbose = TRUE) {
     printSharedKeyInformation(config$sharedKey)
   }
   else if (!is.null(config$servicePrincipal)) {
-    cat(sprintf("Tenant Id: %s",
-                config$servicePrincipal$tenantId), fill = TRUE)
-    cat(sprintf("Client Id: %s",
-                config$servicePrincipal$clientId),fill = TRUE)
-    cat(sprintf("Client Secret: %s",
-                rep(config$servicePrincipal$clientSecret)), fill = TRUE)
     cat(sprintf("Batch Account Resource Id: %s",
                 config$servicePrincipal$batchAccountResourceId), fill = TRUE)
     cat(sprintf("Storage Account Resource Id: %s",
