@@ -280,6 +280,7 @@ BatchUtilities <- R6::R6Class(
           ),
           autoScaleEvaluationInterval = "PT5M",
           maxTasksPerNode = pool$maxTasksPerNode,
+          networkConfiguration = args$networkConfiguration,
           content = "text"
         )
 

@@ -28,7 +28,8 @@ generateClusterConfig <- function(fileName) {
         github = vector(),
         bioconductor = vector()
       ),
-      commandLine = vector()
+      commandLine = vector(),
+      subnetId = ""
     )
 
     configJson <-
@@ -197,6 +198,15 @@ makeCluster <-
         )
     }
 
+    networkConfiguration <- NULL
+    if (!is.null(poolConfig$subnetId) &&
+        poolConfig$subnetId != "") {
+      networkConfiguration <-
+        list(
+          subnetId = poolConfig$subnetId
+        )
+    }
+
     if (!is.null(poolConfig[["pool"]])) {
       validation$isValidDeprecatedClusterConfig(clusterSetting)
       poolConfig <- poolConfig[["pool"]]
@@ -218,7 +228,8 @@ makeCluster <-
       packages = packages,
       environmentSettings = environmentSettings,
       resourceFiles = resourceFiles,
-      commandLine = commandLine
+      commandLine = commandLine,
+      networkConfiguration = networkConfiguration
     )
 
     if (grepl("AuthenticationFailed", response)) {
@@ -410,7 +421,7 @@ getCluster <- function(clusterName, verbose = TRUE) {
 
   config$poolId <- clusterName
   options("az_config" = config)
-  return (config)
+  return(config)
 }
 
 #' Get a list of clusters by state from the given filter
