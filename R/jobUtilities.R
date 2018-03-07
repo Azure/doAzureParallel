@@ -171,47 +171,44 @@ getJobResult <- function(jobId) {
   metadata <- readMetadataBlob(jobId)
 
   if (!is.null(metadata)) {
-    if (metadata$enableCloudCombine == "FALSE") {
-      cat("enalbeCloudCombine is set to FALSE, no job merge result is available",
-          fill = TRUE)
+    job <- getJob(jobId, verbose = FALSE)
 
-      return()
+    if (job$jobState == "active") {
+      stop(sprintf("job %s has not finished yet, please try again later",
+                   job$jobId))
+    } else if (job$jobState != "completed") {
+      stop(sprintf(
+        "job %s is in %s state, no job result is available",
+        job$jobId,
+        job$jobState
+      ))
     }
 
-    if (metadata$wait == "FALSE") {
-      job <- getJob(jobId, verbose = FALSE)
-
-      if (job$jobState == "active") {
-        stop(sprintf(
-          "job %s is not finished yet, please try again later",
-          job$jobId
-        ))
-      } else if (job$jobState != "completed") {
-        stop(sprintf(
-          "job %s is %s state, no job result is available",
-          job$jobId,
-          job$jobState
-        ))
-      }
-
-      # if the job has failed task
-      if (job$tasks$failed > 0) {
-        if (metadata$errorHandling == "stop") {
-          stop(
-            sprintf(
-              "job %s has failed tasks and error handling is set to 'stop', no result will be avaialble",
-              job$jobId
-            )
+    # if the job has failed task
+    if (job$tasks$failed > 0) {
+      if (metadata$errorHandling == "stop") {
+        stop(
+          sprintf(
+            "job %s has failed tasks and error handling is set to 'stop', no result will be available",
+            job$jobId
           )
-        } else {
-          if (job$tasks$succeeded == 0) {
-            stop(sprintf(
-              "all tasks failed for job %s, no result will be avaialble",
-              job$jobId
-            ))
-          }
+        )
+      } else {
+        if (job$tasks$succeeded == 0) {
+          stop(sprintf(
+            "all tasks failed for job %s, no result will be available",
+            job$jobId
+          ))
         }
       }
+    }
+
+    if (metadata$enableCloudCombine == "FALSE") {
+      cat("enableCloudCombine is set to FALSE, we will merge job result locally",
+          fill = TRUE)
+
+      results <- .getJobResultLocal(job)
+      return(results)
     }
   }
 
@@ -247,6 +244,74 @@ getJobResult <- function(jobId) {
     # wait for 5 seconds for the result to be available
     Sys.sleep(5)
   }
+}
+
+.getJobResultLocal <- function(job) {
+  results <- vector("list", job$tasks$completed)
+  count <- 1
+
+  for (i in 1:job$tasks$completed) {
+    retryCounter <- 0
+    maxRetryCount <- 3
+    repeat {
+      if (retryCounter > maxRetryCount) {
+        stop(
+          sprintf("Error getting job result: Maxmium number of retries (%d) reached\r\n",
+                  maxRetryCount)
+        )
+      } else {
+        retryCounter <- retryCounter + 1
+      }
+
+      tryCatch({
+        # Create a temporary file on disk
+        tempFile <- tempfile(fileext = ".rds")
+
+        # Create the temporary file's directory if it doesn't exist
+        dir.create(dirname(tempFile), showWarnings = FALSE)
+
+        # Download the blob to the temporary file
+        rAzureBatch::downloadBlob(
+          containerName = job$jobId,
+          blobName = paste0("result/", i, "-result.rds"),
+          downloadPath = tempFile,
+          overwrite = TRUE
+        )
+
+        #Read the rds as an object in memory
+        taskResult <- readRDS(tempFile)
+
+        for (t in 1:length(taskResult)) {
+          if (isError(taskResult[[t]])) {
+            if (metadata$errorHandling == "stop") {
+              stop("Error found")
+            }
+            else if (metadata$errorHandling == "pass") {
+              results[[count]] <- NA
+              count <- count + 1
+            }
+          } else {
+            results[[count]] <- taskResult[[t]]
+            count <- count + 1
+          }
+        }
+
+        # Delete the temporary file
+        file.remove(tempFile)
+
+        break
+      },
+      error = function(e) {
+        warning(sprintf(
+          "error downloading task result %s from blob, retrying...\r\n%s",
+          paste0(job$jobId, "result/", i, "-result.rds"),
+          e
+        ))
+      })
+    }
+  }
+  # Return the object
+  return(results)
 }
 
 #' Delete a job
@@ -537,4 +602,8 @@ waitForJobPreparation <- function(jobId, poolId) {
   }
 
   cat("\n")
+}
+
+isError <- function(x) {
+  inherits(x, "simpleError") || inherits(x, "try-error")
 }

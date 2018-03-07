@@ -329,6 +329,7 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
 
   # Default command for job preparation task
   commands <- c("ls")
+
   if (!is.null(packages)) {
     jobPackages <-
       dockerRunCommand(containerImage,
@@ -425,6 +426,7 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
       startTask = startTask,
       virtualMachineConfiguration = virtualMachineConfiguration,
       enableAutoScale = TRUE,
+      metadata = list(list(name = "origin", value = "doAzureParallel")),
       autoscaleFormula = getAutoscaleFormula(
         pool$poolSize$autoscaleFormula,
         pool$poolSize$dedicatedNodes$min,

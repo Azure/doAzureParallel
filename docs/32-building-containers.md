@@ -181,4 +181,38 @@ docker push <username>/custom-r-ver
 
 ## Using private Docker Hub repositories
 
-This is currently not supported in doAzureParallel.
+To use a private docker registry simply add the docker registry information to the credentials object before creating your cluster.
+
+### Updating the credentials.json file
+Add the following section inside the credentials file
+```json
+"batchAccount": {
+    ...
+  },
+  "storageAccount": {
+    ...
+  },
+  "githubAuthenticationToken": "",
+  "dockerAuthentication": {
+    "username": "registry_username",
+    "password": "registry_password",
+    "registry": "registry_url"
+  }
+```
+
+### Updating the credentials in code
+Add the following list to your credentials object
+```R
+  credentials <- list(
+    "batchAccount" = list(
+      ...
+    ),
+    "storageAccount" = list(
+      ...
+    ),
+    "githubAuthenticationToken" = "",
+    "dockerAuthentication" = list("username" = "registry_username",
+                                  "password" = "registry_password",
+                                  "registry" = "registry_url")
+  )
+```

@@ -70,7 +70,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
                                     "results"),
                           full.names = TRUE)
     }
-    
+
     files <- files[order(as.numeric(gsub("[^0-9]","",files)))]
 
     if (errorHandling == "stop" &&

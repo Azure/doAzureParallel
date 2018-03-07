@@ -360,12 +360,13 @@ setHttpTraffic <- function(value = FALSE) {
       list(name = "wait",
            value = as.character(FALSE))
   }
-  
+
   metadata[[length(metadata) + 1]] <- waitKeyValuePair
-  
+
   retryCounter <- 0
   maxRetryCount <- 5
   startupFolderName <- "startup"
+
   repeat {
     if (retryCounter > maxRetryCount) {
       stop(
@@ -407,18 +408,12 @@ setHttpTraffic <- function(value = FALSE) {
                             system.file(startupFolderName, "worker.R", package = "doAzureParallel"))
     rAzureBatch::uploadBlob(id,
                             system.file(startupFolderName, "merger.R", package = "doAzureParallel"))
-    rAzureBatch::uploadBlob(
-      id,
-      system.file(startupFolderName, "install_github.R", package = "doAzureParallel")
-    )
-    rAzureBatch::uploadBlob(
-      id,
-      system.file(startupFolderName, "install_cran.R", package = "doAzureParallel")
-    )
-    rAzureBatch::uploadBlob(
-      id,
-      system.file(startupFolderName, "install_bioconductor.R", package = "doAzureParallel")
-    )
+    rAzureBatch::uploadBlob(id,
+                            system.file(startupFolderName, "install_github.R", package = "doAzureParallel"))
+    rAzureBatch::uploadBlob(id,
+                            system.file(startupFolderName, "install_cran.R", package = "doAzureParallel"))
+    rAzureBatch::uploadBlob(id,
+                            system.file(startupFolderName, "install_bioconductor.R", package = "doAzureParallel"))
 
     # Creating common job environment for all tasks
     jobFileName <- paste0(id, ".rds")
@@ -457,9 +452,9 @@ setHttpTraffic <- function(value = FALSE) {
       append(resourceFiles, requiredJobResourceFiles)
 
     ntasks <- length(argsList)
-    
+
     startIndices <- seq(1, length(argsList), chunkSize)
-    
+
     endIndices <-
       if (chunkSize >= length(argsList))
       {
@@ -468,23 +463,23 @@ setHttpTraffic <- function(value = FALSE) {
     else {
       seq(chunkSize, length(argsList), chunkSize)
     }
-    
+
     if (length(startIndices) > length(endIndices)) {
       endIndices[length(startIndices)] <- ntasks
     }
-    
+
     indices <- cbind(startIndices, endIndices)
     mergeSize <- 10
     buckets <- ceiling(nrow(indices) / mergeSize)
     bucketSeq <- rep(1:buckets, each = mergeSize, length.out = nrow(indices))
     indices <- cbind(indices, bucketSeq)
-    
+
     bucketsKeyValuePair <-
       list(name = "buckets",
            value = as.character(buckets))
-    
+
     metadata[[length(metadata) + 1]] <- bucketsKeyValuePair
-    
+
     response <- .addJob(
       jobId = id,
       poolId = data$poolId,
@@ -538,7 +533,7 @@ setHttpTraffic <- function(value = FALSE) {
       containerName = id,
       sasToken = rAzureBatch::createSasToken("w", "c", id)
     )
-  
+
   printJobInformation(
     jobId = job$id,
     chunkSize = chunkSize,
@@ -568,7 +563,7 @@ setHttpTraffic <- function(value = FALSE) {
     }
 
     resultFile <- paste0(taskId, "-result", ".rds")
-    
+
     if (buckets > 1) {
       mergeOutput <- list(
         list(
@@ -595,12 +590,13 @@ setHttpTraffic <- function(value = FALSE) {
     }
 
     mergeOutput <- append(obj$options$azure$outputFiles, mergeOutput)
-    
+
     .addTask(
       jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i %s > $AZ_BATCH_TASK_ID.txt",
+        paste("Rscript --no-save --no-environ --no-restore --no-site-file",
+        "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i > $AZ_BATCH_TASK_ID.txt"),
         startIndex,
         endIndex,
         isDataSet,
@@ -623,14 +619,14 @@ setHttpTraffic <- function(value = FALSE) {
 
     if (buckets > 1) {
       taskDependencies <- list(taskIds = lapply(1:buckets, function(x) paste0("m", x)))
-      
+
       bucket <- 1
       bucketIndex <- 1
-      
+
       while (bucket <= buckets) {
         subTaskId <- paste0("m", bucket)
         resultFile <- paste0(subTaskId, "-result", ".rds")
-        
+
         mergeOutput <- list(
           list(
             filePattern = resultFile,
@@ -641,7 +637,7 @@ setHttpTraffic <- function(value = FALSE) {
             uploadOptions = list(uploadCondition = "taskCompletion")
           )
         )
-        
+
         addSubMergeTask(
           jobId = id,
           taskId = subTaskId,
@@ -660,23 +656,23 @@ setHttpTraffic <- function(value = FALSE) {
           outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
           containerImage = data$containerImage
         )
-        
+
         bucketIndex <- bucketIndex + rle(bucketSeq)$lengths[bucket]
         bucket <- bucket + 1
       }
-      
+
       tasksCount <- buckets
     }
     else {
       taskDependencies <- list(taskIdRanges = list(list(
         start = 1,
         end = length(tasks))))
-      
+
       tasksCount <- length(tasks)
     }
 
     resultFile <- paste0("merge", "-result", ".rds")
-    
+
     mergeOutput <- list(
       list(
         filePattern = resultFile,
@@ -687,12 +683,13 @@ setHttpTraffic <- function(value = FALSE) {
         uploadOptions = list(uploadCondition = "taskCompletion")
       )
     )
-    
+
     addFinalMergeTask(
       jobId = id,
       taskId = "merge",
       rCommand = sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
+        paste("Rscript --no-save --no-environ --no-restore --no-site-file",
+        "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt"),
         as.character(tasksCount),
         chunkSize,
         as.character(obj$errorHandling)
@@ -705,7 +702,7 @@ setHttpTraffic <- function(value = FALSE) {
       containerImage = data$containerImage,
       buckets = buckets
     )
-    
+
     cat(". . .")
   }
 
@@ -724,7 +721,7 @@ setHttpTraffic <- function(value = FALSE) {
 
         if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           tempFile <- tempfile("doAzureParallel", fileext = ".rds")
-          
+
           response <-
             rAzureBatch::downloadBlob(
               id,
@@ -734,7 +731,7 @@ setHttpTraffic <- function(value = FALSE) {
               downloadPath = tempFile,
               overwrite = TRUE
             )
-          
+
           results <- readRDS(tempFile)
           failTasks <- sapply(results, .isError)
 

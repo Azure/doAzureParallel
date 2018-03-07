@@ -148,7 +148,7 @@ Use your credential config JSON file to enter your credentials.
 ```
 Learn more:
  - [Batch account / Storage account](./README.md#azure-requirements)
- - [Create your secrets configuration in code](./docs/33-programmatically-generate-config)
+ - [Create your secrets configuration in code](./docs/33-programmatically-generate-config.md)
 
 
 #### Cluster Settings
@@ -181,7 +181,7 @@ NOTE: If you do **not** want your cluster to autoscale, simply set the number of
 
 Learn more:
  - [Choosing VM size](./docs/10-vm-sizes.md#vm-size-table)
- - [Create your cluster configuration in code](./docs/33-programmatically-generate-config)
+ - [Create your cluster configuration in code](./docs/33-programmatically-generate-config.md)
  - [MaxTasksPerNode](./docs/22-parallelizing-cores.md)
  - [LowPriorityNodes](#low-priority-vms)
  - [Autoscale](./docs/11-autoscale.md)
