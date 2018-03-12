@@ -14,7 +14,7 @@ Copyright: Microsoft
 License: MIT + file LICENSE
 LazyData: TRUE
 Depends:
-    foreach (>= 1.4.3),
+    foreach (>= 1.4.5),
     iterators (>= 1.0.8)
 Imports:
     rAzureBatch (>= 0.5.3),

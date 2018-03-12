@@ -176,7 +176,10 @@ setHttpTraffic <- function(value = FALSE) {
     new.env(parent = emptyenv())
   })
   noexport <- union(obj$noexport, obj$argnames)
-  foreach::getexports(expr, exportenv, envir, bad = noexport)
+  packages <- NULL  
+  foreach::getexports(expr, exportenv, envir, bad = noexport, packages)
+  packages <- c(packages, obj$packages)
+  packages <- unique(packages)
   vars <- ls(exportenv)
 
   export <- unique(obj$export)
@@ -219,7 +222,7 @@ setHttpTraffic <- function(value = FALSE) {
 
   assign("expr", expr, .doAzureBatchGlobals)
   assign("exportenv", exportenv, .doAzureBatchGlobals)
-  assign("packages", obj$packages, .doAzureBatchGlobals)
+  assign("packages", packages, .doAzureBatchGlobals)
   assign("github", githubPackages, .doAzureBatchGlobals)
   assign("bioconductor", bioconductorPackages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
@@ -332,10 +335,10 @@ setHttpTraffic <- function(value = FALSE) {
   metadata <-
     list(enableCloudCombineKeyValuePair, chunkSizeKeyValuePair)
 
-  if (!is.null(obj$packages)) {
+  if (!is.null(packages)) {
     packagesKeyValuePair <-
       list(name = "packages",
-           value = paste(obj$packages, collapse = ";"))
+           value = paste(packages, collapse = ";"))
 
     metadata[[length(metadata) + 1]] <- packagesKeyValuePair
   }
@@ -449,7 +452,7 @@ setHttpTraffic <- function(value = FALSE) {
       poolId = data$poolId,
       resourceFiles = resourceFiles,
       metadata = metadata,
-      packages = obj$packages,
+      packages = packages,
       github = githubPackages,
       bioconductor = bioconductorPackages,
       containerImage = data$containerImage
@@ -499,7 +502,7 @@ setHttpTraffic <- function(value = FALSE) {
     errorHandling = obj$errorHandling,
     wait = wait,
     autoDeleteJob = autoDeleteJob,
-    cranPackages = obj$packages,
+    cranPackages = packages,
     githubPackages = githubPackages,
     bioconductorPackages = bioconductorPackages
   )
@@ -545,7 +548,7 @@ setHttpTraffic <- function(value = FALSE) {
         endIndex,
         isDataSet),
       envir = .doAzureBatchGlobals,
-      packages = obj$packages,
+      packages = packages,
       outputFiles = obj$options$azure$outputFiles,
       containerImage = data$containerImage,
       args = args
@@ -570,7 +573,7 @@ setHttpTraffic <- function(value = FALSE) {
         as.character(obj$errorHandling)
       ),
       envir = .doAzureBatchGlobals,
-      packages = obj$packages,
+      packages = packages,
       dependsOn = list(taskIdRanges = list(list(start = 1, end = length(tasks)))),
       cloudCombine = cloudCombine,
       outputFiles = obj$options$azure$outputFiles,
@@ -583,7 +586,7 @@ setHttpTraffic <- function(value = FALSE) {
   rAzureBatch::updateJob(id)
 
   if (wait) {
-    if (!is.null(obj$packages) ||
+    if (!is.null(packages) ||
         !is.null(githubPackages) ||
         !is.null(bioconductorPackages)) {
       waitForJobPreparation(id, data$poolId)
