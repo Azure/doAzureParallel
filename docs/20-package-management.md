@@ -4,7 +4,19 @@ The doAzureParallel package allows you to install packages to your pool in two w
 - Installing on pool creation
 - Installing per-*foreach* loop
 
+Packages installed at the pool level benefit from only needing to be installed once per node. Each iteration of the foreach can load the library without needing to install them again. Packages installed in the foreach benefit from specifying any specific dependencies required only for that instance of the loop.
+
 ## Installing Packages on Pool Creation
+
+Pool level packages support CRAN, GitHub and BioConductor packages. The packages are installed in a shared directory on the node. It is important to note that it is required to explicitly load any packages installed at the cluster level within the foreach loop. For example, if you installed xml2 on the cluster, you must explicityly load it before using it.
+
+```R
+foreach (i = 1:4) %dopar% {
+  # Load the libraries you want to use.
+  library(xml2)
+  xml2::as_list(...)
+}
+```
 You can install packages by specifying the package(s) in your JSON pool configuration file. This will then install the specified packages at the time of pool creation.
 
 ```R
