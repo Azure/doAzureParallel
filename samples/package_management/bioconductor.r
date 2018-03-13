@@ -8,16 +8,16 @@ install_github("azure/doazureparallel")
 library(doAzureParallel)
 
 # set your credentials
-setCredentials("credentials.json")
+doAzureParallel::setCredentials("credentials.json")
 
 # Create your cluster if not exist
-cluster <- makeCluster("bioconductor_cluster.json")
+cluster <- doAzureParallel::makeCluster("bioconductor_cluster.json")
 
 # register your parallel backend
-registerDoAzureParallel(cluster)
+doAzureParallel::registerDoAzureParallel(cluster)
 
 # check that your workers are up
-getDoParWorkers()
+doAzureParallel::getDoParWorkers()
 
 summary <- foreach(i = 1:1) %dopar% {
   library(GenomeInfoDb) # Already installed as part of the cluster configuration
@@ -25,7 +25,13 @@ summary <- foreach(i = 1:1) %dopar% {
 
   sessionInfo()
   # Your algorithm
+}
 
+summary
+
+summary <- foreach(i = 1:1, bioconductor=c('GenomeInfoDb', 'IRanges')) %dopar% {
+  sessionInfo()
+  # Your algorithm
 }
 
 summary
