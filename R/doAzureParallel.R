@@ -470,6 +470,10 @@ setHttpTraffic <- function(value = FALSE) {
 
     indices <- cbind(startIndices, endIndices)
     mergeSize <- 10
+    if (!is.null(obj$options$azure$mergeSize)) {
+      mergeSize <- as.integer(obj$options$azure$mergeSize)
+    }
+
     buckets <- ceiling(nrow(indices) / mergeSize)
     bucketSeq <- rep(1:buckets, each = mergeSize, length.out = nrow(indices))
     indices <- cbind(indices, bucketSeq)
