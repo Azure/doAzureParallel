@@ -469,7 +469,7 @@ setHttpTraffic <- function(value = FALSE) {
     }
 
     indices <- cbind(startIndices, endIndices)
-    mergeSize <- 10
+    mergeSize <- nrow(indices)
     if (!is.null(obj$options$azure$mergeSize)) {
       mergeSize <- as.integer(obj$options$azure$mergeSize)
     }
