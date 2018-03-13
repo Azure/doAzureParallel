@@ -1,3 +1,5 @@
+#Please see documentation[(link)](../../docs/20-package-management.md) for more details on packagement management.
+
 # install packages
 library(devtools)
 install_github("azure/doazureparallel")
