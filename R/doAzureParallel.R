@@ -525,6 +525,11 @@ setHttpTraffic <- function(value = FALSE) {
     endIndices[length(startIndices)] <- ntasks
   }
 
+  maxTaskRetryCount <- 3
+  if (!is.null(obj$options$azure$taskRetryCount)) {
+    maxTaskRetryCount <- obj$options$azure$taskRetryCount
+  }
+
   tasks <- lapply(1:length(endIndices), function(i) {
     startIndex <- startIndices[i]
     endIndex <- endIndices[i]
@@ -540,15 +545,17 @@ setHttpTraffic <- function(value = FALSE) {
       taskId = taskId,
       rCommand =  sprintf(
         paste("Rscript --no-save --no-environ --no-restore --no-site-file",
-        "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i > $AZ_BATCH_TASK_ID.txt"),
+        "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i %s > $AZ_BATCH_TASK_ID.txt"),
         startIndex,
         endIndex,
-        isDataSet),
+        isDataSet,
+        as.character(obj$errorHandling)),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
       outputFiles = obj$options$azure$outputFiles,
       containerImage = data$containerImage,
-      args = args
+      args = args,
+      maxRetryCount = maxTaskRetryCount
     )
 
     cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")
