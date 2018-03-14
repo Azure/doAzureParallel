@@ -107,9 +107,10 @@ getJobList <- function(filter = NULL) {
         substr(filterClause, 1, nchar(filterClause) - 3)
     }
   }
-
+  config <- getOption("az_config")
   jobs <-
-    rAzureBatch::listJobs(query = list("$filter" = filterClause, "$select" = "id,state"))
+    config$batchClient$jobOperations$listJobs(
+      query = list("$filter" = filterClause, "$select" = "id,state"))
 
   id <- character(length(jobs$value))
   state <- character(length(jobs$value))
@@ -121,11 +122,14 @@ getJobList <- function(filter = NULL) {
     if (is.null(jobs$value[[1]]$id)) {
       stop(jobs$value)
     }
+    config <- getOption("az_config")
+
     for (j in 1:length(jobs$value)) {
       id[j] <- jobs$value[[j]]$id
       state[j] <- jobs$value[[j]]$state
       taskCounts <-
-        rAzureBatch::getJobTaskCounts(jobId = jobs$value[[j]]$id)
+        config$batchClient$jobOperations$getJobTaskCounts(
+          jobId = jobs$value[[j]]$id)
       failedTasks[j] <-
         as.integer(taskCounts$failed)
       totalTasks[j] <-

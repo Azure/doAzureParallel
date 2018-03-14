@@ -358,7 +358,9 @@ makeCluster <-
 #' }
 #' @export
 getCluster <- function(clusterName, verbose = TRUE) {
-  pool <- rAzureBatch::getPool(clusterName)
+  config <- getOption("az_config")
+  pool <- config$batchClient$poolOperations$getPool(
+    clusterName)
 
   if (!is.null(pool$code) && !is.null(pool$message)) {
     stop(sprintf("Code: %s - Message: %s", pool$code, pool$message))
@@ -387,7 +389,9 @@ getCluster <- function(clusterName, verbose = TRUE) {
     stop(resizeErrors)
   }
 
-  nodes <- rAzureBatch::listPoolNodes(clusterName)
+  config <- getOption("az_config")
+  nodes <- config$batchClient$poolOperations$listPoolNodes(
+    clusterName)
 
   if (!is.null(nodes$value) && length(nodes$value) > 0) {
     nodesInfo <- .processNodeCount(nodes)
@@ -510,7 +514,9 @@ getClusterList <- function(filter = NULL) {
 #' }
 #' @export
 stopCluster <- function(cluster) {
-  rAzureBatch::deletePool(cluster$poolId)
+  config <- getOption("az_config")
+  config$batchClient$poolOperations$deletePool(
+    cluster$poolId)
 
   print(sprintf("Your %s cluster is being deleted.", cluster$poolId))
 }
@@ -519,7 +525,9 @@ getPoolWorkers <- function(poolId, ...) {
   args <- list(...)
   raw <- !is.null(args$RAW)
 
-  nodes <- rAzureBatch::listPoolNodes(poolId)
+  config <- getOption("az_config")
+  nodes <- config$batchClient$poolOperations$listPoolNodes(
+    poolId)
 
   if (length(nodes$value) > 0) {
     for (i in 1:length(nodes$value)) {
