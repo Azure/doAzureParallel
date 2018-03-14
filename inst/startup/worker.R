@@ -83,6 +83,14 @@ for (package in azbatchenv$packages) {
   library(package, character.only = TRUE)
 }
 
+for (package in azbatchenv$github) {
+  library(package, character.only = TRUE)
+}
+
+for (package in azbatchenv$bioconductor) {
+  library(package, character.only = TRUE)
+}
+
 ls(azbatchenv)
 parent.env(azbatchenv$exportenv) <- getparentenv(azbatchenv$pkgName)
 
