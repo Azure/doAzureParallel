@@ -470,9 +470,9 @@ setHttpTraffic <- function(value = FALSE) {
 
     indices <- cbind(startIndices, endIndices)
     mergeSize <- nrow(indices)
-    if (!is.null(obj$options$azure$mergeSize)) {
-      mergeSize <- as.integer(obj$options$azure$mergeSize)
-    }
+    # if (!is.null(obj$options$azure$mergeSize)) {
+    #   mergeSize <- as.integer(obj$options$azure$mergeSize)
+    # }
 
     buckets <- ceiling(nrow(indices) / mergeSize)
     bucketSeq <- rep(1:buckets, each = mergeSize, length.out = nrow(indices))
@@ -745,43 +745,44 @@ setHttpTraffic <- function(value = FALSE) {
             .createErrorViewerPane(id, failTasks)
           }
 
-          accumulator <- foreach::makeAccum(it)
-
-          tryCatch({
-              accumulator(results, seq(along = results))
-            },
-            error = function(e) {
-              cat("error calling combine function:\n")
-              print(e)
-            }
-          )
-
-          # check for errors
-          errorValue <- foreach::getErrorValue(it)
-          errorIndex <- foreach::getErrorIndex(it)
-
-          # delete job from batch service and job result from storage blob
-          if (autoDeleteJob) {
-            # Default behavior is to delete the job data
-            deleteJob(id, verbose = !autoDeleteJob)
-          }
-
-          if (identical(obj$errorHandling, "stop") &&
-              !is.null(errorValue)) {
-            msg <-
-              sprintf(
-                paste0(
-                  "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use",
-                  " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
-                ),
-                errorIndex,
-                conditionMessage(errorValue)
-              )
-            stop(simpleError(msg, call = expr))
-          }
-          else {
-            foreach::getResult(it)
-          }
+          results
+          # accumulator <- foreach::makeAccum(it)
+          #
+          # tryCatch({
+          #     accumulator(results, as.numeric(names(results)))
+          #   },
+          #   error = function(e) {
+          #     cat("error calling combine function:\n")
+          #     print(e)
+          #   }
+          # )
+          #
+          # # check for errors
+          # errorValue <- foreach::getErrorValue(it)
+          # errorIndex <- foreach::getErrorIndex(it)
+          #
+          # # delete job from batch service and job result from storage blob
+          # if (autoDeleteJob) {
+          #   # Default behavior is to delete the job data
+          #   deleteJob(id, verbose = !autoDeleteJob)
+          # }
+          #
+          # if (identical(obj$errorHandling, "stop") &&
+          #     !is.null(errorValue)) {
+          #   msg <-
+          #     sprintf(
+          #       paste0(
+          #         "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use",
+          #         " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
+          #       ),
+          #       errorIndex,
+          #       conditionMessage(errorValue)
+          #     )
+          #   stop(simpleError(msg, call = expr))
+          # }
+          # else {
+          #   foreach::getResult(it)
+          # }
         }
       },
       error = function(ex){

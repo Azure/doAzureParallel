@@ -97,38 +97,36 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
         e
       })
 
-      if (batchTaskId != "merge") {
-        if (isError(task)) {
-          if (errorHandling == "stop") {
-            stop("Error found: ", task)
-          }
-          else if (errorHandling == "pass") {
-            result <- lapply(1:length(chunkSize), function(x){
-              NA
-            })
-
-            result
-            next
-          }
-          else if (errorHandling == "remove") {
-            next
-          }
-          else {
-            stop("Unknown error handling: ", errorHandling)
-          }
-        }
-
+      if (isError(task)) {
         if (errorHandling == "stop") {
-          errors <- Filter(function(x) isError(x), task)
-
-          if (length(errors) > 0) {
-            stop("Error found: ", errors)
-          }
+          stop("Error found: ", task)
         }
+        else if (errorHandling == "pass") {
+          result <- lapply(1:length(chunkSize), function(x){
+            NA
+          })
 
-        if (errorHandling == "remove") {
-          return(Filter(function(x) !isError(x), task))
+          result
+          next
         }
+        else if (errorHandling == "remove") {
+          next
+        }
+        else {
+          stop("Unknown error handling: ", errorHandling)
+        }
+      }
+
+      if (errorHandling == "stop") {
+        errors <- Filter(function(x) isError(x), task)
+
+        if (length(errors) > 0) {
+          stop("Error found: ", errors)
+        }
+      }
+
+      if (errorHandling == "remove") {
+        return(Filter(function(x) !isError(x), task))
       }
 
       return(task)
