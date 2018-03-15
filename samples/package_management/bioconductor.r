@@ -1,9 +1,5 @@
 #Please see documentation at docs/20-package-management.md for more details on packagement management.
 
-# install packages
-library(devtools)
-install_github("azure/doazureparallel")
-
 # import the doAzureParallel library and its dependencies
 library(doAzureParallel)
 
