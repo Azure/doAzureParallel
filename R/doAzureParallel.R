@@ -541,8 +541,6 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   tasks <- lapply(1:nrow(indices), function(i) {
-    storageCredentials <- rAzureBatch::getStorageCredentials()
-
     startIndex <- indices[i, ][1]
     endIndex <- indices[i, ][2]
     taskId <- as.character(i)

@@ -188,7 +188,6 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
   userOutputFiles <- args$outputFiles
   containerImage <- args$containerImage
 
-  resultFile <- paste0(taskId, "-result", ".rds")
   accountName <- storageCredentials$name
 
   resourceFiles <- NULL
