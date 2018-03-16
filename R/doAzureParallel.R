@@ -469,20 +469,6 @@ setHttpTraffic <- function(value = FALSE) {
     }
 
     indices <- cbind(startIndices, endIndices)
-    mergeSize <- nrow(indices)
-    # if (!is.null(obj$options$azure$mergeSize)) {
-    #   mergeSize <- as.integer(obj$options$azure$mergeSize)
-    # }
-
-    buckets <- ceiling(nrow(indices) / mergeSize)
-    bucketSeq <- rep(1:buckets, each = mergeSize, length.out = nrow(indices))
-    indices <- cbind(indices, bucketSeq)
-
-    bucketsKeyValuePair <-
-      list(name = "buckets",
-           value = as.character(buckets))
-
-    metadata[[length(metadata) + 1]] <- bucketsKeyValuePair
 
     response <- .addJob(
       jobId = id,
@@ -568,31 +554,16 @@ setHttpTraffic <- function(value = FALSE) {
 
     resultFile <- paste0(taskId, "-result", ".rds")
 
-    if (buckets > 1) {
-      mergeOutput <- list(
-        list(
-          filePattern = resultFile,
-          destination = list(container = list(
-            path = paste0("m", indices[i,][3], "/", resultFile),
-            containerUrl = outputContainerUrl
-          )),
-          uploadOptions = list(uploadCondition = "taskCompletion")
-        )
+    mergeOutput <- list(
+      list(
+        filePattern = resultFile,
+        destination = list(container = list(
+          path = paste0("results", "/", resultFile),
+          containerUrl = outputContainerUrl
+        )),
+        uploadOptions = list(uploadCondition = "taskCompletion")
       )
-    }
-    else {
-      mergeOutput <- list(
-        list(
-          filePattern = resultFile,
-          destination = list(container = list(
-            path = paste0("results", "/", resultFile),
-            containerUrl = outputContainerUrl
-          )),
-          uploadOptions = list(uploadCondition = "taskCompletion")
-        )
-      )
-    }
-
+    )
     mergeOutput <- append(obj$options$azure$outputFiles, mergeOutput)
 
     .addTask(
@@ -621,60 +592,12 @@ setHttpTraffic <- function(value = FALSE) {
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
 
-    if (buckets > 1) {
-      taskDependencies <- list(taskIds = lapply(1:buckets, function(x) paste0("m", x)))
 
-      bucket <- 1
-      bucketIndex <- 1
+    taskDependencies <- list(taskIdRanges = list(list(
+      start = 1,
+      end = length(tasks))))
 
-      while (bucket <= buckets) {
-        subTaskId <- paste0("m", bucket)
-        resultFile <- paste0(subTaskId, "-result", ".rds")
-
-        mergeOutput <- list(
-          list(
-            filePattern = resultFile,
-            destination = list(container = list(
-              path = paste0("results", "/", resultFile),
-              containerUrl = outputContainerUrl
-            )),
-            uploadOptions = list(uploadCondition = "taskCompletion")
-          )
-        )
-
-        addSubMergeTask(
-          jobId = id,
-          taskId = subTaskId,
-          rCommand = sprintf(
-            "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
-            rle(bucketSeq)$lengths[bucket],
-            chunkSize,
-            as.character(obj$errorHandling)
-          ),
-          envir = .doAzureBatchGlobals,
-          packages = obj$packages,
-          dependsOn = list(taskIdRanges = list(list(
-            start = bucketIndex,
-            end = bucketIndex + rle(bucketSeq)$lengths[bucket] - 1))),
-          cloudCombine = cloudCombine,
-          outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
-          containerImage = data$containerImage
-        )
-
-        bucketIndex <- bucketIndex + rle(bucketSeq)$lengths[bucket]
-        bucket <- bucket + 1
-      }
-
-      tasksCount <- buckets
-    }
-    else {
-      taskDependencies <- list(taskIdRanges = list(list(
-        start = 1,
-        end = length(tasks))))
-
-      tasksCount <- length(tasks)
-    }
-
+    tasksCount <- length(tasks)
     resultFile <- paste0("merge", "-result", ".rds")
 
     mergeOutput <- list(
@@ -703,8 +626,7 @@ setHttpTraffic <- function(value = FALSE) {
       dependsOn = taskDependencies,
       cloudCombine = cloudCombine,
       outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
-      containerImage = data$containerImage,
-      buckets = buckets
+      containerImage = data$containerImage
     )
 
     cat(". . .")
@@ -745,50 +667,53 @@ setHttpTraffic <- function(value = FALSE) {
             .createErrorViewerPane(id, failTasks)
           }
 
-          results
-          # accumulator <- foreach::makeAccum(it)
-          #
-          # tryCatch({
-          #     accumulator(results, as.numeric(names(results)))
-          #   },
-          #   error = function(e) {
-          #     cat("error calling combine function:\n")
-          #     print(e)
-          #   }
-          # )
-          #
-          # # check for errors
-          # errorValue <- foreach::getErrorValue(it)
-          # errorIndex <- foreach::getErrorIndex(it)
-          #
-          # # delete job from batch service and job result from storage blob
-          # if (autoDeleteJob) {
-          #   # Default behavior is to delete the job data
-          #   deleteJob(id, verbose = !autoDeleteJob)
-          # }
-          #
-          # if (identical(obj$errorHandling, "stop") &&
-          #     !is.null(errorValue)) {
-          #   msg <-
-          #     sprintf(
-          #       paste0(
-          #         "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use",
-          #         " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
-          #       ),
-          #       errorIndex,
-          #       conditionMessage(errorValue)
-          #     )
-          #   stop(simpleError(msg, call = expr))
-          # }
-          # else {
-          #   foreach::getResult(it)
-          # }
+          if (!identical(function(a, ...) c(a, list(...)),
+                        obj$combineInfo$fun, ignore.environment = TRUE)){
+            tryCatch({
+              accumulator <- foreach::makeAccum(it)
+              accumulator(results, as.numeric(names(results)))
+            },
+            error = function(e) {
+              cat("error calling combine function:\n")
+              print(e)
+            }
+            )
+
+            # check for errors
+            errorValue <- foreach::getErrorValue(it)
+            errorIndex <- foreach::getErrorIndex(it)
+
+            if (identical(obj$errorHandling, "stop") &&
+                !is.null(errorValue)) {
+              msg <-
+                sprintf(
+                  paste0(
+                    "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use",
+                    " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
+                  ),
+                  errorIndex,
+                  conditionMessage(errorValue)
+                )
+              stop(simpleError(msg, call = expr))
+            }
+            else {
+              results <- foreach::getResult(it)
+            }
+          }
         }
       },
       error = function(ex){
         message(ex)
       }
     )
+
+    # delete job from batch service and job result from storage blob
+    if (autoDeleteJob) {
+      # Default behavior is to delete the job data
+      deleteJob(id, verbose = !autoDeleteJob)
+    }
+
+    return(results)
   }
   else{
     print(
