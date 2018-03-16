@@ -5,8 +5,7 @@ addFinalMergeTask <- function(jobId, taskId, rCommand, ...){
   dependsOn <- args$dependsOn
   cloudCombine <- args$cloudCombine
   containerImage <- args$containerImage
-  buckets <- args$buckets
-  
+
   resultFile <- paste0(taskId, "-result", ".rds")
   accountName <- storageCredentials$name
 
@@ -26,7 +25,7 @@ addFinalMergeTask <- function(jobId, taskId, rCommand, ...){
 
     downloadCommand <-
       dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
-    
+
     commands <- c(downloadCommand)
   }
 
@@ -126,7 +125,7 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
   dependsOn <- args$dependsOn
   containerImage <- args$containerImage
   outputFiles <- args$outputFiles
-  
+
   copyCommand <- sprintf(
     "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include %s/*.rds",
     accountName,
@@ -142,16 +141,16 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
   else {
     exitConditions <- list(default = list(dependencyAction = "satisfy"))
   }
-  
+
   downloadCommand <-
     dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
-  
+
   commands <- c(downloadCommand, dockerRunCommand(containerImage, rCommand))
   commands <- linuxWrapCommands(commands)
-  
+
   sasToken <- rAzureBatch::createSasToken("rwcl", "c", jobId)
   queryParameterUrl <- "?"
-  
+
   for (query in names(sasToken)) {
     queryParameterUrl <-
       paste0(queryParameterUrl,
@@ -160,13 +159,13 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
              RCurl::curlEscape(sasToken[[query]]),
              "&")
   }
-  
+
   queryParameterUrl <-
     substr(queryParameterUrl, 1, nchar(queryParameterUrl) - 1)
-  
+
   setting <- list(name = "BLOBXFER_SASKEY",
                   value = queryParameterUrl)
-  
+
   rAzureBatch::addTask(
     jobId,
     taskId,
@@ -240,14 +239,6 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
     )
 
   outputFiles <- list(
-    # list(
-    #   filePattern = resultFile,
-    #   destination = list(container = list(
-    #     path = paste0("result/", resultFile),
-    #     containerUrl = containerUrl
-    #   )),
-    #   uploadOptions = list(uploadCondition = "taskCompletion")
-    # ),
     list(
       filePattern = paste0(taskId, ".txt"),
       destination = list(container = list(
