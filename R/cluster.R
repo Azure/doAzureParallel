@@ -213,6 +213,8 @@ makeCluster <-
                  e))
     })
 
+    printCluster(poolConfig, resourceFiles)
+
     response <- .addPool(
       pool = poolConfig,
       packages = packages,

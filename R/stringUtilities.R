@@ -50,3 +50,34 @@ printJobInformation <- function(jobId,
   cat(sprintf("autoDeleteJob: %s", as.character(autoDeleteJob)), fill = TRUE)
   cat(strrep('=', options("width")), fill = TRUE)
 }
+
+printCluster <- function(cluster, resourceFiles = NULL) {
+  cat(sprintf("Id: %s", cluster$name), fill = TRUE)
+
+  cat(sprintf("Configurations:"), fill = TRUE)
+  cat(sprintf("\tNode Size: %s", cluster$vmSize), fill = TRUE)
+  cat(sprintf("\tMaxTasksPerNode: %s", cluster$maxTasksPerNode), fill = TRUE)
+  cat(sprintf("\tDocker Image: %s", cluster$containerImage), fill = TRUE)
+
+  cranPackages <- cluster$rPackages$cran
+  githubPackages <- cluster$rPackages$github
+  bioconductorPackages <- cluster$rPackages$bioconductor
+  getJobPackageSummary(cranPackages)
+  getJobPackageSummary(githubPackages)
+  getJobPackageSummary(bioconductorPackages)
+
+  cat(sprintf("Nodes:"), fill = TRUE)
+  cat(sprintf("\tDedicated:"), fill = TRUE)
+  cat(sprintf("\t\tMin: %s", cluster$poolSize$dedicatedNodes$min), fill = TRUE)
+  cat(sprintf("\t\tMax: %s", cluster$poolSize$dedicatedNodes$max), fill = TRUE)
+  cat(sprintf("\tLow Priority:"), fill = TRUE)
+  cat(sprintf("\t\tMin: %s", cluster$poolSize$lowPriorityNodes$min), fill = TRUE)
+  cat(sprintf("\t\tMax: %s", cluster$poolSize$lowPriorityNodes$max), fill = TRUE)
+  cat(sprintf("\tAutoscale Formula: %s", cluster$poolSize$autoscaleFormula), fill = TRUE)
+
+  if (!is.null(resourceFiles) &&
+      length(resourceFiles) > 0) {
+
+  }
+  cat(strrep('=', options("width")), fill = TRUE)
+}
