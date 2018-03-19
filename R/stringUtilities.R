@@ -51,7 +51,8 @@ printJobInformation <- function(jobId,
   cat(strrep('=', options("width")), fill = TRUE)
 }
 
-printCluster <- function(cluster, resourceFiles = NULL) {
+printCluster <- function(cluster, resourceFiles = list()) {
+  cat(strrep('=', options("width")), fill = TRUE)
   cat(sprintf("Id: %s", cluster$name), fill = TRUE)
 
   cat(sprintf("Configurations:"), fill = TRUE)
@@ -67,17 +68,22 @@ printCluster <- function(cluster, resourceFiles = NULL) {
   getJobPackageSummary(bioconductorPackages)
 
   cat(sprintf("Nodes:"), fill = TRUE)
+  cat(sprintf("\tAutoscale Formula: %s", cluster$poolSize$autoscaleFormula), fill = TRUE)
   cat(sprintf("\tDedicated:"), fill = TRUE)
   cat(sprintf("\t\tMin: %s", cluster$poolSize$dedicatedNodes$min), fill = TRUE)
   cat(sprintf("\t\tMax: %s", cluster$poolSize$dedicatedNodes$max), fill = TRUE)
   cat(sprintf("\tLow Priority:"), fill = TRUE)
   cat(sprintf("\t\tMin: %s", cluster$poolSize$lowPriorityNodes$min), fill = TRUE)
   cat(sprintf("\t\tMax: %s", cluster$poolSize$lowPriorityNodes$max), fill = TRUE)
-  cat(sprintf("\tAutoscale Formula: %s", cluster$poolSize$autoscaleFormula), fill = TRUE)
 
   if (!is.null(resourceFiles) &&
       length(resourceFiles) > 0) {
+    cat(sprintf("Resource Files:"), fill = TRUE)
 
+    for (i in 1:length(resourceFiles)) {
+      cat(sprintf("\t%s",
+                  resourceFiles[[i]]$filePath), fill = TRUE)
+    }
   }
   cat(strrep('=', options("width")), fill = TRUE)
 }
