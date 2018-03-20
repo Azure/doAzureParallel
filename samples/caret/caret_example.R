@@ -3,9 +3,9 @@
 # =============
 
 # install packages from github
-# library(devtools)
-# install_github("azure/razurebatch")
-# install_github("azure/doazureparallel")
+library(devtools)
+install_github("azure/razurebatch")
+install_github("azure/doazureparallel")
 
 # import packages
 library(doAzureParallel)
@@ -38,7 +38,7 @@ library(caret)
 setChunkSize(8)
 
 # install DAAG to download the dataset 'spam7'
-#install.packages("DAAG")
+install.packages("DAAG")
 library(DAAG)
 
 # 'spam7' is a data set that consists of 4601 email items, 
@@ -88,4 +88,4 @@ rf_fit
 rf_fit$bestTune
 
 # de-provision your cluster in Azure
-#stopCluster(cluster)
+stopCluster(cluster)
