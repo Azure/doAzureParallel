@@ -57,11 +57,11 @@ testing  <- spam7[-inTraining,]
 # registered our parallel backend, Caret will know to use it
 fitControl <- trainControl(## 10-fold cross validation
                            method = "repeatedcv",
-                           number = 2,
+                           number = 10,
                            ## repeat 10 times
-                           repeats = 2,
+                           repeats = 10,
                            classProbs = TRUE,
-                           summaryFunction = multiClassSummary,
+                           summaryFunction = twoClassSummary,
                            search = "random",
                            ## run on the parallel backend
                            allowParallel = TRUE)
@@ -76,7 +76,7 @@ rf_fit <- train(## classification column
                  ## the metric to use for evaluation
                  metric = "ROC",
                  ## # of random searches
-                 tuneLength = 2,
+                 tuneLength = 30,
                  ## tuning params
                  trControl = fitControl)
 
