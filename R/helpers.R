@@ -9,6 +9,11 @@
   userOutputFiles <- args$outputFiles
   containerImage <- args$containerImage
 
+  maxTaskRetryCount <- 3
+  if (!is.null(args$maxTaskRetryCount)) {
+    maxTaskRetryCount <- args$maxTaskRetryCount
+  }
+
   resultFile <- paste0(taskId, "-result", ".rds")
   accountName <- storageCredentials$name
 
@@ -131,7 +136,10 @@
     commandLine = commands,
     dependsOn = dependsOn,
     outputFiles = outputFiles,
-    exitConditions = exitConditions
+    exitConditions = exitConditions,
+    constraints = list(
+      maxTaskRetryCount = maxTaskRetryCount
+    )
   )
 }
 
