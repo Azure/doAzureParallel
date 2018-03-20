@@ -9,9 +9,9 @@
   userOutputFiles <- args$outputFiles
   containerImage <- args$containerImage
 
-  maxRetryCount <- 3
-  if(!is.null(args$maxRetryCount)){
-    maxRetryCount <- args$maxRetryCount
+  maxTaskRetryCount <- 3
+  if (!is.null(args$maxTaskRetryCount)) {
+    maxTaskRetryCount <- args$maxTaskRetryCount
   }
 
   resultFile <- paste0(taskId, "-result", ".rds")
@@ -138,7 +138,7 @@
     outputFiles = outputFiles,
     exitConditions = exitConditions,
     constraints = list(
-      maxTaskRetryCount = maxRetryCount
+      maxTaskRetryCount = maxTaskRetryCount
     )
   )
 }

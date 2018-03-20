@@ -526,8 +526,8 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   maxTaskRetryCount <- 3
-  if (!is.null(obj$options$azure$taskRetryCount)) {
-    maxTaskRetryCount <- obj$options$azure$taskRetryCount
+  if (!is.null(obj$options$azure$maxTaskRetryCount)) {
+    maxTaskRetryCount <- obj$options$azure$maxTaskRetryCount
   }
 
   tasks <- lapply(1:length(endIndices), function(i) {
