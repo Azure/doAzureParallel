@@ -3,9 +3,9 @@
 # =============
 
 # install packages from github
-library(devtools)
-install_github("azure/razurebatch")
-install_github("azure/doazureparallel")
+# library(devtools)
+# install_github("azure/razurebatch")
+# install_github("azure/doazureparallel")
 
 # import packages
 library(doAzureParallel)
@@ -17,10 +17,10 @@ generateCredentialsConfig("credentials.json")
 setCredentials("credentials.json")
 
 # generate cluster config json file
-generateClusterConfig("cluster.json")
+generateClusterConfig("cluster-caret.json")
 
 # Creating an Azure parallel backend
-cluster <- makeCluster(clusterSetting = "cluster.json")
+cluster <- makeCluster(clusterSetting = "cluster-caret.json")
 
 # Register your Azure parallel backend to the foreach implementation
 registerDoAzureParallel(cluster)
@@ -38,7 +38,7 @@ library(caret)
 setChunkSize(8)
 
 # install DAAG to download the dataset 'spam7'
-install.packages("DAAG")
+#install.packages("DAAG")
 library(DAAG)
 
 # 'spam7' is a data set that consists of 4601 email items, 
@@ -57,11 +57,11 @@ testing  <- spam7[-inTraining,]
 # registered our parallel backend, Caret will know to use it
 fitControl <- trainControl(## 10-fold cross validation
                            method = "repeatedcv",
-                           number = 10,
+                           number = 2,
                            ## repeat 10 times
-                           repeats = 10,
+                           repeats = 2,
                            classProbs = TRUE,
-                           summaryFunction = twoClassSummary,
+                           summaryFunction = multiClassSummary,
                            search = "random",
                            ## run on the parallel backend
                            allowParallel = TRUE)
@@ -76,7 +76,7 @@ rf_fit <- train(## classification column
                  ## the metric to use for evaluation
                  metric = "ROC",
                  ## # of random searches
-                 tuneLength = 30,
+                 tuneLength = 2,
                  ## tuning params
                  trControl = fitControl)
 
@@ -88,4 +88,4 @@ rf_fit
 rf_fit$bestTune
 
 # de-provision your cluster in Azure
-stopCluster(cluster)
+#stopCluster(cluster)
