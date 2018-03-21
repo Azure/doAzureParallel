@@ -4,12 +4,12 @@
   "maxTasksPerNode": 1,
   "poolSize": {
     "dedicatedNodes": {
-      "min": 4,
-      "max": 4
-    },
-    "lowPriorityNodes": {
       "min": 0,
       "max": 0
+    },
+    "lowPriorityNodes": {
+      "min": 3,
+      "max": 3
     },
     "autoscaleFormula": "QUEUE"
   },
