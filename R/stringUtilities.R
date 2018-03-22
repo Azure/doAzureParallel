@@ -67,7 +67,7 @@ printCluster <- function(cluster, resourceFiles = list()) {
   getJobPackageSummary(githubPackages)
   getJobPackageSummary(bioconductorPackages)
 
-  cat(sprintf("Nodes:"), fill = TRUE)
+  cat(sprintf("Scale:"), fill = TRUE)
   cat(sprintf("\tAutoscale Formula: %s", cluster$poolSize$autoscaleFormula), fill = TRUE)
   cat(sprintf("\tDedicated:"), fill = TRUE)
   cat(sprintf("\t\tMin: %s", cluster$poolSize$dedicatedNodes$min), fill = TRUE)
