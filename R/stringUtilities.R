@@ -55,7 +55,7 @@ printCluster <- function(cluster, resourceFiles = list()) {
   cat(strrep('=', options("width")), fill = TRUE)
   cat(sprintf("Name: %s", cluster$name), fill = TRUE)
 
-  cat(sprintf("Configurations:"), fill = TRUE)
+  cat(sprintf("Configuration:"), fill = TRUE)
   cat(sprintf("\tDocker Image: %s", cluster$containerImage), fill = TRUE)
   cat(sprintf("\tMaxTasksPerNode: %s", cluster$maxTasksPerNode), fill = TRUE)
   cat(sprintf("\tNode Size: %s", cluster$vmSize), fill = TRUE)
