@@ -426,7 +426,7 @@ setHttpTraffic <- function(value = FALSE) {
                                  id,
                                  "install_github.R",
                                  sasToken,
-								 storageCredentials$endpointSuffix)
+                                 storageCredentials$endpointSuffix)
     installCranScriptUrl <-
       rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_cran.R", sasToken, storageCredentials$endpointSuffix)
     installBioConductorScriptUrl <-

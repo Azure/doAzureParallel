@@ -170,13 +170,11 @@ createOutputFile <- function(filePattern, url) {
   )
 
   # Parsing url to obtain container's virtual directory path
-  azureDomain <- "blob.core.windows.net"
-  parsedValue <- strsplit(url, azureDomain)[[1]]
+  parsedValue <- strsplit(url, "/")[[1]]
 
-  accountName <- parsedValue[1]
-  urlPath <- parsedValue[2]
+  urlPath <- paste0("/", parsedValue[4])
 
-  baseUrl <- paste0(accountName, azureDomain)
+  baseUrl <- paste0(parsedValue[1], "//", parsedValue[3])
   parsedUrlPath <- strsplit(urlPath, "?", fixed = TRUE)[[1]]
 
   storageContainerPath <- parsedUrlPath[1]
