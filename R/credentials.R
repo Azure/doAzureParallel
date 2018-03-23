@@ -24,7 +24,7 @@
 #'    batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com",
 #'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key",
 #'	  storageEndpointSuffix = "core.windows.net")
-#' supported storage account endpoint suffix: core.windows.net, 
+#' supported storage account endpoint suffix: core.windows.net,
 #'    core.chinacloudapi.cn, core.cloudapi.de, core.usgovcloudapi.net
 #' }
 #' @export
@@ -85,7 +85,7 @@ generateCredentialsConfig <- function(fileName, ...) {
                           url = batchUrl),
       storageAccount = list(name = storageName,
                             key = storageKey,
-							endpointSuffix = storageEndpointSuffix),
+                            endpointSuffix = storageEndpointSuffix),
       githubAuthenticationToken = githubAuthenticationToken,
       dockerAuthentication = list(username = dockerUsername,
                                   password = dockerPassword,

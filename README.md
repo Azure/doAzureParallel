@@ -79,7 +79,7 @@ For your Azure Storage Account, we need to get:
 This information can be found in the Azure Portal inside your Azure Storage Account:
 
 ![Azure Storage Acccount in the Portal](./vignettes/doAzureParallel-azurestorage-instructions.PNG "Azure Storage Acccount in the Portal")
-Please note EndpointSuffix is the last part of the Connection string shown in the Access keys blade.
+Please note EndpointSuffix is the last part of the Connection string shown in the Access keys blade. For Azure public cloud, its value is core.windows.net. For Azure national clouds, the endpoint is core.chinacloudapi.cn, core.usgovcloudapi.net or core.cloudapi.de.
 
 Keep track of the above keys and account information as it will be used to connect your R session with Azure.
 

@@ -63,7 +63,7 @@
       storageAccount = storageCredentials$name,
       containerName = jobId,
       sasToken = rAzureBatch::createSasToken("w", "c", jobId),
-	  storageEndpointSuffix = storageCredentials$endpointSuffix
+      storageEndpointSuffix = storageCredentials$endpointSuffix
     )
 
   outputFiles <- list(

@@ -273,7 +273,7 @@ setHttpTraffic <- function(value = FALSE) {
       "inputs",
       list(name = storageCredentials$name,
            sasToken = sasToken,
-		   endpointSuffix = storageCredentials$endpointSuffix),
+           endpointSuffix = storageCredentials$endpointSuffix),
       .doAzureBatchGlobals
     )
   }
