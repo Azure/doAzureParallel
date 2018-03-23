@@ -22,7 +22,10 @@
 #' generateCredentialsConfig("test_config.json")
 #' generateCredentialsConfig("test_config.json", batchAccount = "testbatchaccount",
 #'    batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com",
-#'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
+#'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key",
+#'	  storageEndpointSuffix = "core.windows.net")
+#' supported storage account endpoint suffix: core.windows.net, 
+#'    core.chinacloudapi.cn, core.cloudapi.de, core.usgovcloudapi.net
 #' }
 #' @export
 generateCredentialsConfig <- function(fileName, ...) {
@@ -45,6 +48,10 @@ generateCredentialsConfig <- function(fileName, ...) {
     ifelse(is.null(args$storageKey),
            "storage_account_key",
            args$storageKey)
+  storageSuffix <-
+    ifelse(is.null(args$storageEndpointSuffix),
+           "core.windows.net",
+           args$storageEndpointSuffix)
 
   githubAuthenticationToken <-
     ifelse(is.null(args$githubAuthenticationToken),
@@ -77,7 +84,8 @@ generateCredentialsConfig <- function(fileName, ...) {
                           key = batchKey,
                           url = batchUrl),
       storageAccount = list(name = storageName,
-                            key = storageKey),
+                            key = storageKey,
+							endpointSuffix = storageEndpointSuffix),
       githubAuthenticationToken = githubAuthenticationToken,
       dockerAuthentication = list(username = dockerUsername,
                                   password = dockerPassword,

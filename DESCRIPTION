@@ -17,7 +17,7 @@ Depends:
     foreach (>= 1.4.3),
     iterators (>= 1.0.8)
 Imports:
-    rAzureBatch (>= 0.5.3),
+    rAzureBatch (>= 0.5.7),
     jsonlite,
     rjson,
     xml2,

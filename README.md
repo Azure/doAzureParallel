@@ -74,10 +74,12 @@ This information can be found in the Azure Portal inside your Batch Account:
 For your Azure Storage Account, we need to get:
 - Storage Account Name
 - Storage Account Access Key
+- Storage Account Endpoint Suffix
 
 This information can be found in the Azure Portal inside your Azure Storage Account:
 
 ![Azure Storage Acccount in the Portal](./vignettes/doAzureParallel-azurestorage-instructions.PNG "Azure Storage Acccount in the Portal")
+Please note EndpointSuffix is the last part of the Connection string shown in the Access keys blade.
 
 Keep track of the above keys and account information as it will be used to connect your R session with Azure.
 
@@ -141,7 +143,8 @@ Use your credential config JSON file to enter your credentials.
   },
   "storageAccount": {
     "name": <Azure Storage Account Name>,
-    "key": <Azure Storage Account Key>
+    "key": <Azure Storage Account Key>,
+	"endpointSuffix": <Azure Storage Account Endpoint Suffix>
   },
   "githubAuthenticationToken": {}
 }
