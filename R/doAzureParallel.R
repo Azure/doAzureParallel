@@ -468,8 +468,6 @@ setHttpTraffic <- function(value = FALSE) {
       endIndices[length(startIndices)] <- ntasks
     }
 
-    indices <- cbind(startIndices, endIndices)
-
     response <- .addJob(
       jobId = id,
       poolId = data$poolId,

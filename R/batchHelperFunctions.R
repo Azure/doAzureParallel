@@ -193,7 +193,6 @@ addSubMergeTask <- function(jobId, taskId, rCommand, ...){
     maxTaskRetryCount <- args$maxTaskRetryCount
   }
 
-  resultFile <- paste0(taskId, "-result", ".rds")
   accountName <- storageCredentials$name
 
   resourceFiles <- NULL
