@@ -540,9 +540,31 @@ setHttpTraffic <- function(value = FALSE) {
     saveMetadataBlob(job$id, metadata)
   }
 
-  tasks <- lapply(1:nrow(indices), function(i) {
-    startIndex <- indices[i, ][1]
-    endIndex <- indices[i, ][2]
+  ntasks <- length(argsList)
+
+  startIndices <- seq(1, length(argsList), chunkSize)
+
+  endIndices <-
+    if (chunkSize >= length(argsList))
+    {
+      c(length(argsList))
+    }
+  else {
+    seq(chunkSize, length(argsList), chunkSize)
+  }
+
+  if (length(startIndices) > length(endIndices)) {
+    endIndices[length(startIndices)] <- ntasks
+  }
+
+  maxTaskRetryCount <- 3
+  if (!is.null(obj$options$azure$maxTaskRetryCount)) {
+    maxTaskRetryCount <- obj$options$azure$maxTaskRetryCount
+  }
+
+  tasks <- lapply(1:length(endIndices), function(i) {
+    startIndex <- startIndices[i]
+    endIndex <- endIndices[i]
     taskId <- as.character(i)
 
     args <- NULL
@@ -569,7 +591,7 @@ setHttpTraffic <- function(value = FALSE) {
       taskId = taskId,
       rCommand =  sprintf(
         paste("Rscript --no-save --no-environ --no-restore --no-site-file",
-        "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i > $AZ_BATCH_TASK_ID.txt"),
+        "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i %s > $AZ_BATCH_TASK_ID.txt"),
         startIndex,
         endIndex,
         isDataSet,
@@ -578,7 +600,8 @@ setHttpTraffic <- function(value = FALSE) {
       packages = obj$packages,
       outputFiles = mergeOutput,
       containerImage = data$containerImage,
-      args = args
+      args = args,
+      maxRetryCount = maxTaskRetryCount
     )
 
     cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")
