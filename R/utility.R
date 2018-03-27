@@ -179,9 +179,8 @@ createOutputFile <- function(filePattern, url) {
 
   parsedValue <- strsplit(url, "/")[[1]]
 
-  urlPath <- paste0("/", parsedValue[4])
-
   baseUrl <- paste0(parsedValue[1], "//", parsedValue[3])
+  urlPath <- sub(baseUrl, "", url)
   parsedUrlPath <- strsplit(urlPath, "?", fixed = TRUE)[[1]]
 
   storageContainerPath <- parsedUrlPath[1]
