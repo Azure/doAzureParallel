@@ -428,11 +428,23 @@ setHttpTraffic <- function(value = FALSE) {
                                  sasToken,
                                  storageCredentials$endpointSuffix)
     installCranScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_cran.R", sasToken, storageCredentials$endpointSuffix)
+      rAzureBatch::createBlobUrl(storageCredentials$name,
+                                 id,
+                                 "install_cran.R",
+                                 sasToken,
+                                 storageCredentials$endpointSuffix)
     installBioConductorScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_bioconductor.R", sasToken, storageCredentials$endpointSuffix)
+      rAzureBatch::createBlobUrl(storageCredentials$name,
+                                 id,
+                                 "install_bioconductor.R",
+                                 sasToken,
+                                 storageCredentials$endpointSuffix)
     jobCommonFileUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, jobFileName, sasToken, storageCredentials$endpointSuffix)
+      rAzureBatch::createBlobUrl(storageCredentials$name,
+                                 id,
+                                 jobFileName,
+                                 sasToken,
+                                 storageCredentials$endpointSuffix)
 
     requiredJobResourceFiles <- list(
       rAzureBatch::createResourceFile(url = workerScriptUrl, fileName = "worker.R"),
