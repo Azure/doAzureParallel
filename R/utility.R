@@ -170,6 +170,13 @@ createOutputFile <- function(filePattern, url) {
   )
 
   # Parsing url to obtain container's virtual directory path
+  # sample url: "https://accountname.blob.core.windows.net/outputs?se=2017-07-31&sr=c&st=2017-07-12"
+  # after split by "/"
+  # parsedValue[1] = "https"
+  # parsedValue[2] = ""
+  # parsedValue[3] = "accountname.blob.core.windows.net"
+  # parsedValue[4] = "outputs?se=2017-07-31&sr=c&st=2017-07-12"
+
   parsedValue <- strsplit(url, "/")[[1]]
 
   urlPath <- paste0("/", parsedValue[4])

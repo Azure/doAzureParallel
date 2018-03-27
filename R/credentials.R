@@ -22,10 +22,7 @@
 #' generateCredentialsConfig("test_config.json")
 #' generateCredentialsConfig("test_config.json", batchAccount = "testbatchaccount",
 #'    batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com",
-#'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key",
-#'	  storageEndpointSuffix = "core.windows.net")
-#' supported storage account endpoint suffix: core.windows.net,
-#'    core.chinacloudapi.cn, core.cloudapi.de, core.usgovcloudapi.net
+#'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
 #' }
 #' @export
 generateCredentialsConfig <- function(fileName, ...) {
@@ -48,10 +45,6 @@ generateCredentialsConfig <- function(fileName, ...) {
     ifelse(is.null(args$storageKey),
            "storage_account_key",
            args$storageKey)
-  storageSuffix <-
-    ifelse(is.null(args$storageEndpointSuffix),
-           "core.windows.net",
-           args$storageEndpointSuffix)
 
   githubAuthenticationToken <-
     ifelse(is.null(args$githubAuthenticationToken),
@@ -84,8 +77,7 @@ generateCredentialsConfig <- function(fileName, ...) {
                           key = batchKey,
                           url = batchUrl),
       storageAccount = list(name = storageName,
-                            key = storageKey,
-                            endpointSuffix = storageEndpointSuffix),
+                            key = storageKey),
       githubAuthenticationToken = githubAuthenticationToken,
       dockerAuthentication = list(username = dockerUsername,
                                   password = dockerPassword,
@@ -125,6 +117,40 @@ setCredentials <- function(credentials = "az_config.json") {
     stop(sprintf(
       "credentials type is not supported: %s\n",
       class(clusterSetting)
+    ))
+  }
+
+  if (is.null(config)) {
+    stop("config is missing.\n")
+  }
+
+  if (is.null(config$batchAccount)) {
+    stop("batch account is not specified in crdetntials config.\n")
+  }
+
+  if (is.null(config$batchAccount$url)) {
+    stop(sprintf(
+      "batch account url not specified for batch account %s.\n",
+      config$batchAccount$name
+    ))
+  }
+
+  if (endsWith(config$batchAccount$url, "batch.azure.com")) {
+    config$storageAccount$endpointSuffix <- "core.windows.net"
+  }
+  else if (endsWith(config$batchAccount$url, "batch.usgovcloudapi.net")) {
+    config$storageAccount$endpointSuffix <- "core.usgovcloudapi.net"
+  }
+  else if (endsWith(config$batchAccount$url, "batch.chinacloudapi.cn")) {
+    config$storageAccount$endpointSuffix <- "core.chinacloudapi.cn"
+  }
+  else if (endsWith(config$batchAccount$url, "batch.microsoftazure.de")) {
+    config$storageAccount$endpointSuffix <- "core.cloudapi.de"
+  }
+  else {
+    stop(sprintf(
+      "invalid batch account url specified: %s.\n",
+      config$batchAccount$url
     ))
   }
 
