@@ -15,7 +15,8 @@ You can generate credentials by creating a R object as shown below:
     ),
     "storageAccount" = list(
       "name" = "storageaccountname",
-      "key" = "storageaccountkey"
+      "key" = "storageaccountkey",
+      "endpointSuffix" = "core.windows.net"
     ),
     "githubAuthenticationToken" = "",
     "dockerAuthentication" = list("username" = "",
