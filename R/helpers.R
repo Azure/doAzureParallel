@@ -26,7 +26,7 @@
 
     readToken <- rAzureBatch::createSasToken("r", "c", jobId)
     envFileUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, jobId, envFile, readToken)
+      rAzureBatch::createBlobUrl(storageCredentials$name, jobId, envFile, readToken, storageCredentials$endpointSuffix)
     resourceFiles <-
       list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
   }
@@ -38,10 +38,11 @@
   if (!is.null(cloudCombine)) {
     assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
     copyCommand <- sprintf(
-      "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds",
+      "%s %s %s --endpoint %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds",
       accountName,
       jobId,
-      "$AZ_BATCH_TASK_WORKING_DIR"
+      "$AZ_BATCH_TASK_WORKING_DIR",
+      storageCredentials$endpointSuffix
     )
 
     downloadCommand <-
@@ -61,7 +62,8 @@
     rAzureBatch::createBlobUrl(
       storageAccount = storageCredentials$name,
       containerName = jobId,
-      sasToken = rAzureBatch::createSasToken("w", "c", jobId)
+      sasToken = rAzureBatch::createSasToken("w", "c", jobId),
+      storageEndpointSuffix = storageCredentials$endpointSuffix
     )
 
   outputFiles <- list(

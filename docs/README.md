@@ -45,6 +45,10 @@ This section will provide information about how Azure works, how best to take ad
 
    Generate credentials and cluster config at runtime programmatically
 
+11. **National Cloud configuration" [(link)](/.34-national-clouds.md)
+
+   How to run workload in Azure national clouds
+
 ## Additional Documentation
 Take a look at our [**Troubleshooting Guide**](./40-troubleshooting.md) for information on how to diagnose common issues.
 
