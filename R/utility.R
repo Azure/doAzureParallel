@@ -285,3 +285,15 @@ hasDataSet <- function(list) {
 
   return(FALSE)
 }
+
+getHttpErrorMessage <- function(responseObj) {
+  detailMessage <- paste0(responseObj$code, ": ", responseObj$message$value)
+
+  if (length(responseObj$values) > 0) {
+    for (i in 1:length(responseObj$values)) {
+      detailMessage <- paste0(detailMessage, "\r\n", responseObj$values[[i]]$key, ": ", responseObj$values[[i]]$value)
+    }
+  }
+  detailMessage <- paste0(detailMessage, "\r\nodata.metadata: ", responseObj$odata.metadata)
+  return(detailMessage)
+}

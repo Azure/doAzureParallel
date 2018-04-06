@@ -223,42 +223,64 @@ makeCluster <-
       commandLine = commandLine
     )
 
-    if (grepl("AuthenticationFailed", response)) {
-      stop("Check your credentials and try again.")
-    }
+    if (nchar(response) > 0) {
+      responseObj <- rjson::fromJSON(response)
+      errorMessage <- getHttpErrorMessage(responseObj)
 
-    if (grepl("PoolBeingDeleted", response)) {
-      message <- paste(
-        "Cluster '%s' already exists and is being deleted.",
-        "Another cluster with the same name cannot be created",
-        "until it is deleted. Please wait for the cluster to be deleted",
-        "or create one with a different name"
-      )
-
-      if (wait == TRUE) {
-        pool <- rAzureBatch::getPool(poolConfig$name)
-
-        cat(sprintf(message,
-                    poolConfig$name),
-            fill = TRUE)
-
-        while (rAzureBatch::getPool(poolConfig$name)$state == "deleting") {
-          cat(".")
-          Sys.sleep(10)
-        }
-
-        cat("\n")
-
-        response <- .addPool(
-          pool = poolConfig,
-          packages = packages,
-          environmentSettings = environmentSettings,
-          resourceFiles = resourceFiles,
-          commandLine = commandLine
+      if (responseObj$code == "PoolBeingDeleted") {
+        message <- paste(
+          "Cluster '%s' already exists and is being deleted.",
+          "Another cluster with the same name cannot be created",
+          "until it is deleted. Please wait for the cluster to be deleted",
+          "or create one with a different name"
         )
-      } else {
-        stop(sprintf(message,
-                     poolConfig$name))
+
+        if (wait == TRUE) {
+          pool <- rAzureBatch::getPool(poolConfig$name)
+
+          cat(sprintf(message,
+                      poolConfig$name),
+              fill = TRUE)
+
+          while (!is.null(pool) && !is.null(pool$state) && pool$state == "deleting") {
+            cat(".")
+            Sys.sleep(10)
+            pool <- rAzureBatch::getPool(poolConfig$name)
+          }
+
+          cat("\n")
+
+          response <- .addPool(
+            pool = poolConfig,
+            packages = packages,
+            environmentSettings = environmentSettings,
+            resourceFiles = resourceFiles,
+            commandLine = commandLine
+          )
+
+          if (nchar(response) > 0) {
+            responseObj <- rjson::fromJSON(response)
+            errorMessage <- getHttpErrorMessage(responseObj)
+          }
+          else {
+            responseObj <- NULL
+            errorMessage <- NULL
+          }
+        } else {
+          stop(sprintf(message,
+                       poolConfig$name))
+        }
+      }
+
+      if (nchar(response) > 0) {
+        if (responseObj$code == "AuthenticationFailed") {
+          stop(paste0("Check your credentials and try again.\r\n", errorMessage))
+        }
+        else {
+          if (responseObj$code != "PoolExists") {
+            stop(errorMessage)
+          }
+        }
       }
     }
 
