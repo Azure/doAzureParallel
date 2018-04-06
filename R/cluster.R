@@ -226,7 +226,7 @@ makeCluster <-
     if (nchar(response) > 0) {
       responseObj <- rjson::fromJSON(response)
       errorMessage <- getHttpErrorMessage(responseObj)
-      
+
       if (responseObj$code == "PoolBeingDeleted") {
         message <- paste(
           "Cluster '%s' already exists and is being deleted.",
@@ -234,7 +234,7 @@ makeCluster <-
           "until it is deleted. Please wait for the cluster to be deleted",
           "or create one with a different name"
         )
-        
+
         if (wait == TRUE) {
           pool <- rAzureBatch::getPool(poolConfig$name)
 
