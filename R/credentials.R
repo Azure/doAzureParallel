@@ -49,7 +49,7 @@ generateCredentialsConfig <- function(fileName, ...) {
            "storage_account_key",
            args$storageKey)
 
-  storageSuffix <-
+  storageEndpointSuffix <-
     ifelse(is.null(args$storageEndpointSuffix),
            "core.windows.net",
            args$storageEndpointSuffix)
