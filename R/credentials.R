@@ -86,7 +86,7 @@ generateCredentialsConfig <- function(fileName, ...) {
                           url = batchUrl),
       storageAccount = list(name = storageName,
                             key = storageKey,
-                            endpointSuffix = storageEndpointSuffix),
+                            endpointSuffix = storageSuffix),
       githubAuthenticationToken = githubAuthenticationToken,
       dockerAuthentication = list(username = dockerUsername,
                                   password = dockerPassword,
