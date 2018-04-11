@@ -223,7 +223,6 @@ setHttpTraffic <- function(value = FALSE) {
   assign("github", githubPackages, .doAzureBatchGlobals)
   assign("bioconductor", bioconductorPackages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
-  assign("it", it, .doAzureBatchGlobals)
 
   isDataSet <- hasDataSet(argsList)
 
@@ -543,13 +542,12 @@ setHttpTraffic <- function(value = FALSE) {
   startIndices <- seq(1, length(argsList), chunkSize)
 
   endIndices <-
-    if (chunkSize >= length(argsList))
-    {
+    if (chunkSize >= length(argsList)) {
       c(length(argsList))
     }
-  else {
-    seq(chunkSize, length(argsList), chunkSize)
-  }
+    else {
+      seq(chunkSize, length(argsList), chunkSize)
+    }
 
   if (length(startIndices) > length(endIndices)) {
     endIndices[length(startIndices)] <- ntasks
@@ -707,7 +705,7 @@ setHttpTraffic <- function(value = FALSE) {
               msg <-
                 sprintf(
                   paste0(
-                    "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use",
+                    "task %d failed - '%s'.\r\nBy default a job and its result is deleted after run is over, use",
                     " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
                   ),
                   errorIndex,

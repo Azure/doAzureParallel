@@ -18,11 +18,12 @@ batchJobPreparationDirectory <-
   Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 batchTaskWorkingDirectory <- Sys.getenv("AZ_BATCH_TASK_WORKING_DIR")
 taskPackageDirectory <- paste0(batchTaskWorkingDirectory)
+clusterPackageDirectory <- paste0(Sys.getenv("AZ_BATCH_NODE_SHARED_DIR", "/R/packages"))
 
 libPaths <- c(
   taskPackageDirectory,
   jobPrepDirectory,
-  "/mnt/batch/tasks/shared/R/packages",
+  clusterPackageDirectory,
   .libPaths()
 )
 
@@ -87,10 +88,10 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
     }
 
     results <- foreach::foreach(i = 1:length(files), .export = c("batchTaskWorkingDirectory",
-                                                                   "batchJobId",
-                                                                    "chunkSize",
-                                                                   "errorHandling",
-                                                                   "isError")) %dopar% {
+                                                                 "batchJobId",
+                                                                 "chunkSize",
+                                                                 "errorHandling",
+                                                                 "isError")) %dopar% {
       task <- tryCatch({
         readRDS(files[i])
       }, error = function(e) {
