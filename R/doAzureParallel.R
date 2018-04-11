@@ -469,13 +469,12 @@ setHttpTraffic <- function(value = FALSE) {
     startIndices <- seq(1, length(argsList), chunkSize)
 
     endIndices <-
-      if (chunkSize >= length(argsList))
-      {
+      if (chunkSize >= length(argsList)) {
         c(length(argsList))
       }
-    else {
-      seq(chunkSize, length(argsList), chunkSize)
-    }
+      else {
+        seq(chunkSize, length(argsList), chunkSize)
+      }
 
     if (length(startIndices) > length(endIndices)) {
       endIndices[length(startIndices)] <- ntasks
