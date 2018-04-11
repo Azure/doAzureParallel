@@ -170,13 +170,17 @@ createOutputFile <- function(filePattern, url) {
   )
 
   # Parsing url to obtain container's virtual directory path
-  azureDomain <- "blob.core.windows.net"
-  parsedValue <- strsplit(url, azureDomain)[[1]]
+  # sample url: "https://accountname.blob.core.windows.net/outputs?se=2017-07-31&sr=c&st=2017-07-12"
+  # after split by "/"
+  # parsedValue[1] is "https"
+  # parsedValue[2] is ""
+  # parsedValue[3] is "accountname.blob.core.windows.net"
+  # parsedValue[4] is "outputs?se=2017-07-31&sr=c&st=2017-07-12"
 
-  accountName <- parsedValue[1]
-  urlPath <- parsedValue[2]
+  parsedValue <- strsplit(url, "/")[[1]]
 
-  baseUrl <- paste0(accountName, azureDomain)
+  baseUrl <- paste0(parsedValue[1], "//", parsedValue[3])
+  urlPath <- sub(baseUrl, "", url)
   parsedUrlPath <- strsplit(urlPath, "?", fixed = TRUE)[[1]]
 
   storageContainerPath <- parsedUrlPath[1]
@@ -280,4 +284,16 @@ hasDataSet <- function(list) {
   }
 
   return(FALSE)
+}
+
+getHttpErrorMessage <- function(responseObj) {
+  detailMessage <- paste0(responseObj$code, ": ", responseObj$message$value)
+
+  if (length(responseObj$values) > 0) {
+    for (i in 1:length(responseObj$values)) {
+      detailMessage <- paste0(detailMessage, "\r\n", responseObj$values[[i]]$key, ": ", responseObj$values[[i]]$value)
+    }
+  }
+  detailMessage <- paste0(detailMessage, "\r\nodata.metadata: ", responseObj$odata.metadata)
+  return(detailMessage)
 }

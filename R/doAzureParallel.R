@@ -272,7 +272,8 @@ setHttpTraffic <- function(value = FALSE) {
     assign(
       "inputs",
       list(name = storageCredentials$name,
-           sasToken = sasToken),
+           sasToken = sasToken,
+           endpointSuffix = storageCredentials$endpointSuffix),
       .doAzureBatchGlobals
     )
   }
@@ -423,20 +424,33 @@ setHttpTraffic <- function(value = FALSE) {
     # Creating read-only SAS token blob resource file urls
     sasToken <- rAzureBatch::createSasToken("r", "c", id)
     workerScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "worker.R", sasToken)
+      rAzureBatch::createBlobUrl(storageCredentials$name, id, "worker.R", sasToken, storageCredentials$endpointSuffix)
     mergerScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "merger.R", sasToken)
+      rAzureBatch::createBlobUrl(storageCredentials$name, id, "merger.R", sasToken, storageCredentials$endpointSuffix)
     installGithubScriptUrl <-
       rAzureBatch::createBlobUrl(storageCredentials$name,
                                  id,
                                  "install_github.R",
-                                 sasToken)
+                                 sasToken,
+                                 storageCredentials$endpointSuffix)
     installCranScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_cran.R", sasToken)
+      rAzureBatch::createBlobUrl(storageCredentials$name,
+                                 id,
+                                 "install_cran.R",
+                                 sasToken,
+                                 storageCredentials$endpointSuffix)
     installBioConductorScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_bioconductor.R", sasToken)
+      rAzureBatch::createBlobUrl(storageCredentials$name,
+                                 id,
+                                 "install_bioconductor.R",
+                                 sasToken,
+                                 storageCredentials$endpointSuffix)
     jobCommonFileUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, jobFileName, sasToken)
+      rAzureBatch::createBlobUrl(storageCredentials$name,
+                                 id,
+                                 jobFileName,
+                                 sasToken,
+                                 storageCredentials$endpointSuffix)
 
     requiredJobResourceFiles <- list(
       rAzureBatch::createResourceFile(url = workerScriptUrl, fileName = "worker.R"),
@@ -671,6 +685,7 @@ setHttpTraffic <- function(value = FALSE) {
               paste0("results/", "merge-result.rds"),
               sasToken = sasToken,
               accountName = storageCredentials$name,
+              endpointSuffix = storageCredentials$endpointSuffix,
               downloadPath = tempFile,
               overwrite = TRUE
             )
@@ -769,7 +784,7 @@ setHttpTraffic <- function(value = FALSE) {
   azureStorageUrl <-
     paste0("http://",
            storageCredentials$name,
-           ".blob.core.windows.net/",
+           sprintf(".blob.%s/", storageCredentials$endpointSuffix),
            id)
 
   staticHtml <- "<h1>Errors:</h1>"
