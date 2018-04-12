@@ -15,7 +15,7 @@ test_that("Remove error handling with combine test", {
 
   '%dopar%' <- foreach::'%dopar%'
   res <-
-    foreach::foreach(i = 1:5, .errorhandling = "remove", .combine="c") %dopar% {
+    foreach::foreach(i = 1:5, .errorhandling = "remove", .combine = "c") %dopar% {
       if (i == 3 || i == 4) {
         fail
       }
