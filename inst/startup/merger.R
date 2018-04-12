@@ -42,6 +42,9 @@ parent.env(azbatchenv$exportenv) <- globalenv()
 
 enableCloudCombine <- azbatchenv$enableCloudCombine
 cloudCombine <- azbatchenv$cloudCombine
+localCombine <- azbatchenv$localCombine
+isListCombineFunction <- identical(function(a, ...) c(a, list(...)),
+                                   localCombine, ignore.environment = TRUE)
 
 if (typeof(cloudCombine) == "list" && enableCloudCombine) {
   if (!require("doParallel", character.only = TRUE)) {
@@ -110,7 +113,8 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           result
           next
         }
-        else if (errorHandling == "remove") {
+        else if (errorHandling == "remove"
+                 && isListCombineFunction) {
           next
         }
         else {
@@ -126,7 +130,8 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
         }
       }
 
-      if (errorHandling == "remove") {
+      if (errorHandling == "remove"
+          && isListCombineFunction) {
         return(Filter(function(x) !isError(x), task))
       }
 

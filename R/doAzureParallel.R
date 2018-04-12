@@ -300,6 +300,7 @@ setHttpTraffic <- function(value = FALSE) {
 
   assign("enableCloudCombine", enableCloudCombine, envir = .doAzureBatchGlobals)
   assign("cloudCombine", cloudCombine, envir = .doAzureBatchGlobals)
+  assign("localCombine", obj$combineInfo$fun, .doAzureBatchGlobals)
 
   resourceFiles <- list()
   if (!is.null(obj$options$azure$resourceFiles)) {

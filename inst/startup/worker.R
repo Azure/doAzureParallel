@@ -7,6 +7,9 @@ endIndex <- as.integer(args[2])
 isDataSet <- as.logical(as.integer(args[3]))
 errorHandling <- args[4]
 
+isError <- function(x) {
+  return(inherits(x, "simpleError") || inherits(x, "try-error"))
+}
 
 jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 .libPaths(c(
@@ -75,6 +78,10 @@ setwd(batchTaskWorkingDirectory)
 azbatchenv <-
   readRDS(paste0(batchJobPreparationDirectory, "/", batchJobEnvironment))
 
+localCombine <- azbatchenv$localCombine
+isListCombineFunction <- identical(function(a, ...) c(a, list(...)),
+          localCombine, ignore.environment = TRUE)
+
 if (isDataSet) {
   argsList <- readRDS(batchTaskEnvironment)
 } else {
@@ -115,6 +122,11 @@ if (!is.null(azbatchenv$gather) && length(argsList) > 1) {
 }
 
 names(result) <- seq(startIndex, endIndex)
+
+if (errorHandling == "remove"
+    && isListCombineFunction) {
+  result <- Filter(function(x) !isError(x), result)
+}
 
 saveRDS(result,
         file = file.path(
