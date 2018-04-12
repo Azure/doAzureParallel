@@ -63,17 +63,9 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
   status <- tryCatch({
     count <- 1
 
-    # Verify if merge task is sub or final task
-    if (batchTaskId != "merge") {
-      files <- list.files(file.path(batchTaskWorkingDirectory,
-                                    batchTaskId),
-                          full.names = TRUE)
-    }
-    else {
-      files <- list.files(file.path(batchTaskWorkingDirectory,
-                                    "results"),
-                          full.names = TRUE)
-    }
+    files <- list.files(file.path(batchTaskWorkingDirectory,
+                                  "results"),
+                        full.names = TRUE)
 
     files <- files[order(as.numeric(gsub("[^0-9]", "", files)))]
 
