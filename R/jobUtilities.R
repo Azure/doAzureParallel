@@ -231,7 +231,7 @@ getJobResult <- function(jobId) {
 
     results <- rAzureBatch::downloadBlob(
       jobId,
-      "result/merge-result.rds",
+      "results/merge-result.rds",
       downloadPath = tempFile,
       overwrite = TRUE
     )
@@ -273,7 +273,7 @@ getJobResult <- function(jobId) {
         # Download the blob to the temporary file
         rAzureBatch::downloadBlob(
           containerName = job$jobId,
-          blobName = paste0("result/", i, "-result.rds"),
+          blobName = paste0("results/", i, "-result.rds"),
           downloadPath = tempFile,
           overwrite = TRUE
         )
@@ -304,7 +304,7 @@ getJobResult <- function(jobId) {
       error = function(e) {
         warning(sprintf(
           "error downloading task result %s from blob, retrying...\r\n%s",
-          paste0(job$jobId, "result/", i, "-result.rds"),
+          paste0(job$jobId, "results/", i, "-result.rds"),
           e
         ))
       })
