@@ -1,3 +1,182 @@
+addFinalMergeTask <- function(jobId, taskId, rCommand, ...){
+  storageCredentials <- rAzureBatch::getStorageCredentials()
+
+  args <- list(...)
+  dependsOn <- args$dependsOn
+  cloudCombine <- args$cloudCombine
+  containerImage <- args$containerImage
+
+  resultFile <- paste0(taskId, "-result", ".rds")
+  accountName <- storageCredentials$name
+
+  # Only use the download command if cloudCombine is enabled
+  # Otherwise just leave it empty
+  commands <- c()
+
+  if (!is.null(cloudCombine)) {
+    assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
+
+    copyCommand <- sprintf(
+      "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include results/*.rds",
+      accountName,
+      jobId,
+      "$AZ_BATCH_TASK_WORKING_DIR"
+    )
+
+    downloadCommand <-
+      dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
+
+    commands <- c(downloadCommand)
+  }
+
+  exitConditions <- NULL
+  if (!is.null(args$dependsOn)) {
+    dependsOn <- args$dependsOn
+  }
+  else {
+    exitConditions <- list(default = list(dependencyAction = "satisfy"))
+  }
+
+  containerUrl <-
+    rAzureBatch::createBlobUrl(
+      storageAccount = storageCredentials$name,
+      containerName = jobId,
+      sasToken = rAzureBatch::createSasToken("w", "c", jobId)
+    )
+
+  outputFiles <- list(
+    list(
+      filePattern = resultFile,
+      destination = list(container = list(
+        path = paste0("results/", resultFile),
+        containerUrl = containerUrl
+      )),
+      uploadOptions = list(uploadCondition = "taskCompletion")
+    ),
+    list(
+      filePattern = paste0(taskId, ".txt"),
+      destination = list(container = list(
+        path = paste0("logs/", taskId, ".txt"),
+        containerUrl = containerUrl
+      )),
+      uploadOptions = list(uploadCondition = "taskCompletion")
+    ),
+    list(
+      filePattern = "../stdout.txt",
+      destination = list(container = list(
+        path = paste0("stdout/", taskId, "-stdout.txt"),
+        containerUrl = containerUrl
+      )),
+      uploadOptions = list(uploadCondition = "taskCompletion")
+    ),
+    list(
+      filePattern = "../stderr.txt",
+      destination = list(container = list(
+        path = paste0("stderr/", taskId, "-stderr.txt"),
+        containerUrl = containerUrl
+      )),
+      uploadOptions = list(uploadCondition = "taskCompletion")
+    )
+  )
+
+  commands <-
+    c(commands,
+      dockerRunCommand(containerImage, rCommand))
+
+  commands <- linuxWrapCommands(commands)
+
+  sasToken <- rAzureBatch::createSasToken("rwcl", "c", jobId)
+  queryParameterUrl <- "?"
+
+  for (query in names(sasToken)) {
+    queryParameterUrl <-
+      paste0(queryParameterUrl,
+             query,
+             "=",
+             RCurl::curlEscape(sasToken[[query]]),
+             "&")
+  }
+
+  queryParameterUrl <-
+    substr(queryParameterUrl, 1, nchar(queryParameterUrl) - 1)
+
+  setting <- list(name = "BLOBXFER_SASKEY",
+                  value = queryParameterUrl)
+
+  containerEnv <- list(name = "CONTAINER_NAME",
+                       value = jobId)
+
+  rAzureBatch::addTask(
+    jobId,
+    taskId,
+    environmentSettings = list(setting, containerEnv),
+    commandLine = commands,
+    dependsOn = dependsOn,
+    outputFiles = outputFiles,
+    exitConditions = exitConditions
+  )
+}
+
+addSubMergeTask <- function(jobId, taskId, rCommand, ...){
+  storageCredentials <- rAzureBatch::getStorageCredentials()
+  accountName <- storageCredentials$name
+
+  args <- list(...)
+  dependsOn <- args$dependsOn
+  containerImage <- args$containerImage
+  outputFiles <- args$outputFiles
+
+  copyCommand <- sprintf(
+    "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include %s/*.rds",
+    accountName,
+    jobId,
+    "$AZ_BATCH_TASK_WORKING_DIR",
+    taskId
+  )
+
+  exitConditions <- NULL
+  if (!is.null(args$dependsOn)) {
+    dependsOn <- args$dependsOn
+  }
+  else {
+    exitConditions <- list(default = list(dependencyAction = "satisfy"))
+  }
+
+  downloadCommand <-
+    dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
+
+  commands <- c(downloadCommand, dockerRunCommand(containerImage, rCommand))
+  commands <- linuxWrapCommands(commands)
+
+  sasToken <- rAzureBatch::createSasToken("rwcl", "c", jobId)
+  queryParameterUrl <- "?"
+
+  for (query in names(sasToken)) {
+    queryParameterUrl <-
+      paste0(queryParameterUrl,
+             query,
+             "=",
+             RCurl::curlEscape(sasToken[[query]]),
+             "&")
+  }
+
+  queryParameterUrl <-
+    substr(queryParameterUrl, 1, nchar(queryParameterUrl) - 1)
+
+  setting <- list(name = "BLOBXFER_SASKEY",
+                  value = queryParameterUrl)
+
+  rAzureBatch::addTask(
+    jobId,
+    taskId,
+    commandLine = commands,
+    environmentSettings = list(setting),
+    dependsOn = dependsOn,
+    outputFiles = outputFiles,
+    exitConditions = exitConditions
+  )
+}
+
 .addTask <- function(jobId, taskId, rCommand, ...) {
   storageCredentials <- rAzureBatch::getStorageCredentials()
 
@@ -14,7 +193,6 @@
     maxTaskRetryCount <- args$maxTaskRetryCount
   }
 
-  resultFile <- paste0(taskId, "-result", ".rds")
   accountName <- storageCredentials$name
 
   resourceFiles <- NULL
@@ -67,14 +245,6 @@
     )
 
   outputFiles <- list(
-    list(
-      filePattern = resultFile,
-      destination = list(container = list(
-        path = paste0("result/", resultFile),
-        containerUrl = containerUrl
-      )),
-      uploadOptions = list(uploadCondition = "taskCompletion")
-    ),
     list(
       filePattern = paste0(taskId, ".txt"),
       destination = list(container = list(

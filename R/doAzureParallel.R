@@ -300,6 +300,7 @@ setHttpTraffic <- function(value = FALSE) {
 
   assign("enableCloudCombine", enableCloudCombine, envir = .doAzureBatchGlobals)
   assign("cloudCombine", cloudCombine, envir = .doAzureBatchGlobals)
+  assign("localCombine", obj$combineInfo$fun, .doAzureBatchGlobals)
 
   resourceFiles <- list()
   if (!is.null(obj$options$azure$resourceFiles)) {
@@ -354,8 +355,14 @@ setHttpTraffic <- function(value = FALSE) {
       list(name = "wait",
            value = as.character(obj$options$azure$wait))
 
-    metadata[[length(metadata) + 1]] <- waitKeyValuePair
   }
+  else {
+    waitKeyValuePair <-
+      list(name = "wait",
+           value = as.character(FALSE))
+  }
+
+  metadata[[length(metadata) + 1]] <- waitKeyValuePair
 
   retryCounter <- 0
   maxRetryCount <- 5
@@ -458,6 +465,22 @@ setHttpTraffic <- function(value = FALSE) {
     resourceFiles <-
       append(resourceFiles, requiredJobResourceFiles)
 
+    ntasks <- length(argsList)
+
+    startIndices <- seq(1, length(argsList), chunkSize)
+
+    endIndices <-
+      if (chunkSize >= length(argsList)) {
+        c(length(argsList))
+      }
+      else {
+        seq(chunkSize, length(argsList), chunkSize)
+      }
+
+    if (length(startIndices) > length(endIndices)) {
+      endIndices[length(startIndices)] <- ntasks
+    }
+
     response <- .addJob(
       jobId = id,
       poolId = data$poolId,
@@ -505,6 +528,12 @@ setHttpTraffic <- function(value = FALSE) {
   }
 
   job <- rAzureBatch::getJob(id)
+  outputContainerUrl <-
+    rAzureBatch::createBlobUrl(
+      storageAccount = storageCredentials$name,
+      containerName = id,
+      sasToken = rAzureBatch::createSasToken("w", "c", id)
+    )
 
   printJobInformation(
     jobId = job$id,
@@ -527,13 +556,12 @@ setHttpTraffic <- function(value = FALSE) {
   startIndices <- seq(1, length(argsList), chunkSize)
 
   endIndices <-
-    if (chunkSize >= length(argsList))
-    {
+    if (chunkSize >= length(argsList)) {
       c(length(argsList))
     }
-  else {
-    seq(chunkSize, length(argsList), chunkSize)
-  }
+    else {
+      seq(chunkSize, length(argsList), chunkSize)
+    }
 
   if (length(startIndices) > length(endIndices)) {
     endIndices[length(startIndices)] <- ntasks
@@ -554,6 +582,20 @@ setHttpTraffic <- function(value = FALSE) {
       args <- argsList[startIndex:endIndex]
     }
 
+    resultFile <- paste0(taskId, "-result", ".rds")
+
+    mergeOutput <- list(
+      list(
+        filePattern = resultFile,
+        destination = list(container = list(
+          path = paste0("results", "/", resultFile),
+          containerUrl = outputContainerUrl
+        )),
+        uploadOptions = list(uploadCondition = "taskCompletion")
+      )
+    )
+    mergeOutput <- append(obj$options$azure$outputFiles, mergeOutput)
+
     .addTask(
       jobId = id,
       taskId = taskId,
@@ -566,7 +608,7 @@ setHttpTraffic <- function(value = FALSE) {
         as.character(obj$errorHandling)),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
-      outputFiles = obj$options$azure$outputFiles,
+      outputFiles = mergeOutput,
       containerImage = data$containerImage,
       args = args,
       maxRetryCount = maxTaskRetryCount
@@ -580,23 +622,44 @@ setHttpTraffic <- function(value = FALSE) {
 
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
-    .addTask(
+
+
+    taskDependencies <- list(taskIdRanges = list(list(
+      start = 1,
+      end = length(tasks))))
+
+    tasksCount <- length(tasks)
+    resultFile <- paste0("merge", "-result", ".rds")
+
+    mergeOutput <- list(
+      list(
+        filePattern = resultFile,
+        destination = list(container = list(
+          path = paste0("results", "/", resultFile),
+          containerUrl = outputContainerUrl
+        )),
+        uploadOptions = list(uploadCondition = "taskCompletion")
+      )
+    )
+
+    addFinalMergeTask(
       jobId = id,
       taskId = "merge",
       rCommand = sprintf(
         paste("Rscript --no-save --no-environ --no-restore --no-site-file",
         "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt"),
-        length(tasks),
+        as.character(tasksCount),
         chunkSize,
         as.character(obj$errorHandling)
       ),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
-      dependsOn = list(taskIdRanges = list(list(start = 1, end = length(tasks)))),
+      dependsOn = taskDependencies,
       cloudCombine = cloudCombine,
-      outputFiles = obj$options$azure$outputFiles,
+      outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
       containerImage = data$containerImage
     )
+
     cat(". . .")
   }
 
@@ -619,7 +682,7 @@ setHttpTraffic <- function(value = FALSE) {
           response <-
             rAzureBatch::downloadBlob(
               id,
-              paste0("result/", "merge-result.rds"),
+              paste0("results/", "merge-result.rds"),
               sasToken = sasToken,
               accountName = storageCredentials$name,
               endpointSuffix = storageCredentials$endpointSuffix,
@@ -628,7 +691,6 @@ setHttpTraffic <- function(value = FALSE) {
             )
 
           results <- readRDS(tempFile)
-
           failTasks <- sapply(results, .isError)
 
           numberOfFailedTasks <- sum(unlist(failTasks))
@@ -637,41 +699,38 @@ setHttpTraffic <- function(value = FALSE) {
             .createErrorViewerPane(id, failTasks)
           }
 
-          accumulator <- foreach::makeAccum(it)
-
-          tryCatch(
-            accumulator(results, seq(along = results)),
+          if (!identical(function(a, ...) c(a, list(...)),
+                        obj$combineInfo$fun, ignore.environment = TRUE)){
+            tryCatch({
+              accumulator <- foreach::makeAccum(it)
+              accumulator(results, as.numeric(names(results)))
+            },
             error = function(e) {
               cat("error calling combine function:\n")
               print(e)
             }
-          )
+            )
 
-          # check for errors
-          errorValue <- foreach::getErrorValue(it)
-          errorIndex <- foreach::getErrorIndex(it)
+            # check for errors
+            errorValue <- foreach::getErrorValue(it)
+            errorIndex <- foreach::getErrorIndex(it)
 
-          # delete job from batch service and job result from storage blob
-          if (autoDeleteJob) {
-            # Default behavior is to delete the job data
-            deleteJob(id, verbose = !autoDeleteJob)
-          }
-
-          if (identical(obj$errorHandling, "stop") &&
-              !is.null(errorValue)) {
-            msg <-
-              sprintf(
-                paste0(
-                  "task %d failed - '%s'.\r\nBy default job and its result is deleted after run is over, use",
-                  " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
-                ),
-                errorIndex,
-                conditionMessage(errorValue)
-              )
-            stop(simpleError(msg, call = expr))
-          }
-          else {
-            foreach::getResult(it)
+            if (identical(obj$errorHandling, "stop") &&
+                !is.null(errorValue)) {
+              msg <-
+                sprintf(
+                  paste0(
+                    "task %d failed - '%s'.\r\nBy default a job and its result is deleted after run is over, use",
+                    " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
+                  ),
+                  errorIndex,
+                  conditionMessage(errorValue)
+                )
+              stop(simpleError(msg, call = expr))
+            }
+            else {
+              results <- foreach::getResult(it)
+            }
           }
         }
       },
@@ -679,6 +738,14 @@ setHttpTraffic <- function(value = FALSE) {
         message(ex)
       }
     )
+
+    # delete job from batch service and job result from storage blob
+    if (autoDeleteJob) {
+      # Default behavior is to delete the job data
+      deleteJob(id, verbose = !autoDeleteJob)
+    }
+
+    return(results)
   }
   else{
     print(

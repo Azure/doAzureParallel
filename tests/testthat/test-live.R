@@ -18,7 +18,7 @@ test_that("Basic scenario test", {
   '%dopar%' <- foreach::'%dopar%'
   res <-
     foreach::foreach(i = 1:4) %dopar% {
-      mean(1:3)
+      i
     }
 
   res
