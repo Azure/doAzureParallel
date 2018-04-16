@@ -190,11 +190,11 @@ makeBatchClient <- function(config) {
     }
 
     batchCredentials <- rAzureBatch::SharedKeyCredentials$new(
-      name = credentials$batchAccountName,
-      key = credentials$batchAccountKey
+      name = credentials$batchAccount$name,
+      key = credentials$batchAccount$key
     )
 
-    baseUrl <- config$batchAccountUrl
+    baseUrl <- credentials$batchAccount$url
   }
   # Set up ServicePrincipalCredentials
   else {
@@ -240,9 +240,18 @@ makeStorageClient <- function(config) {
     }
 
     storageCredentials <- rAzureBatch::SharedKeyCredentials$new(
-      name = credentials$storageAccountName,
-      key = credentials$storageAccountKey
+      name = credentials$storageAccount$name,
+      key = credentials$storageAccount$key
     )
+
+    endpointSuffix <- credentials$storageAccount$endpointSuffix
+    if (is.null(endpointSuffix)) {
+      endpointSuffix <- "core.windows.net"
+    }
+
+    baseUrl <- sprintf("https://%s.blob.%s",
+                       credentials$storageAccount$name,
+                       endpointSuffix)
   }
   # Set up ServicePrincipalCredentials
   else {
@@ -269,7 +278,8 @@ makeStorageClient <- function(config) {
   }
 
   rAzureBatch::StorageServiceClient$new(
-    authentication = storageCredentials
+    authentication = storageCredentials,
+    url = baseUrl
   )
 }
 
