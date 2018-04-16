@@ -495,6 +495,14 @@ setHttpTraffic <- function(value = FALSE) {
     if (response$status_code == 201) {
       break
     }
+    else if (response$status_code == 403) {
+      stop(
+        paste(
+          "Error in creating job: Server failed to authenticate the request.",
+          "Make sure your batch account credential is set correctly."
+        )
+      )
+    }
     else {
       jobContent <- httr::content(response, content = "parsed")
 
