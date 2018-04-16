@@ -17,7 +17,7 @@ Depends:
     foreach (>= 1.4.3),
     iterators (>= 1.0.8)
 Imports:
-    rAzureBatch (>= 0.5.3),
+    rAzureBatch (>= 0.5.7),
     jsonlite,
     rjson,
     xml2,
@@ -28,6 +28,5 @@ Suggests:
     plyr,
     lintr
 Remotes:
-  Azure/rAzureBatch@v0.5.5
-  Microsoft/AzureSMR
+  Azure/rAzureBatch@v0.5.7
 RoxygenNote: 6.0.1

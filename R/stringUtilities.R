@@ -34,8 +34,9 @@ printSharedKeyInformation <- function(config) {
 
   cat(sprintf("Storage Account: %s",
               config$storageAccount$name), fill = TRUE)
-  cat(sprintf("Storage Account Url: %s", sprintf("https://%s.blob.core.windows.net",
-                                                 config$storageAccount$name)),
+  cat(sprintf("Storage Account Url: %s", sprintf("https://%s.blob.%s",
+                                                 config$storageAccount$name,
+                                                 config$storageAccount$endpointSuffix)),
       fill = TRUE)
 }
 
@@ -76,4 +77,41 @@ getAccountInformation <- function(x) {
     resourceGroup = extractResourceGroupname(x),
     subscriptionId = extractSubscriptionID(x)
   )
+}
+
+printCluster <- function(cluster, resourceFiles = list()) {
+  cat(strrep('=', options("width")), fill = TRUE)
+  cat(sprintf("Name: %s", cluster$name), fill = TRUE)
+
+  cat(sprintf("Configuration:"), fill = TRUE)
+  cat(sprintf("\tDocker Image: %s", cluster$containerImage), fill = TRUE)
+  cat(sprintf("\tMaxTasksPerNode: %s", cluster$maxTasksPerNode), fill = TRUE)
+  cat(sprintf("\tNode Size: %s", cluster$vmSize), fill = TRUE)
+
+  cranPackages <- cluster$rPackages$cran
+  githubPackages <- cluster$rPackages$github
+  bioconductorPackages <- cluster$rPackages$bioconductor
+  getJobPackageSummary(cranPackages)
+  getJobPackageSummary(githubPackages)
+  getJobPackageSummary(bioconductorPackages)
+
+  cat(sprintf("Scale:"), fill = TRUE)
+  cat(sprintf("\tAutoscale Formula: %s", cluster$poolSize$autoscaleFormula), fill = TRUE)
+  cat(sprintf("\tDedicated:"), fill = TRUE)
+  cat(sprintf("\t\tMin: %s", cluster$poolSize$dedicatedNodes$min), fill = TRUE)
+  cat(sprintf("\t\tMax: %s", cluster$poolSize$dedicatedNodes$max), fill = TRUE)
+  cat(sprintf("\tLow Priority:"), fill = TRUE)
+  cat(sprintf("\t\tMin: %s", cluster$poolSize$lowPriorityNodes$min), fill = TRUE)
+  cat(sprintf("\t\tMax: %s", cluster$poolSize$lowPriorityNodes$max), fill = TRUE)
+
+  if (!is.null(resourceFiles) &&
+      length(resourceFiles) > 0) {
+    cat(sprintf("Resource Files:"), fill = TRUE)
+
+    for (i in 1:length(resourceFiles)) {
+      cat(sprintf("\t%s",
+                  resourceFiles[[i]]$filePath), fill = TRUE)
+    }
+  }
+  cat(strrep('=', options("width")), fill = TRUE)
 }

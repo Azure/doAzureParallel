@@ -272,7 +272,8 @@ setHttpTraffic <- function(value = FALSE) {
     assign(
       "inputs",
       list(name = storageClient$authentication$name,
-           sasToken = sasToken),
+           sasToken = sasToken,
+           endpointSuffix = storageClient$authentication$endpointSuffix),
       .doAzureBatchGlobals
     )
   }
@@ -541,6 +542,11 @@ setHttpTraffic <- function(value = FALSE) {
     endIndices[length(startIndices)] <- ntasks
   }
 
+  maxTaskRetryCount <- 3
+  if (!is.null(obj$options$azure$maxTaskRetryCount)) {
+    maxTaskRetryCount <- obj$options$azure$maxTaskRetryCount
+  }
+
   tasks <- lapply(1:length(endIndices), function(i) {
     startIndex <- startIndices[i]
     endIndex <- endIndices[i]
@@ -556,15 +562,17 @@ setHttpTraffic <- function(value = FALSE) {
       taskId = taskId,
       rCommand =  sprintf(
         paste("Rscript --no-save --no-environ --no-restore --no-site-file",
-              "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i > $AZ_BATCH_TASK_ID.txt"),
+              "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i %s > $AZ_BATCH_TASK_ID.txt"),
         startIndex,
         endIndex,
-        isDataSet),
+        isDataSet,
+        as.character(obj$errorHandling)),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
       outputFiles = obj$options$azure$outputFiles,
       containerImage = data$containerImage,
-      args = args
+      args = args,
+      maxRetryCount = maxTaskRetryCount
     )
 
     cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")
@@ -616,6 +624,7 @@ setHttpTraffic <- function(value = FALSE) {
             paste0("result/", "merge-result.rds"),
             sasToken = sasToken,
             accountName = storageClient$authentication$name,
+            endpointSuffix = storageClient$authentication$endpointSuffix,
             downloadPath = tempFile,
             overwrite = TRUE
           )
@@ -710,7 +719,7 @@ setHttpTraffic <- function(value = FALSE) {
   azureStorageUrl <-
     paste0("http://",
            storageCredentials$name,
-           ".blob.core.windows.net/",
+           sprintf(".blob.%s/", storageCredentials$endpointSuffix),
            id)
 
   staticHtml <- "<h1>Errors:</h1>"
