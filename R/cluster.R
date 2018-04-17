@@ -62,7 +62,7 @@ generateClusterConfig <- function(fileName) {
 #' }
 #' @export
 makeCluster <-
-  function(clusterSetting = "cluster.json",
+  function(cluster = "cluster.json",
            fullName = FALSE,
            wait = TRUE,
            resourceFiles = list()) {
