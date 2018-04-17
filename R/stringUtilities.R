@@ -30,7 +30,7 @@ printSharedKeyInformation <- function(config) {
   cat(sprintf("Batch Account: %s",
               config$batchAccount$name), fill = TRUE)
   cat(sprintf("Batch Account Url: %s",
-              config$batchAccount$url),fill = TRUE)
+              config$batchAccount$url), fill = TRUE)
 
   cat(sprintf("Storage Account: %s",
               config$storageAccount$name), fill = TRUE)
