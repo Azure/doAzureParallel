@@ -66,20 +66,20 @@ makeCluster <-
            fullName = FALSE,
            wait = TRUE,
            resourceFiles = list()) {
-    if (class(clusterSetting) == "character") {
+    if (class(cluster) == "character") {
       if (fullName) {
-        poolConfig <- rjson::fromJSON(file = paste0(clusterSetting))
+        poolConfig <- rjson::fromJSON(file = paste0(cluster))
       }
       else {
         poolConfig <-
-          rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
+          rjson::fromJSON(file = paste0(getwd(), "/", cluster))
       }
-    } else if (class(clusterSetting) == "list") {
-      poolConfig <- clusterSetting
+    } else if (class(cluster) == "list") {
+      poolConfig <- cluster
     } else {
       stop(sprintf(
         "cluster setting type is not supported: %s\n",
-        class(clusterSetting)
+        class(cluster)
       ))
     }
 
@@ -208,11 +208,11 @@ makeCluster <-
     }
 
     if (!is.null(poolConfig[["pool"]])) {
-      validation$isValidDeprecatedClusterConfig(clusterSetting)
+      validation$isValidDeprecatedClusterConfig(cluster)
       poolConfig <- poolConfig[["pool"]]
     }
     else {
-      validation$isValidClusterConfig(clusterSetting)
+      validation$isValidClusterConfig(cluster)
     }
 
     tryCatch({

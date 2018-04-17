@@ -48,7 +48,7 @@ BatchUtilities <- R6::R6Class(
       if (!is.null(cloudCombine)) {
         assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
         copyCommand <- sprintf(
-          "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include result/*.rds",
+          "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include results/*.rds",
           accountName,
           jobId,
           "$AZ_BATCH_TASK_WORKING_DIR"
@@ -75,14 +75,6 @@ BatchUtilities <- R6::R6Class(
         )
 
       outputFiles <- list(
-        list(
-          filePattern = resultFile,
-          destination = list(container = list(
-            path = paste0("result/", resultFile),
-            containerUrl = containerUrl
-          )),
-          uploadOptions = list(uploadCondition = "taskCompletion")
-        ),
         list(
           filePattern = paste0(taskId, ".txt"),
           destination = list(container = list(
