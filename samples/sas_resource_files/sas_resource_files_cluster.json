@@ -1,0 +1,22 @@
+{
+  "name": "sas_resource_files",
+  "vmSize": "Standard_D11_v2",
+  "maxTasksPerNode": 1,
+  "poolSize": {
+    "dedicatedNodes": {
+      "min": 0,
+      "max": 0
+    },
+    "lowPriorityNodes": {
+      "min": 3,
+      "max": 3
+    },
+    "autoscaleFormula": "QUEUE"
+  },
+  "rPackages": {
+    "cran": [],
+    "github": ["azure/rAzureBatch"],
+    "bioconductor": []
+  },
+  "commandLine": []
+}
