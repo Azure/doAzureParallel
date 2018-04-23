@@ -433,28 +433,41 @@ setHttpTraffic <- function(value = FALSE) {
       rAzureBatch::createBlobUrl(storageClient$authentication$name,
                                  id,
                                  "worker.R",
-                                 sasToken)
+                                 sasToken,
+                                 storageClient$authentication$endpointSuffix)
+
     mergerScriptUrl <-
       rAzureBatch::createBlobUrl(storageClient$authentication$name,
                                  id,
                                  "merger.R",
-                                 sasToken)
+                                 sasToken,
+                                 storageClient$authentication$endpointSuffix)
+
     installGithubScriptUrl <-
       rAzureBatch::createBlobUrl(storageClient$authentication$name,
                                  id,
                                  "install_github.R",
-                                 sasToken)
+                                 sasToken,
+                                 storageClient$authentication$endpointSuffix)
     installCranScriptUrl <-
-      rAzureBatch::createBlobUrl(storageClient$authentication$name, id, "install_cran.R", sasToken)
+      rAzureBatch::createBlobUrl(storageClient$authentication$name,
+                                 id,
+                                 "install_cran.R",
+                                 sasToken,
+                                 storageClient$authentication$endpointSuffix)
+
     installBioConductorScriptUrl <-
-      rAzureBatch::createBlobUrl(storageClient$authentication$name, id, "install_bioconductor.R", sasToken)
-    jobCommonFileUrl <-
-      rAzureBatch::createBlobUrl(storageClient$authentication$name, id, jobFileName, sasToken)
+      rAzureBatch::createBlobUrl(storageClient$authentication$name,
+                                 id,
+                                 "install_bioconductor.R",
+                                 sasToken,
+                                 storageClient$authentication$endpointSuffix)
     jobCommonFileUrl <-
       rAzureBatch::createBlobUrl(storageClient$authentication$name,
                                  id,
                                  jobFileName,
-                                 sasToken)
+                                 sasToken,
+                                 storageClient$authentication$endpointSuffix)
 
     requiredJobResourceFiles <- list(
       rAzureBatch::createResourceFile(url = workerScriptUrl, fileName = "worker.R"),
