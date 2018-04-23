@@ -26,7 +26,7 @@ If you would like to see more samples, please reach out to [razurebatch@microsof
 
    The sample also has code that runs through this process locally (both single core and multi-core) to do a benchmark against running the work with doAzureParallel.
 
-5. **Using Sas Tokens for Private Blobs** [(link)](./resource_files/sas_resource_files_example.R)
+5. **Using Sas Tokens for Private Blobs** [(link)](./sas_resource_files/sas_resources_files_example.R)
 
    This sample walks through using private blobs. The code shows your how to create a Sas token to use when uploading files to your private blob, and then how to use resource files to move your private dataset into your doAzureParallel cluster to execute on.
 
