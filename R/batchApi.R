@@ -36,7 +36,8 @@ BatchUtilities <- R6::R6Class(
             storageClient$authentication$name,
             jobId,
             envFile,
-            readToken)
+            readToken,
+            storageClient$authentication$endpointSuffix)
         resourceFiles <-
           list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
       }
@@ -71,7 +72,8 @@ BatchUtilities <- R6::R6Class(
         rAzureBatch::createBlobUrl(
           storageAccount = storageClient$authentication$name,
           containerName = jobId,
-          sasToken = storageClient$generateSasToken("w", "c", jobId)
+          sasToken = storageClient$generateSasToken("w", "c", jobId),
+          storageClient$authentication$endpointSuffix
         )
 
       outputFiles <- list(
