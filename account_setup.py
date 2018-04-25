@@ -142,8 +142,6 @@ def batch_account_get_keys(credentials, subscription_id, **kwargs):
         resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
         account_name=kwargs.get("batch_account", DefaultSettings.batch_account)
     )
-    print(batch_account_keys)
-    print(batch_account_keys.primary)
     return batch_account_keys.primary
 
 def create_vnet(credentials, subscription_id, **kwargs):
@@ -449,12 +447,12 @@ if __name__ == "__main__":
 
         secrets = format_secrets(
             **{
-                '"batchAccount"': {
+                "\"batchAccount\"": {
                   '"name"': '"{}"'.format(kwargs["batch_account"]),
                   '"key"': '"{}"'.format(kwargs["batch_account_key"]),
                   '"url"': '"{}"'.format("batchaccounturl")
                 },
-                '"storageAccount"': {
+                "\"storageAccount\"": {
                   '"name"': '"{}"'.format(kwargs["storage_account"]),
                   '"key"': '"{}"'.format(kwargs["storage_account_key"]),
                   '"endpointSuffix"': '"{}"'.format("core.windows.net")
