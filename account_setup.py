@@ -88,6 +88,22 @@ def create_storage_account(credentials, subscription_id, **kwargs):
     )
     return storage_account.result().id
 
+def storage_account_get_keys(credentials, subscription_id, **kwargs):
+    """
+        get Storage account keys
+        :param credentials: msrestazure.azure_active_directory.AdalAuthentication
+        :param subscription_id: str
+        :param **resource_group: str
+        :param **storage_account: str
+        :param **region: str
+    """
+    storage_management_client = StorageManagementClient(credentials, subscription_id)
+    storage_account_keys = storage_management_client.storage_accounts.get_keys(
+        resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
+        account_name=kwargs.get("storage_account", DefaultSettings.storage_account)
+    )
+    print(storage_account_keys.result())
+    return storage_account_keys.result()
 
 
 def create_batch_account(credentials, subscription_id, **kwargs):
@@ -113,6 +129,22 @@ def create_batch_account(credentials, subscription_id, **kwargs):
     )
     return batch_account.result().id
 
+
+def batch_account_get_keys(credentials, subscription_id, **kwargs):
+    """
+        get Batch account keys
+        :param credentials: msrestazure.azure_active_directory.AdalAuthentication
+        :param subscription_id: str
+        :param **resource_group: str
+        :param **batch_account: str
+    """
+    batch_management_client = BatchManagementClient(credentials, subscription_id)
+    batch_account_keys = batch_management_client.batch_account.get_keys(
+        resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
+        account_name=kwargs.get("batch_account", DefaultSettings.batch_account)
+    )
+    print(batch_account_keys.result())
+    return batch_account_keys.result()
 
 def create_vnet(credentials, subscription_id, **kwargs):
     """
@@ -406,12 +438,13 @@ if __name__ == "__main__":
     if authentication == DefaultSettings.shared_key:
         # retrieve batch account key
         with Spinner():
-            profile = credentials.get_cli_profile()
-            #aad_cred, subscirption_id, tenant_id = profile.get_login_credentials(
-            #    resource=AZURE_PUBLIC_CLOUD.endpoints.active_directory_graph_resource_id
-            #)
+            batch_account_keys = batch_account_get_keys(creds, subscirption_id, **kwargs)
+            kwargs["batch_account_key"] = batch_account_keys
+        print("Retrieved batch account key.")
 
-            #application_id, service_principal_object_id, application_credential = create_aad_user(aad_cred, tenant_id, **kwargs)
+        with Spinner():
+            storage_account_keys = storage_account_get_keys(creds, subscirption_id, **kwargs)
+            kwargs["storage_account_key"] = storage_account_keys
         print("Retrieved batch account key.")
 
         secrets = format_secrets(
@@ -456,3 +489,4 @@ if __name__ == "__main__":
         )
 
     print("\n# Copy the following into your credentials.json file\n{}".format(secrets))
+
