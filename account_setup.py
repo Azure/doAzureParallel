@@ -253,7 +253,7 @@ def create_role_assignment(credentials, subscription_id, scope, principal_id):
 
 def format_secrets(**kwargs):
     '''
-    Retuns the secrets for the created resources to be placed in secrets.yaml
+    Returns the secrets for the created resources to be placed in credentials.json
     The following form is returned:
 
         service_principal:
@@ -358,7 +358,7 @@ if __name__ == "__main__":
           "Default values are provided in the brackets. "\
           "Hit enter to use default.")
 
-    authentication = prompt_with_default("Enter 1 for Shared Key, 2 for Azure Active Directory", DefaultSettings.shared_key)
+    authentication = prompt_with_default("Enter 1 for Shared Key, 2 for Azure Active Directory", DefaultSettings.authentication)
     if authentication == DefaultSettings.shared_key:
         kwargs = {
             "region": prompt_with_default("Azure Region", DefaultSettings.region),
