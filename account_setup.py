@@ -103,8 +103,9 @@ def storage_account_get_keys(credentials, subscription_id, **kwargs):
         account_name=kwargs.get("storage_account", DefaultSettings.storage_account)
     )
     print(storage_account_keys.keys)
-    print(storage_account_keys.keys["key1"])
-    return storage_account_keys.keys["key1"]
+    storage_keys = {v.key_name: v.value for v in storage_account_keys.keys}
+    print(storage_keys.keys["key1"])
+    return storage_keys.keys["key1"]
 
 
 def create_batch_account(credentials, subscription_id, **kwargs):
