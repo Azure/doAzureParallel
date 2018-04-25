@@ -438,7 +438,7 @@ if __name__ == "__main__":
     if authentication == DefaultSettings.authentication:
         # retrieve batch account key
         with Spinner():
-            batch_account_keys = batch_account_get_keys(creds, subscirption_id, **kwargs)
+            batch_account_keys = batch_account_get_keys(creds, subscription_id, **kwargs)
             kwargs["batch_account_key"] = batch_account_keys
         print("Retrieved batch account key.")
 
