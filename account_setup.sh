@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Installing depdendencies..." &&
+echo "Installing dependencies..." &&
 pip install --force-reinstall --upgrade --user pyyaml==3.12 azure==3.0.0 azure-cli-core==2.0.30 msrestazure==0.4.25 > /dev/null 2>&1 &&
 echo "Finished installing depdencies." &&
 echo "Getting account setup script..." &&
