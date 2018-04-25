@@ -144,7 +144,8 @@ def batch_account_get_keys(credentials, subscription_id, **kwargs):
         account_name=kwargs.get("batch_account", DefaultSettings.batch_account)
     )
     print(batch_account_keys)
-    return batch_account_keys
+    print(batch_account_keys.primary)
+    return batch_account_keys.primary
 
 def create_vnet(credentials, subscription_id, **kwargs):
     """
@@ -438,12 +439,12 @@ if __name__ == "__main__":
     if authentication == DefaultSettings.authentication:
         # retrieve batch account key
         with Spinner():
-            batch_account_keys = batch_account_get_keys(creds, subscription_id, **kwargs)
-            kwargs["batch_account_key"] = batch_account_keys
+            batch_account_key = batch_account_get_keys(creds, subscription_id, **kwargs)
+            kwargs["batch_account_key"] = batch_account_key
         print("Retrieved batch account key.")
 
         with Spinner():
-            storage_account_keys = storage_account_get_keys(creds, subscirption_id, **kwargs)
+            storage_account_keys = storage_account_get_keys(creds, subscription_id, **kwargs)
             kwargs["storage_account_key"] = storage_account_keys
         print("Retrieved batch account key.")
 
