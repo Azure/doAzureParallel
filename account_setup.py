@@ -104,8 +104,8 @@ def storage_account_get_keys(credentials, subscription_id, **kwargs):
     )
     print(storage_account_keys.keys)
     storage_keys = {v.key_name: v.value for v in storage_account_keys.keys}
-    print(storage_keys.keys["key1"])
-    return storage_keys.keys["key1"]
+    print(storage_keys.keys)
+    return storage_keys.keys
 
 
 def create_batch_account(credentials, subscription_id, **kwargs):
@@ -419,31 +419,31 @@ if __name__ == "__main__":
     print("Creating the Azure resources.")
 
     # create resource group
-    with Spinner():
-        resource_group_id = create_resource_group(creds, subscription_id, **kwargs)
-        kwargs["resource_group_id"] = resource_group_id
-    print("Created resource group.")
+#    with Spinner():
+#        resource_group_id = create_resource_group(creds, subscription_id, **kwargs)
+#        kwargs["resource_group_id"] = resource_group_id
+#    print("Created resource group.")
 
     # create storage account
-    with Spinner():
-        storage_account_id = create_storage_account(creds, subscription_id, **kwargs)
-        kwargs["storage_account_id"] = storage_account_id
-    print("Created Storage account.")
+#    with Spinner():
+#        storage_account_id = create_storage_account(creds, subscription_id, **kwargs)
+#        kwargs["storage_account_id"] = storage_account_id
+#    print("Created Storage account.")
 
     # create batch account
-    with Spinner():
-        batch_account_id = create_batch_account(creds, subscription_id, **kwargs)
-    print("Created Batch account.")
+#    with Spinner():
+#        batch_account_id = create_batch_account(creds, subscription_id, **kwargs)
+#    print("Created Batch account.")
 
     # create vnet with a subnet
     # subnet_id = create_vnet(creds, subscription_id)
 
     if authentication == DefaultSettings.authentication:
         # retrieve batch account key
-        with Spinner():
-            batch_account_key = batch_account_get_keys(creds, subscription_id, **kwargs)
-            kwargs["batch_account_key"] = batch_account_key
-        print("Retrieved batch account key.")
+ #       with Spinner():
+ #           batch_account_key = batch_account_get_keys(creds, subscription_id, **kwargs)
+ #           kwargs["batch_account_key"] = batch_account_key
+ #       print("Retrieved batch account key.")
 
         with Spinner():
             storage_account_keys = storage_account_get_keys(creds, subscription_id, **kwargs)
