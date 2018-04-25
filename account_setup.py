@@ -102,8 +102,8 @@ def storage_account_get_keys(credentials, subscription_id, **kwargs):
         resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
         account_name=kwargs.get("storage_account", DefaultSettings.storage_account)
     )
-    print(storage_account_keys.result())
-    return storage_account_keys.result()
+    print(storage_account_keys)
+    return storage_account_keys
 
 
 def create_batch_account(credentials, subscription_id, **kwargs):
@@ -143,8 +143,8 @@ def batch_account_get_keys(credentials, subscription_id, **kwargs):
         resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
         account_name=kwargs.get("batch_account", DefaultSettings.batch_account)
     )
-    print(batch_account_keys.result())
-    return batch_account_keys.result()
+    print(batch_account_keys)
+    return batch_account_keys
 
 def create_vnet(credentials, subscription_id, **kwargs):
     """
