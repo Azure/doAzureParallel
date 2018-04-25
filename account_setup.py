@@ -98,7 +98,7 @@ def storage_account_get_keys(credentials, subscription_id, **kwargs):
         :param **region: str
     """
     storage_management_client = StorageManagementClient(credentials, subscription_id)
-    storage_account_keys = storage_management_client.storage_accounts.get_keys(
+    storage_account_keys = storage_management_client.storage_accounts.list_keys(
         resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
         account_name=kwargs.get("storage_account", DefaultSettings.storage_account)
     )
