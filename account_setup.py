@@ -293,7 +293,7 @@ def format_secrets(**kwargs):
             batch_account_resource_id: </batch/account/resource/id>
             storage_account_resource_id: </storage/account/resource/id>
     '''
-    return yaml.dump({"service_principal": kwargs}, default_flow_style=False)
+    return json.dumps({"service_principal": kwargs})
 
 
 def prompt_for_confirmation(prompt, deny_error, unrecognized_input_error):
@@ -447,13 +447,13 @@ if __name__ == "__main__":
 
         secrets = format_secrets(
             **{
-                "\"batchAccount\"": {
-                  '"name"': '"{}"'.format(kwargs["batch_account"]),
-                  '"key"': '"{}"'.format(kwargs["batch_account_key"]),
-                  '"url"': '"{}"'.format("batchaccounturl")
+                "batchAccount": {
+                  "name": kwargs["batch_account"],
+                  "key": "{}".format(kwargs["batch_account_key"]),
+                  "url": "{}".format("batchaccounturl")
                 },
-                "\"storageAccount\"": {
-                  "name": "{}".format(kwargs["storage_account"]),
+                "storageAccount": {
+                  "name": kwargs["storage_account"],
                   "key": "{}".format(kwargs["storage_account_key"]),
                   "endpointSuffix": "{}".format("core.windows.net")
                 }
