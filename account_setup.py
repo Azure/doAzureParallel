@@ -453,9 +453,9 @@ if __name__ == "__main__":
                   '"url"': '"{}"'.format("batchaccounturl")
                 },
                 "\"storageAccount\"": {
-                  '"name"': '"{}"'.format(kwargs["storage_account"]),
-                  '"key"': '"{}"'.format(kwargs["storage_account_key"]),
-                  '"endpointSuffix"': '"{}"'.format("core.windows.net")
+                  "name": "{}".format(kwargs["storage_account"]),
+                  "key": "{}".format(kwargs["storage_account_key"]),
+                  "endpointSuffix": "{}".format("core.windows.net")
                 }
             }
         )
