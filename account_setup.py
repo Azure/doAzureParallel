@@ -5,7 +5,7 @@ import sys
 import threading
 import time
 import uuid
-import yaml
+import json
 from azure.common import credentials
 from azure.graphrbac import GraphRbacManagementClient
 from azure.graphrbac.models import ApplicationCreateParameters, PasswordCredential, ServicePrincipalCreateParameters
