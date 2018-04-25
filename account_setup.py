@@ -29,6 +29,7 @@ class AccountSetupError(Exception):
 
 
 class DefaultSettings():
+    authentication = "1"
     resource_group = 'doazureparallel'
     storage_account = 'doazureparallelstorage'
     batch_account = 'doazureparallelbatch'
@@ -356,17 +357,30 @@ if __name__ == "__main__":
     print("Input the desired names and values for your Azure resources. "\
           "Default values are provided in the brackets. "\
           "Hit enter to use default.")
-    kwargs = {
-        "region": prompt_with_default("Azure Region", DefaultSettings.region),
-        "resource_group": prompt_with_default("Resource Group Name", DefaultSettings.resource_group),
-        "storage_account": prompt_with_default("Storage Account Name", DefaultSettings.storage_account),
-        "batch_account": prompt_with_default("Batch Account Name", DefaultSettings.batch_account),
-        # "virtual_network_name": prompt_with_default("Virtual Network Name", DefaultSettings.virtual_network_name),
-        # "subnet_name": prompt_with_default("Subnet Name", DefaultSettings.subnet_name),
-        "application_name": prompt_with_default("Active Directory Application Name", DefaultSettings.application_name),
-        "application_credential_name": prompt_with_default("Active Directory Application Credential Name", DefaultSettings.resource_group),
-        "service_principal": prompt_with_default("Service Principal Name", DefaultSettings.service_principal)
-    }
+
+    authentication = prompt_with_default("Enter 1 for Shared Key, 2 for Azure Active Directory", DefaultSettings.shared_key)
+    if authentication == DefaultSettings.shared_key:
+        kwargs = {
+            "region": prompt_with_default("Azure Region", DefaultSettings.region),
+            "resource_group": prompt_with_default("Resource Group Name", DefaultSettings.resource_group),
+            "storage_account": prompt_with_default("Storage Account Name", DefaultSettings.storage_account),
+            "batch_account": prompt_with_default("Batch Account Name", DefaultSettings.batch_account),
+            # "virtual_network_name": prompt_with_default("Virtual Network Name", DefaultSettings.virtual_network_name),
+            # "subnet_name": prompt_with_default("Subnet Name", DefaultSettings.subnet_name),
+            "application_name": prompt_with_default("Active Directory Application Name", DefaultSettings.application_name),
+            "application_credential_name": prompt_with_default("Active Directory Application Credential Name", DefaultSettings.resource_group),
+            "service_principal": prompt_with_default("Service Principal Name", DefaultSettings.service_principal)
+        }
+    else:
+        kwargs = {
+            "region": prompt_with_default("Azure Region", DefaultSettings.region),
+            "resource_group": prompt_with_default("Resource Group Name", DefaultSettings.resource_group),
+            "storage_account": prompt_with_default("Storage Account Name", DefaultSettings.storage_account),
+            "batch_account": prompt_with_default("Batch Account Name", DefaultSettings.batch_account),
+            # "virtual_network_name": prompt_with_default("Virtual Network Name", DefaultSettings.virtual_network_name),
+            # "subnet_name": prompt_with_default("Subnet Name", DefaultSettings.subnet_name),
+        }
+
     print("Creating the Azure resources.")
 
     # create resource group
@@ -389,30 +403,56 @@ if __name__ == "__main__":
     # create vnet with a subnet
     # subnet_id = create_vnet(creds, subscription_id)
 
-    # create AAD application and service principal
-    with Spinner():
-        profile = credentials.get_cli_profile()
-        aad_cred, subscirption_id, tenant_id = profile.get_login_credentials(
-            resource=AZURE_PUBLIC_CLOUD.endpoints.active_directory_graph_resource_id
-        )
+    if authentication == DefaultSettings.shared_key:
+        # retrieve batch account key
+        with Spinner():
+            profile = credentials.get_cli_profile()
+            #aad_cred, subscirption_id, tenant_id = profile.get_login_credentials(
+            #    resource=AZURE_PUBLIC_CLOUD.endpoints.active_directory_graph_resource_id
+            #)
 
-        application_id, service_principal_object_id, application_credential = create_aad_user(aad_cred, tenant_id, **kwargs)
-    print("Created Azure Active Directory service principal.")
+            #application_id, service_principal_object_id, application_credential = create_aad_user(aad_cred, tenant_id, **kwargs)
+        print("Retrieved batch account key.")
 
-    with Spinner():
-        create_role_assignment(creds, subscription_id, resource_group_id, service_principal_object_id)
-    print("Configured permsisions.")
-
-    secrets = format_secrets(
-        **{
-            "servicePrincipal": {
-              "tenant_id": tenant_id,
-              "client_id": application_id,
-              "credential": application_credential,
-              "batchAccountResourceId": batch_account_id,
-              "storageAccountResourceId": storage_account_id
+        secrets = format_secrets(
+            **{
+                "batchAccount": {
+                  "name": kwargs["batch_account"],
+                  "key": kwargs["batch_account_key"],
+                  "url": application_credential
+                },
+                "storageAccount": {
+                  "name": kwargs["storage_account"],
+                  "key": kwargs["storage_account_key"],
+                  "endpointSuffix": "core.windows.net"
+                }
             }
-        }
-    )
+        )
+    else:
+        # create AAD application and service principal
+        with Spinner():
+            profile = credentials.get_cli_profile()
+            aad_cred, subscirption_id, tenant_id = profile.get_login_credentials(
+                resource=AZURE_PUBLIC_CLOUD.endpoints.active_directory_graph_resource_id
+            )
+
+            application_id, service_principal_object_id, application_credential = create_aad_user(aad_cred, tenant_id, **kwargs)
+        print("Created Azure Active Directory service principal.")
+
+        with Spinner():
+            create_role_assignment(creds, subscription_id, resource_group_id, service_principal_object_id)
+        print("Configured permsisions.")
+
+        secrets = format_secrets(
+            **{
+                "servicePrincipal": {
+                  "tenant_id": tenant_id,
+                  "client_id": application_id,
+                  "credential": application_credential,
+                  "batchAccountResourceId": batch_account_id,
+                  "storageAccountResourceId": storage_account_id
+                }
+            }
+        )
 
     print("\n# Copy the following into your credentials.json file\n{}".format(secrets))
