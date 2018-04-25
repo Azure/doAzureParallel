@@ -390,8 +390,17 @@ if __name__ == "__main__":
           "Default values are provided in the brackets. "\
           "Hit enter to use default.")
 
-    authentication = prompt_with_default("Enter 1 for Shared Key, 2 for Azure Active Directory", DefaultSettings.authentication)
+    authentication = prompt_with_default("Enter 1 for Shared Key Authentication, 2 for Azure Active Directory Authentication", DefaultSettings.authentication)
     if authentication == DefaultSettings.authentication:
+        kwargs = {
+            "region": prompt_with_default("Azure Region", DefaultSettings.region),
+            "resource_group": prompt_with_default("Resource Group Name", DefaultSettings.resource_group),
+            "storage_account": prompt_with_default("Storage Account Name", DefaultSettings.storage_account),
+            "batch_account": prompt_with_default("Batch Account Name", DefaultSettings.batch_account),
+            # "virtual_network_name": prompt_with_default("Virtual Network Name", DefaultSettings.virtual_network_name),
+            # "subnet_name": prompt_with_default("Subnet Name", DefaultSettings.subnet_name),
+        }
+    else:
         kwargs = {
             "region": prompt_with_default("Azure Region", DefaultSettings.region),
             "resource_group": prompt_with_default("Resource Group Name", DefaultSettings.resource_group),
@@ -402,15 +411,6 @@ if __name__ == "__main__":
             "application_name": prompt_with_default("Active Directory Application Name", DefaultSettings.application_name),
             "application_credential_name": prompt_with_default("Active Directory Application Credential Name", DefaultSettings.resource_group),
             "service_principal": prompt_with_default("Service Principal Name", DefaultSettings.service_principal)
-        }
-    else:
-        kwargs = {
-            "region": prompt_with_default("Azure Region", DefaultSettings.region),
-            "resource_group": prompt_with_default("Resource Group Name", DefaultSettings.resource_group),
-            "storage_account": prompt_with_default("Storage Account Name", DefaultSettings.storage_account),
-            "batch_account": prompt_with_default("Batch Account Name", DefaultSettings.batch_account),
-            # "virtual_network_name": prompt_with_default("Virtual Network Name", DefaultSettings.virtual_network_name),
-            # "subnet_name": prompt_with_default("Subnet Name", DefaultSettings.subnet_name),
         }
 
     print("Creating the Azure resources.")
