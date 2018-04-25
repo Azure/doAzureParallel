@@ -449,15 +449,15 @@ if __name__ == "__main__":
 
         secrets = format_secrets(
             **{
-                "batchAccount": {
-                  "name": kwargs["batch_account"],
-                  "key": kwargs["batch_account_key"],
-                  "url": "batchaccounturl"
+                '"batchAccount"': {
+                  '"name"': '"{}"'.format(kwargs["batch_account"]),
+                  '"key"': '"{}"'.format(kwargs["batch_account_key"]),
+                  '"url"': '"{}"'.format("batchaccounturl")
                 },
-                "storageAccount": {
-                  "name": kwargs["storage_account"],
-                  "key": kwargs["storage_account_key"],
-                  "endpointSuffix": "core.windows.net"
+                '"storageAccount"': {
+                  '"name"': '"{}"'.format(kwargs["storage_account"]),
+                  '"key"': '"{}"'.format(kwargs["storage_account_key"]),
+                  '"endpointSuffix"': '"{}"'.format("core.windows.net")
                 }
             }
         )
@@ -478,12 +478,12 @@ if __name__ == "__main__":
 
         secrets = format_secrets(
             **{
-                "servicePrincipal": {
-                  "tenant_id": tenant_id,
-                  "client_id": application_id,
-                  "credential": application_credential,
-                  "batchAccountResourceId": batch_account_id,
-                  "storageAccountResourceId": storage_account_id
+                '"servicePrincipal"': {
+                  '"tenant_id"': '"{}"'.format(tenant_id),
+                  '"client_id"': '"{}"'.format(application_id),
+                  '"credential"': '"{}"'.format(application_credential),
+                  '"batchAccountResourceId"': '"{}"'.format(batch_account_id),
+                  '"storageAccountResourceId"': '"{}"'.format(storage_account_id)
                 }
             }
         )
