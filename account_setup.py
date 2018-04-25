@@ -102,8 +102,9 @@ def storage_account_get_keys(credentials, subscription_id, **kwargs):
         resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
         account_name=kwargs.get("storage_account", DefaultSettings.storage_account)
     )
-    print(storage_account_keys)
-    return storage_account_keys
+    print(storage_account_keys.keys)
+    print(storage_account_keys.keys["key1"])
+    return storage_account_keys.keys["key1"]
 
 
 def create_batch_account(credentials, subscription_id, **kwargs):
@@ -446,14 +447,14 @@ if __name__ == "__main__":
         with Spinner():
             storage_account_keys = storage_account_get_keys(creds, subscription_id, **kwargs)
             kwargs["storage_account_key"] = storage_account_keys
-        print("Retrieved batch account key.")
+        print("Retrieved storage account key.")
 
         secrets = format_secrets(
             **{
                 "batchAccount": {
                   "name": kwargs["batch_account"],
                   "key": kwargs["batch_account_key"],
-                  "url": application_credential
+                  "url": "batchaccounturl"
                 },
                 "storageAccount": {
                   "name": kwargs["storage_account"],
