@@ -435,7 +435,7 @@ if __name__ == "__main__":
     # create vnet with a subnet
     # subnet_id = create_vnet(creds, subscription_id)
 
-    if authentication == DefaultSettings.shared_key:
+    if authentication == DefaultSettings.authentication:
         # retrieve batch account key
         with Spinner():
             batch_account_keys = batch_account_get_keys(creds, subscirption_id, **kwargs)
