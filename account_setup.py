@@ -157,10 +157,7 @@ def batch_account_get_url(credentials, subscription_id, **kwargs):
         resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
         account_name=kwargs.get("batch_account", DefaultSettings.batch_account)
     )
-    print(batch_account)
-    #print(batch_account["account_endpoint"])
-    print(batch_account.account_endpoint)
-    return batch_account#"https://" + batch_account.properties["accountEndpoint"]
+    return "https://" + batch_account.account_endpoint
 
 def create_vnet(credentials, subscription_id, **kwargs):
     """
