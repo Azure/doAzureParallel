@@ -449,7 +449,6 @@ if __name__ == "__main__":
 
     chars = string.ascii_lowercase
     suffix = "".join(random.choice(chars) for i in range(4))
-    DefaultSettings.resource_group += suffix
     DefaultSettings.storage_account += suffix
     DefaultSettings.batch_account += suffix
     if authentication == DefaultSettings.authentication:
