@@ -438,12 +438,15 @@ if __name__ == "__main__":
         print("Deleted resource group.")
         sys.exit()
    
+    if len(sys.argv) > 1 and sys.argv[1] == "serviceprincipal":
+        authentication = "serviceprincipal"
+    else:
+        authentication = DefaultSettings.authentication
+
     print("Input the desired names and values for your Azure resources. "\
           "Default values are provided in the brackets. "\
           "Hit enter to use default.")
 
-    #authentication = prompt_with_default("Enter 1 for Shared Key Authentication, 2 for Azure Active Directory Authentication", DefaultSettings.authentication)
-    authentication = DefaultSettings.authentication
     chars = string.ascii_lowercase
     suffix = "".join(random.choice(chars) for i in range(4))
     DefaultSettings.resource_group += suffix
