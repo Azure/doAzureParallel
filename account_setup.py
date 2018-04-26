@@ -102,6 +102,7 @@ def storage_account_get_keys(credentials, subscription_id, **kwargs):
         resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
         account_name=kwargs.get("storage_account", DefaultSettings.storage_account)
     )
+    print(storage_account_keys)
     return storage_account_keys.keys[0].value
 
 
@@ -403,7 +404,8 @@ if __name__ == "__main__":
           "Default values are provided in the brackets. "\
           "Hit enter to use default.")
 
-    authentication = prompt_with_default("Enter 1 for Shared Key Authentication, 2 for Azure Active Directory Authentication", DefaultSettings.authentication)
+    #authentication = prompt_with_default("Enter 1 for Shared Key Authentication, 2 for Azure Active Directory Authentication", DefaultSettings.authentication)
+    authentication == DefaultSettings.authentication
     if authentication == DefaultSettings.authentication:
         kwargs = {
             "region": prompt_with_default("Azure Region", DefaultSettings.region),
@@ -466,6 +468,11 @@ if __name__ == "__main__":
             kwargs["storage_account_key"] = storage_account_keys
         print("Retrieved storage account key.")
 
+        with Spinner():
+            storage_account_endpoint_suffix = storage_account_get_keys(creds, subscription_id, **kwargs)
+            kwargs["storage_account_endpoint_suffix"] = storage_account_endpoint_suffix
+        print("Retrieved storage account endpoint suffix.")
+
         secrets = format_secrets(
             **{
                 "batchAccount": {
@@ -476,7 +483,7 @@ if __name__ == "__main__":
                 "storageAccount": {
                   "name": kwargs["storage_account"],
                   "key": kwargs["storage_account_key"],
-                  "endpointSuffix": "core.windows.net"
+                  "endpointSuffix": kwargs["storage_account_endpoint_suffix"]
                 }
             }
         )
