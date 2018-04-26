@@ -25,6 +25,7 @@ Azure Region [westus]:
 Resource Group Name [doazp]:
 Storage Account Name [doazpstorage]:
 Batch Account Name [doazpbatch]:
+```
 
 following prompts will only show up when you use AAD auth by running
 ```sh
