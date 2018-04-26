@@ -459,7 +459,7 @@ if __name__ == "__main__":
         with Spinner():
             batch_account_url = batch_account_get_url(creds, subscription_id, **kwargs)
             kwargs["batch_account_url"] = batch_account_url
-        print("Retrieved batch account key.")
+        print("Retrieved batch account url.")
 
         with Spinner():
             storage_account_keys = storage_account_get_keys(creds, subscription_id, **kwargs)
@@ -470,13 +470,13 @@ if __name__ == "__main__":
             **{
                 "batchAccount": {
                   "name": kwargs["batch_account"],
-                  "key": "{}".format(kwargs["batch_account_key"]),
-                  "url": "{}".format(kwargs["batch_account_url"])
+                  "key": kwargs["batch_account_key"],
+                  "url": kwargs["batch_account_url"]
                 },
                 "storageAccount": {
                   "name": kwargs["storage_account"],
-                  "key": "{}".format(kwargs["storage_account_key"]),
-                  "endpointSuffix": "{}".format("core.windows.net")
+                  "key": kwargs["storage_account_key"],
+                  "endpointSuffix": "core.windows.net"
                 }
             }
         )
@@ -497,12 +497,12 @@ if __name__ == "__main__":
 
         secrets = format_secrets(
             **{
-                '"servicePrincipal"': {
-                  '"tenant_id"': '"{}"'.format(tenant_id),
-                  '"client_id"': '"{}"'.format(application_id),
-                  '"credential"': '"{}"'.format(application_credential),
-                  '"batchAccountResourceId"': '"{}"'.format(batch_account_id),
-                  '"storageAccountResourceId"': '"{}"'.format(storage_account_id)
+                "servicePrincipal": {
+                  "tenant_id": tenant_id,
+                  "client_id": application_id,
+                  "credential": application_credential,
+                  "batchAccountResourceId": batch_account_id,
+                  "storageAccountResourceId": storage_account_id
                 }
             }
         )
