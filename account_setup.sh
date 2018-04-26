@@ -8,4 +8,4 @@ wget -q https://raw.githubusercontent.com/Azure/doAzureParallel/feature/getstart
 chmod 755 account_setup.py &&
 echo "Finished getting account setup script." &&
 echo "Running account setup script..." &&
-python3 account_setup.py
+python3 account_setup.py $1
