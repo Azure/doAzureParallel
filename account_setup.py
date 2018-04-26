@@ -484,7 +484,7 @@ if __name__ == "__main__":
         print("Retrieved storage account key.")
 
         with Spinner():
-            storage_account_endpoint_suffix = storage_account_get_keys(creds, subscription_id, **kwargs)
+            storage_account_endpoint_suffix = storage_account_get_endpoint_suffix(creds, subscription_id, **kwargs)
             kwargs["storage_account_endpoint_suffix"] = storage_account_endpoint_suffix
         print("Retrieved storage account endpoint suffix.")
 
