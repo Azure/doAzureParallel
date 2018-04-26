@@ -293,7 +293,7 @@ def format_secrets(**kwargs):
             batch_account_resource_id: </batch/account/resource/id>
             storage_account_resource_id: </storage/account/resource/id>
     '''
-    return json.dumps({"service_principal": kwargs})
+    return json.dumps({"service_principal": kwargs}, indent = 4)
 
 
 def prompt_for_confirmation(prompt, deny_error, unrecognized_input_error):
