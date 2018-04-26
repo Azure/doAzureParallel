@@ -68,6 +68,28 @@ def create_resource_group(credentials, subscription_id, **kwargs):
             kwargs["resource_group"] = prompt_with_default("Azure Region", DefaultSettings.region)
     return resource_group.id
 
+def delete_resource_group(credentials, subscription_id, resource_group):
+    """
+        Delete a resource group
+        :param credentials: msrestazure.azure_active_directory.AdalAuthentication
+        :param subscription_id: str
+        :param resource_group: str
+    """
+    resource_client = ResourceManagementClient(credentials, subscription_id)
+    resource_client.resource_groups.list()
+    for i in range(3):
+        try:
+            delete_async_operation = resource_client.resource_groups.delete(
+                resource_group_name=resource_group
+            )
+            delete_async_operation.wait()
+        except CloudError as e:
+            if i == 2:
+                raise AccountSetupError(
+                    "Unable to delete resource group")
+            print(e.message)
+            print("Please try again.")
+    #return resource_group.id
 
 def create_storage_account(credentials, subscription_id, **kwargs):
     """
@@ -408,6 +430,12 @@ class Spinner:
 
 
 if __name__ == "__main__":
+  if sys.argv[1] == "deleteresourcegroup":
+    resource_group = prompt_with_default("Resource Group Name")
+    with Spinner():
+        delete_resource_group(creds, subscription_id, resource_group)
+    print("Deleted resource group.")
+  else:
     print("\nGetting credentials.")
     # get credentials and tenant_id
     creds, subscription_id = credentials.get_azure_cli_credentials()
