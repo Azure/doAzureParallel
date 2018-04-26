@@ -6,6 +6,8 @@ import threading
 import time
 import uuid
 import json
+import string
+import random
 from azure.common import credentials
 from azure.graphrbac import GraphRbacManagementClient
 from azure.graphrbac.models import ApplicationCreateParameters, PasswordCredential, ServicePrincipalCreateParameters
@@ -422,6 +424,11 @@ if __name__ == "__main__":
 
     #authentication = prompt_with_default("Enter 1 for Shared Key Authentication, 2 for Azure Active Directory Authentication", DefaultSettings.authentication)
     authentication = DefaultSettings.authentication
+    chars = string.ascii_lowercase
+    suffix = "".join(random.choice(chars) for i in range(4))
+    DefaultSettings.resource_group += suffix
+    DefaultSettings.storage_account += suffix
+    DefaultSettings.batch_account += suffix
     if authentication == DefaultSettings.authentication:
         kwargs = {
             "region": prompt_with_default("Azure Region", DefaultSettings.region),
