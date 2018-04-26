@@ -158,7 +158,7 @@ def batch_account_get_url(credentials, subscription_id, **kwargs):
         account_name=kwargs.get("batch_account", DefaultSettings.batch_account)
     )
     print(batch_account)
-    print(batch_account["account_endpoint"])
+    #print(batch_account["account_endpoint"])
     print(batch_account.account_endpoint)
     return batch_account#"https://" + batch_account.properties["accountEndpoint"]
 
