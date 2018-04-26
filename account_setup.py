@@ -118,8 +118,8 @@ def storage_account_get_endpoint_suffix(credentials, subscription_id, **kwargs):
         resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
         account_name=kwargs.get("storage_account", DefaultSettings.storage_account)
     )
-    print(storage_account.primary_endpoints)
-    return storage_account
+    print(storage_account.primary_endpoints.blob)
+    return storage_account.primary_endpoints.blob
 
 def create_batch_account(credentials, subscription_id, **kwargs):
     """
