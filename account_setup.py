@@ -102,9 +102,24 @@ def storage_account_get_keys(credentials, subscription_id, **kwargs):
         resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
         account_name=kwargs.get("storage_account", DefaultSettings.storage_account)
     )
-    print(storage_account_keys)
     return storage_account_keys.keys[0].value
 
+def storage_account_get_endpoint_suffix(credentials, subscription_id, **kwargs):
+    """
+        get Storage account keys
+        :param credentials: msrestazure.azure_active_directory.AdalAuthentication
+        :param subscription_id: str
+        :param **resource_group: str
+        :param **storage_account: str
+        :param **region: str
+    """
+    storage_management_client = StorageManagementClient(credentials, subscription_id)
+    storage_account = storage_management_client.storage_accounts.get(
+        resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
+        account_name=kwargs.get("storage_account", DefaultSettings.storage_account)
+    )
+    print(storage_account)
+    return storage_account
 
 def create_batch_account(credentials, subscription_id, **kwargs):
     """
