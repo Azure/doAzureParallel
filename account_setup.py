@@ -430,7 +430,7 @@ class Spinner:
 
 
 if __name__ == "__main__":
-  if sys.argv[1] == "deleteresourcegroup":
+  if len(sys.argv) > 1 and sys.argv[1] == "deleteresourcegroup":
     resource_group = prompt_with_default("Resource Group Name")
     with Spinner():
         delete_resource_group(creds, subscription_id, resource_group)
