@@ -33,7 +33,7 @@ wget -q https://raw.githubusercontent.com/Azure/doAzureParallel/master/account_s
 chmod 755 account_setup.sh &&
 /bin/bash account_setup.sh serviceprincipal
 ```
-
+```
 Active Directory Application Name [doazpapp]:
 Active Directory Application Credential Name [doazp]:
 Service Principal Name [doazpsp]
