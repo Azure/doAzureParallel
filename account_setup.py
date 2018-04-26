@@ -144,6 +144,21 @@ def batch_account_get_keys(credentials, subscription_id, **kwargs):
     )
     return batch_account_keys.primary
 
+def batch_account_get_url(credentials, subscription_id, **kwargs):
+    """
+        get Batch account url
+        :param credentials: msrestazure.azure_active_directory.AdalAuthentication
+        :param subscription_id: str
+        :param **resource_group: str
+        :param **batch_account: str
+    """
+    batch_management_client = BatchManagementClient(credentials, subscription_id)
+    batch_account_keys = batch_management_client.batch_account.get(
+        resource_group_name=kwargs.get("resource_group", DefaultSettings.resource_group),
+        account_name=kwargs.get("batch_account", DefaultSettings.batch_account)
+    )
+    return batch_account_keys.properties["accountEndpoint"]
+
 def create_vnet(credentials, subscription_id, **kwargs):
     """
         Create a Batch account
@@ -440,6 +455,12 @@ if __name__ == "__main__":
             kwargs["batch_account_key"] = batch_account_key
         print("Retrieved batch account key.")
 
+        # retrieve batch account url
+        with Spinner():
+            batch_account_url = batch_account_get_url(creds, subscription_id, **kwargs)
+            kwargs["batch_account_url"] = batch_account_url
+        print("Retrieved batch account key.")
+
         with Spinner():
             storage_account_keys = storage_account_get_keys(creds, subscription_id, **kwargs)
             kwargs["storage_account_key"] = storage_account_keys
@@ -450,7 +471,7 @@ if __name__ == "__main__":
                 "batchAccount": {
                   "name": kwargs["batch_account"],
                   "key": "{}".format(kwargs["batch_account_key"]),
-                  "url": "{}".format("batchaccounturl")
+                  "url": "{}".format(kwargs["batch_account_url"])
                 },
                 "storageAccount": {
                   "name": kwargs["storage_account"],
