@@ -68,7 +68,7 @@ For Azure Active Directory Authentication:
 }
 ```
 
-Copy the entire section to your `credentials.json`. If you do not have a `.json` file, you can create one in your current working directory by running `doAzureParallel::generateCredentialsConfig()`.
+Copy the entire section to your `credentials.json`. If you do not have a `credentials.json` file, you can create one in your current working directory by running `doAzureParallel::generateCredentialsConfig()`.
 
 ### Delete resource group
 Copy and paste the following into an [Azure Cloud Shell](https://shell.azure.com):
