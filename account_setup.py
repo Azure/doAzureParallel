@@ -32,12 +32,12 @@ class AccountSetupError(Exception):
 
 class DefaultSettings():
     authentication = "1"
-    resource_group = 'doazureparallel'
-    storage_account = 'doazureparallelstorage'
-    batch_account = 'doazureparallelbatch'
-    application_name = 'doazureparallelapplication'
-    application_credential_name = 'doazureparallelapplicationcredential'
-    service_principal = 'doazureparallelsp'
+    resource_group = 'doazp'
+    storage_account = 'doazpstorage'
+    batch_account = 'doazpbatch'
+    application_name = 'doazpapp'
+    application_credential_name = 'doazpappcredential'
+    service_principal = 'doazpsp'
     region = 'westus'
 
 
