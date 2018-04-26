@@ -707,7 +707,7 @@ setHttpTraffic <- function(value = FALSE) {
             paste0("results/", "merge-result.rds"),
             sasToken = sasToken,
             accountName = storageClient$authentication$name,
-            endpointSuffix = storageClient$authentication$endpointSuffix,
+            endpointSuffix = config$endpointSuffix,
             downloadPath = tempFile,
             overwrite = TRUE
           )

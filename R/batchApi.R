@@ -37,7 +37,7 @@ BatchUtilities <- R6::R6Class(
             jobId,
             envFile,
             readToken,
-            storageClient$authentication$endpointSuffix)
+            config$endpointSuffix)
         resourceFiles <-
           list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
       }
@@ -49,10 +49,11 @@ BatchUtilities <- R6::R6Class(
       if (!is.null(cloudCombine)) {
         assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
         copyCommand <- sprintf(
-          "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include results/*.rds",
+          "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include results/*.rds --endpoint %s",
           accountName,
           jobId,
-          "$AZ_BATCH_TASK_WORKING_DIR"
+          "$AZ_BATCH_TASK_WORKING_DIR",
+          config$endpointSuffix
         )
 
         downloadCommand <-
@@ -73,7 +74,7 @@ BatchUtilities <- R6::R6Class(
           storageAccount = storageClient$authentication$name,
           containerName = jobId,
           sasToken = storageClient$generateSasToken("w", "c", jobId),
-          storageClient$authentication$endpointSuffix
+          storageEndpointSuffix = config$endpointSuffix
         )
 
       outputFiles <- list(
