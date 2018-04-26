@@ -430,13 +430,6 @@ class Spinner:
 
 
 if __name__ == "__main__":
-  print(sys.argv)
-  if len(sys.argv) > 1 and sys.argv[1] == "deleteresourcegroup":
-    resource_group = input("Resource Group Name: ")
-    with Spinner():
-        delete_resource_group(creds, subscription_id, resource_group)
-    print("Deleted resource group.")
-  else:
     print("\nGetting credentials.")
     # get credentials and tenant_id
     creds, subscription_id = credentials.get_azure_cli_credentials()
@@ -447,6 +440,13 @@ if __name__ == "__main__":
     else:
         tenant_id = tenant_ids[0]
 
+    if len(sys.argv) > 1 and sys.argv[1] == "deleteresourcegroup":
+      resource_group = input("Resource Group Name: ")
+      with Spinner():
+          delete_resource_group(creds, subscription_id, resource_group)
+      print("Deleted resource group.")
+      sys.exit()
+   
     print("Input the desired names and values for your Azure resources. "\
           "Default values are provided in the brackets. "\
           "Hit enter to use default.")
