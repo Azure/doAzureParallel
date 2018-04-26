@@ -405,7 +405,7 @@ if __name__ == "__main__":
           "Hit enter to use default.")
 
     #authentication = prompt_with_default("Enter 1 for Shared Key Authentication, 2 for Azure Active Directory Authentication", DefaultSettings.authentication)
-    authentication == DefaultSettings.authentication
+    authentication = DefaultSettings.authentication
     if authentication == DefaultSettings.authentication:
         kwargs = {
             "region": prompt_with_default("Azure Region", DefaultSettings.region),
