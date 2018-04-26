@@ -103,7 +103,8 @@ generateCredentialsConfig <- function(fileName, authenticationType = "ServicePri
           clientId = "client",
           credential = "credential",
           batchAccountResourceId = "batchAccountResourceId",
-          storageAccountResourceId = "storageAccountResourceId"),
+          storageAccountResourceId = "storageAccountResourceId",
+          storageEndpointSuffix = storageEndpointSuffix),
         githubAuthenticationToken = githubAuthenticationToken,
         dockerAuthentication = list(username = dockerUsername,
                                     password = dockerPassword,
@@ -152,22 +153,26 @@ setCredentials <- function(credentials = "az_config.json", verbose = TRUE) {
 
   config$batchClient <- batchServiceClient
   config$storageClient <- storageServiceClient
-  options("az_config" = config)
 
   cat(strrep('=', options("width")), fill = TRUE)
   if (!is.null(config$sharedKey)) {
     printSharedKeyInformation(config$sharedKey)
+
+    config$endpointSuffix <- config$sharedKey$storageAccount$endpointSuffix
   }
   else if (!is.null(config$servicePrincipal)) {
     cat(sprintf("Batch Account Resource Id: %s",
                 config$servicePrincipal$batchAccountResourceId), fill = TRUE)
     cat(sprintf("Storage Account Resource Id: %s",
                 config$servicePrincipal$storageAccountResourceId), fill = TRUE)
+
+    config$endpointSuffix <- config$servicePrincipal$storageEndpointSuffix
   }
   else {
     printSharedKeyInformation(config)
   }
 
+  options("az_config" = config)
   cat(strrep('=', options("width")), fill = TRUE)
   if (!is.null(config$batchAccountName) &&
       !is.null(config$storageAccount) &&
@@ -208,17 +213,18 @@ makeBatchClient <- function(config) {
       resource = 'https://batch.core.windows.net/'
     )
 
-    azureContext <- AzureSMR::createAzureContext(
-      tenantID = config$servicePrincipal$tenantId,
-      clientID = config$servicePrincipal$clientId,
-      authKey = config$servicePrincipal$credential
+    servicePrincipal <- rAzureBatch::ServicePrincipalCredentials$new(
+      tenantId = config$servicePrincipal$tenantId,
+      clientId = config$servicePrincipal$clientId,
+      clientSecrets = config$servicePrincipal$credential,
+      resource = 'https://management.azure.com/'
     )
 
-    batchAccountInfo <- AzureSMR::azureGetBatchAccount(
-      azureContext,
+    batchAccountInfo <- rAzureBatch::getBatchAccount(
       batchAccount = info$account,
       resourceGroup = info$resourceGroup,
-      subscriptionID = info$subscriptionId
+      subscriptionId = info$subscriptionId,
+      servicePrincipal = servicePrincipal
     )
 
     baseUrl <- sprintf("https://%s/",
@@ -258,23 +264,33 @@ makeStorageClient <- function(config) {
     info <-
       getAccountInformation(config$servicePrincipal$storageAccountResourceId)
 
-    azureContext <- AzureSMR::createAzureContext(
-      tenantID = config$servicePrincipal$tenantId,
-      clientID = config$servicePrincipal$clientId,
-      authKey = config$servicePrincipal$credential
+    endpointSuffix <- config$servicePrincipal$endpointSuffix
+    if (is.null(endpointSuffix)) {
+      endpointSuffix <- "core.windows.net"
+    }
+
+    servicePrincipal <- rAzureBatch::ServicePrincipalCredentials$new(
+      tenantId = config$servicePrincipal$tenantId,
+      clientId = config$servicePrincipal$clientId,
+      clientSecrets = config$servicePrincipal$credential,
+      resource = 'https://management.azure.com/'
     )
 
-    primaryKey <- AzureSMR::azureSAGetKey(
-      azureContext,
+    storageKeys <- rAzureBatch::getStorageKeys(
       storageAccount = info$account,
       resourceGroup =  info$resourceGroup,
-      subscriptionID = info$subscriptionId
+      subscriptionId = info$subscriptionId,
+      servicePrincipal = servicePrincipal
     )
 
     storageCredentials <- rAzureBatch::SharedKeyCredentials$new(
       name = info$account,
-      key = primaryKey
+      key = storageKeys$keys[[1]]$value
     )
+
+    baseUrl <- sprintf("https://%s.blob.%s",
+                       info$account,
+                       endpointSuffix)
   }
 
   rAzureBatch::StorageServiceClient$new(

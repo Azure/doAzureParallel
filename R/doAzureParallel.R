@@ -431,43 +431,43 @@ setHttpTraffic <- function(value = FALSE) {
     sasToken <- storageClient$generateSasToken("r", "c", id)
     workerScriptUrl <-
       rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 id,
-                                 "worker.R",
-                                 sasToken,
-                                 storageClient$authentication$endpointSuffix)
+                                 containerName = id,
+                                 fileName = "worker.R",
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
 
     mergerScriptUrl <-
       rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 id,
-                                 "merger.R",
-                                 sasToken,
-                                 storageClient$authentication$endpointSuffix)
+                                 containerName = id,
+                                 fileName = "merger.R",
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
 
     installGithubScriptUrl <-
       rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 id,
-                                 "install_github.R",
-                                 sasToken,
-                                 storageClient$authentication$endpointSuffix)
+                                 containerName = id,
+                                 fileName = "install_github.R",
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
     installCranScriptUrl <-
       rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 id,
-                                 "install_cran.R",
-                                 sasToken,
-                                 storageClient$authentication$endpointSuffix)
+                                 containerName = id,
+                                 fileName = "install_cran.R",
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
 
     installBioConductorScriptUrl <-
       rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 id,
-                                 "install_bioconductor.R",
-                                 sasToken,
-                                 storageClient$authentication$endpointSuffix)
+                                 containerName = id,
+                                 fileName = "install_bioconductor.R",
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
     jobCommonFileUrl <-
       rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 id,
-                                 jobFileName,
-                                 sasToken,
-                                 storageClient$authentication$endpointSuffix)
+                                 containerName = id,
+                                 fileName = jobFileName,
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
 
     requiredJobResourceFiles <- list(
       rAzureBatch::createResourceFile(url = workerScriptUrl, fileName = "worker.R"),
@@ -496,7 +496,6 @@ setHttpTraffic <- function(value = FALSE) {
     if (length(startIndices) > length(endIndices)) {
       endIndices[length(startIndices)] <- ntasks
     }
-
 
     response <- BatchUtilitiesOperations$addJob(
       jobId = id,
@@ -558,7 +557,8 @@ setHttpTraffic <- function(value = FALSE) {
     rAzureBatch::createBlobUrl(
       storageAccount = storageClient$authentication$name,
       containerName = id,
-      sasToken = storageClient$generateSasToken("w", "c", id)
+      sasToken = storageClient$generateSasToken("w", "c", id),
+      storageEndpointSuffix = config$endpointSuffix
     )
 
   printJobInformation(
