@@ -12,7 +12,7 @@ setCredentials(credentials = "az_config.json", verbose = TRUE,
 
 \item{verbose}{Enable verbose messaging on setting credentials}
 
-\item{environment}{The type of Azure Environment that your account is located}
+\item{environment}{Azure environment type values are Azure, AzureGermany, AzureChina, AzureUSGov-}
 }
 \description{
 Set azure credentials to R session from credentials object or json file.

@@ -135,7 +135,7 @@ generateCredentialsConfig <- function(fileName, authenticationType = "SharedKey"
 #'
 #' @param credentials The credentials object or json file
 #' @param verbose Enable verbose messaging on setting credentials
-#' @param environment The type of Azure Environment that your account is located
+#' @param environment Azure environment type values are Azure, AzureGermany, AzureChina, AzureUSGov-
 #'
 #' @export
 setCredentials <- function(credentials = "az_config.json",
