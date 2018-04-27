@@ -18,7 +18,8 @@ generateCredentialsConfig(fileName, authenticationType = "SharedKey", ...)
  \item{"batchUrl"}: {Batch service url for account.}
  \item{"storageAccount"}: {Storage account for storing output results.}
  \item{"storageKey"}: {Storage account key for storage service authentication.}
- \item{"storageEndpointSuffix"}: {Values: core.windows.net, core.chinacloudapi.cn, core.cloudapi.de, core.usgovcloudapi.net }
+ \item{"storageEndpointSuffix"}: {Values: core.windows.net,
+ core.chinacloudapi.cn, core.cloudapi.de, core.usgovcloudapi.net }
  \item{"githubAuthenticationToken"}: {GitHub authentication token for pulling R
                                       packages from private GitHub repositories}
  \item{"dockerAuthentication"}: {Docker authentication for pulling Docker images
