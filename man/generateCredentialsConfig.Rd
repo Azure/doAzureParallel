@@ -4,11 +4,12 @@
 \alias{generateCredentialsConfig}
 \title{Creates a credentials file for rAzureBatch package authentication}
 \usage{
-generateCredentialsConfig(fileName, authenticationType = c("SharedKey",
-  "ServicePrincipal"), ...)
+generateCredentialsConfig(fileName, authenticationType = "SharedKey", ...)
 }
 \arguments{
 \item{fileName}{Credentials file name}
+
+\item{authenticationType}{The type of authentication for Azure: SharedKey, ServicePrincipal}
 
 \item{...}{Further named parameters
 \itemize{
@@ -38,6 +39,9 @@ Creates a credentials file for rAzureBatch package authentication
 generateCredentialsConfig("test_config.json")
 generateCredentialsConfig("test_config.json", batchAccount = "testbatchaccount",
    batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com",
-   storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
+   storageAccount = "teststorageaccount", storageKey = "test_storage_account_key",
+   storageEndpointSuffix = "core.windows.net")
+supported storage account endpoint suffix: core.windows.net (default),
+   core.chinacloudapi.cn, core.cloudapi.de, core.usgovcloudapi.net, etc.
 }
 }

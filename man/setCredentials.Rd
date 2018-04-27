@@ -4,10 +4,15 @@
 \alias{setCredentials}
 \title{Set azure credentials to R session from credentials object or json file.}
 \usage{
-setCredentials(credentials = "az_config.json", verbose = TRUE)
+setCredentials(credentials = "az_config.json", verbose = TRUE,
+  environment = "Azure")
 }
 \arguments{
 \item{credentials}{The credentials object or json file}
+
+\item{verbose}{Enable verbose messaging on setting credentials}
+
+\item{environment}{The type of Azure Environment that your account is located}
 }
 \description{
 Set azure credentials to R session from credentials object or json file.

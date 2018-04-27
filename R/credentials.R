@@ -1,6 +1,7 @@
 #' Creates a credentials file for rAzureBatch package authentication
 #'
 #' @param fileName Credentials file name
+#' @param authenticationType The type of authentication for Azure: SharedKey, ServicePrincipal
 #' @param ... Further named parameters
 #' \itemize{
 #'  \item{"batchAccount"}: {Batch account name for Batch Service authentication.}
