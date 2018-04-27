@@ -31,7 +31,7 @@ class AccountSetupError(Exception):
 
 
 class DefaultSettings():
-    authentication = "1"
+    authentication = "sharedkey"
     resource_group = 'doazp'
     storage_account = 'doazpstorage'
     batch_account = 'doazpbatch'
@@ -470,9 +470,7 @@ if __name__ == "__main__":
             "region": prompt_with_default("Azure Region", DefaultSettings.region),
             "resource_group": prompt_with_default("Resource Group Name", DefaultSettings.resource_group),
             "storage_account": prompt_with_default("Storage Account Name", DefaultSettings.storage_account),
-            "batch_account": prompt_with_default("Batch Account Name", DefaultSettings.batch_account),
-            # "virtual_network_name": prompt_with_default("Virtual Network Name", DefaultSettings.virtual_network_name),
-            # "subnet_name": prompt_with_default("Subnet Name", DefaultSettings.subnet_name),
+            "batch_account": prompt_with_default("Batch Account Name", DefaultSettings.batch_account)
         }
     else:
         kwargs = {
@@ -493,44 +491,41 @@ if __name__ == "__main__":
     with Spinner():
         resource_group_id = create_resource_group(creds, subscription_id, **kwargs)
         kwargs["resource_group_id"] = resource_group_id
-    print("Created resource group.")
+    print("Created Resource Group.")
 
     # create storage account
     with Spinner():
         storage_account_id = create_storage_account(creds, subscription_id, **kwargs)
         kwargs["storage_account_id"] = storage_account_id
-    print("Created Storage account.")
+    print("Created Storage Account.")
 
     with Spinner():
         storage_account_endpoint_suffix = storage_account_get_endpoint_suffix(creds, subscription_id, **kwargs)
         kwargs["storage_account_endpoint_suffix"] = storage_account_endpoint_suffix
-    print("Retrieved storage account endpoint suffix.")
+    print("Retrieved Storage Account endpoint suffix.")
 
     # create batch account
     with Spinner():
         batch_account_id = create_batch_account(creds, subscription_id, **kwargs)
-    print("Created Batch account.")
-
-    # create vnet with a subnet
-    # subnet_id = create_vnet(creds, subscription_id)
+    print("Created Batch Account.")
 
     if authentication == DefaultSettings.authentication:
         # retrieve batch account key
         with Spinner():
             batch_account_key = batch_account_get_keys(creds, subscription_id, **kwargs)
             kwargs["batch_account_key"] = batch_account_key
-        print("Retrieved batch account key.")
+        print("Retrieved Batch Account key.")
 
         # retrieve batch account url
         with Spinner():
             batch_account_url = batch_account_get_url(creds, subscription_id, **kwargs)
             kwargs["batch_account_url"] = batch_account_url
-        print("Retrieved batch account url.")
+        print("Retrieved Batch Account url.")
 
         with Spinner():
             storage_account_keys = storage_account_get_keys(creds, subscription_id, **kwargs)
             kwargs["storage_account_key"] = storage_account_keys
-        print("Retrieved storage account key.")
+        print("Retrieved Storage Account key.")
 
         secrets = format_secrets(
             **{
@@ -547,6 +542,9 @@ if __name__ == "__main__":
             }
         )
     else:
+        # create vnet with a subnet
+        # subnet_id = create_vnet(creds, subscription_id)
+
         # create AAD application and service principal
         with Spinner():
             profile = credentials.get_cli_profile()
