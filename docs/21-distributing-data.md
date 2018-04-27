@@ -15,7 +15,7 @@ results <- foreach(i = 1:number_of_iterations) %dopar% {
 
 ## Chunking Data
 
-A common scenario would be to chunk your data accross the pool so that your R code is running agaisnt a single chunk. In doAzureParallel, we help you achieve this by iterating through your chunks so that each chunk is mapped to an interation of the distributed *foreach* loop.
+A common scenario would be to chunk your data accross the pool so that your R code is running agaisnt a single chunk. In doAzureParallel, we help you achieve this by iterating through your chunks so that each chunk is mapped to an interaction of the distributed *foreach* loop.
 
 ```R
 chunks <- split(<data_set>, 10)
@@ -31,7 +31,7 @@ Some workloads may require data pre-loaded into the cluster as soon as the clust
 
 **NOTE** The default setting for storage containers is _private_. You can either use a [SAS](https://docs.microsoft.com/en-us/azure/storage/common/storage-dotnet-shared-access-signature-part-1) to access the resources or [make the container public using the Azure Portal](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-manage-access-to-resources).
 
-**IMPORTANT** Public storage containers can be ready by anyone who knows the URL. We do not recommend storing any private or sensitive information in public storage containers!
+**IMPORTANT** Public storage containers can be read by anyone who knows the URL. We do not recommend storing any private or sensitive information in public storage containers!
 
 Here's an example that uses data stored in a public location on Azure Blob Storage:
 
