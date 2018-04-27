@@ -128,9 +128,13 @@ generateCredentialsConfig <- function(fileName, authenticationType = "ServicePri
 #' Set azure credentials to R session from credentials object or json file.
 #'
 #' @param credentials The credentials object or json file
+#' @param verbose Enable verbose messaging on setting credentials
+#' @param environment The type of Azure Environment that your account is located
 #'
 #' @export
-setCredentials <- function(credentials = "az_config.json", verbose = TRUE) {
+setCredentials <- function(credentials = "az_config.json",
+                           verbose = TRUE,
+                           environment = "Azure") {
   if (class(credentials) == "character") {
     fileName <- credentials
     if (file.exists(fileName)) {
@@ -147,6 +151,32 @@ setCredentials <- function(credentials = "az_config.json", verbose = TRUE) {
       class(clusterSetting)
     ))
   }
+
+  if (environment == "AzureGov") {
+    aadUrl <- "https://login.microsoftonline.us/"
+    armUrl <- "https://management.usgovcloudapi.net/"
+    batchUrl <- "https://batch.core.usgovcloudapi.net/"
+  }
+  else if (environment == "AzureChina") {
+    aadUrl <- "https://login.chinacloudapi.cn/"
+    armUrl <- "https://management.chinacloudapi.cn/"
+    batchUrl <- "https://batch.chinacloudapi.cn/"
+  }
+  else if (environment == "AzureGermany"){
+    aadUrl <- "https://login.microsoftonline.de/"
+    armUrl <- "https://management.microsoftazure.de/"
+    batchUrl <- "https://batch.microsoftazure.de/"
+  }
+  else {
+    aadUrl <- "https://login.microsoftonline.com/"
+    armUrl <- "https://management.azure.com/"
+    batchUrl <- "https://batch.core.windows.net/"
+  }
+
+  config$azureEnvironment <- list(type = environment,
+                                  aadUrl = aadUrl,
+                                  armUrl = armUrl,
+                                  batchUrl = batchUrl)
 
   batchServiceClient <- makeBatchClient(config)
   storageServiceClient <- makeStorageClient(config)
@@ -210,21 +240,24 @@ makeBatchClient <- function(config) {
       tenantId = config$servicePrincipal$tenantId,
       clientId = config$servicePrincipal$clientId,
       clientSecrets = config$servicePrincipal$credential,
-      resource = 'https://batch.core.windows.net/'
+      resource = config$azureEnvironment$batchUrl,
+      aadUrl = config$azureEnvironment$aadUrl
     )
 
     servicePrincipal <- rAzureBatch::ServicePrincipalCredentials$new(
       tenantId = config$servicePrincipal$tenantId,
       clientId = config$servicePrincipal$clientId,
       clientSecrets = config$servicePrincipal$credential,
-      resource = 'https://management.azure.com/'
+      resource = config$azureEnvironment$armUrl,
+      aadUrl = config$azureEnvironment$aadUrl
     )
 
     batchAccountInfo <- rAzureBatch::getBatchAccount(
       batchAccount = info$account,
       resourceGroup = info$resourceGroup,
       subscriptionId = info$subscriptionId,
-      servicePrincipal = servicePrincipal
+      servicePrincipal = servicePrincipal,
+      verbose = TRUE
     )
 
     baseUrl <- sprintf("https://%s/",
@@ -273,14 +306,16 @@ makeStorageClient <- function(config) {
       tenantId = config$servicePrincipal$tenantId,
       clientId = config$servicePrincipal$clientId,
       clientSecrets = config$servicePrincipal$credential,
-      resource = 'https://management.azure.com/'
+      resource = config$azureEnvironment$armUrl,
+      aadUrl = config$azureEnvironment$aadUrl
     )
 
     storageKeys <- rAzureBatch::getStorageKeys(
       storageAccount = info$account,
       resourceGroup =  info$resourceGroup,
       subscriptionId = info$subscriptionId,
-      servicePrincipal = servicePrincipal
+      servicePrincipal = servicePrincipal,
+      verbose = TRUE
     )
 
     storageCredentials <- rAzureBatch::SharedKeyCredentials$new(
