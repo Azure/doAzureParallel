@@ -77,19 +77,10 @@ def delete_resource_group(credentials, subscription_id, resource_group):
     """
     resource_client = ResourceManagementClient(credentials, subscription_id)
     resource_client.resource_groups.list()
-    for i in range(3):
-        try:
-            delete_async_operation = resource_client.resource_groups.delete(
-                resource_group_name=resource_group
-            )
-            delete_async_operation.wait()
-        except CloudError as e:
-            if i == 2:
-                raise AccountSetupError(
-                    "Unable to delete resource group")
-            print(e.message)
-            print("Please try again.")
-    #return resource_group.id
+    delete_async_operation = resource_client.resource_groups.delete(
+        resource_group_name=resource_group
+    )
+    delete_async_operation.wait()
 
 def create_storage_account(credentials, subscription_id, **kwargs):
     """
@@ -441,21 +432,23 @@ if __name__ == "__main__":
         tenant_id = tenant_ids[0]
 
     if len(sys.argv) > 1 and sys.argv[1] == "deleteresourcegroup":
-      resource_group = input("Resource Group Name: ")
-      with Spinner():
+        resource_group = input("Resource Group Name: ")
+        with Spinner():
           delete_resource_group(creds, subscription_id, resource_group)
-      print("Deleted resource group.")
-      sys.exit()
+        print("Deleted resource group.")
+        sys.exit()
    
+    if len(sys.argv) > 1 and sys.argv[1] == "serviceprincipal":
+        authentication = "serviceprincipal"
+    else:
+        authentication = DefaultSettings.authentication
+
     print("Input the desired names and values for your Azure resources. "\
           "Default values are provided in the brackets. "\
           "Hit enter to use default.")
 
-    #authentication = prompt_with_default("Enter 1 for Shared Key Authentication, 2 for Azure Active Directory Authentication", DefaultSettings.authentication)
-    authentication = DefaultSettings.authentication
     chars = string.ascii_lowercase
     suffix = "".join(random.choice(chars) for i in range(4))
-    DefaultSettings.resource_group += suffix
     DefaultSettings.storage_account += suffix
     DefaultSettings.batch_account += suffix
     if authentication == DefaultSettings.authentication:
