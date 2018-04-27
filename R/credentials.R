@@ -152,17 +152,18 @@ setCredentials <- function(credentials = "az_config.json",
     ))
   }
 
-  if (environment == "AzureGov") {
+  environment <- tolower(environment)
+  if (environment == "azureusgov") {
     aadUrl <- "https://login.microsoftonline.us/"
     armUrl <- "https://management.usgovcloudapi.net/"
     batchUrl <- "https://batch.core.usgovcloudapi.net/"
   }
-  else if (environment == "AzureChina") {
+  else if (environment == "azurechina") {
     aadUrl <- "https://login.chinacloudapi.cn/"
     armUrl <- "https://management.chinacloudapi.cn/"
     batchUrl <- "https://batch.chinacloudapi.cn/"
   }
-  else if (environment == "AzureGermany"){
+  else if (environment == "azuregermany"){
     aadUrl <- "https://login.microsoftonline.de/"
     armUrl <- "https://management.microsoftazure.de/"
     batchUrl <- "https://batch.microsoftazure.de/"
@@ -200,6 +201,10 @@ setCredentials <- function(credentials = "az_config.json",
   }
   else {
     printSharedKeyInformation(config)
+  }
+
+  if (is.null(config$endpointSuffix)) {
+    config$endpointSuffix <- "core.windows.net"
   }
 
   options("az_config" = config)
@@ -297,7 +302,7 @@ makeStorageClient <- function(config) {
     info <-
       getAccountInformation(config$servicePrincipal$storageAccountResourceId)
 
-    endpointSuffix <- config$servicePrincipal$endpointSuffix
+    endpointSuffix <- config$servicePrincipal$storageEndpointSuffix
     if (is.null(endpointSuffix)) {
       endpointSuffix <- "core.windows.net"
     }
