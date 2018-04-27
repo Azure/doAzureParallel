@@ -28,7 +28,7 @@
 #'    core.chinacloudapi.cn, core.cloudapi.de, core.usgovcloudapi.net, etc.
 #' }
 #' @export
-generateCredentialsConfig <- function(fileName, authenticationType = "ServicePrincipal", ...) {
+generateCredentialsConfig <- function(fileName, authenticationType = "SharedKey", ...) {
   args <- list(...)
 
   batchAccount <-
@@ -80,7 +80,8 @@ generateCredentialsConfig <- function(fileName, authenticationType = "ServicePri
            args$dockerRegistry)
 
   if (!file.exists(paste0(getwd(), "/", fileName))) {
-    if (authenticationType == "SharedKey") {
+    authenticationType <- tolower(authenticationType)
+    if (authenticationType == "sharedkey") {
       config <- list(
         sharedKey = list(
           batchAccount = list(name = batchAccount,
@@ -96,7 +97,7 @@ generateCredentialsConfig <- function(fileName, authenticationType = "ServicePri
                                     registry = dockerRegistry)
       )
     }
-    else {
+    else if (authenticationType == "serviceprincipal") {
       config <- list(
         servicePrincipal = list(
           tenantId = "tenant",
@@ -110,6 +111,10 @@ generateCredentialsConfig <- function(fileName, authenticationType = "ServicePri
                                     password = dockerPassword,
                                     registry = dockerRegistry)
       )
+    }
+    else {
+      stop(sprintf("Incorrect authentication type: %s. Use 'SharedKey' or 'ServicePrincipal'",
+                   authenticationType))
     }
 
     configJson <-
