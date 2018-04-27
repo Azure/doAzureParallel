@@ -9,6 +9,7 @@
 #'  \item{"batchUrl"}: {Batch service url for account.}
 #'  \item{"storageAccount"}: {Storage account for storing output results.}
 #'  \item{"storageKey"}: {Storage account key for storage service authentication.}
+#'  \item{"storageEndpointSuffix"}: {Values: core.windows.net, core.chinacloudapi.cn, core.cloudapi.de, core.usgovcloudapi.net }
 #'  \item{"githubAuthenticationToken"}: {GitHub authentication token for pulling R
 #'                                       packages from private GitHub repositories}
 #'  \item{"dockerAuthentication"}: {Docker authentication for pulling Docker images
@@ -25,8 +26,6 @@
 #'    batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com",
 #'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key",
 #'    storageEndpointSuffix = "core.windows.net")
-#' supported storage account endpoint suffix: core.windows.net (default),
-#'    core.chinacloudapi.cn, core.cloudapi.de, core.usgovcloudapi.net, etc.
 #' }
 #' @export
 generateCredentialsConfig <- function(fileName, authenticationType = "SharedKey", ...) {
