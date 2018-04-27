@@ -494,6 +494,11 @@ if __name__ == "__main__":
         kwargs["storage_account_id"] = storage_account_id
     print("Created Storage account.")
 
+    with Spinner():
+        storage_account_endpoint_suffix = storage_account_get_endpoint_suffix(creds, subscription_id, **kwargs)
+        kwargs["storage_account_endpoint_suffix"] = storage_account_endpoint_suffix
+    print("Retrieved storage account endpoint suffix.")
+
     # create batch account
     with Spinner():
         batch_account_id = create_batch_account(creds, subscription_id, **kwargs)
@@ -519,11 +524,6 @@ if __name__ == "__main__":
             storage_account_keys = storage_account_get_keys(creds, subscription_id, **kwargs)
             kwargs["storage_account_key"] = storage_account_keys
         print("Retrieved storage account key.")
-
-        with Spinner():
-            storage_account_endpoint_suffix = storage_account_get_endpoint_suffix(creds, subscription_id, **kwargs)
-            kwargs["storage_account_endpoint_suffix"] = storage_account_endpoint_suffix
-        print("Retrieved storage account endpoint suffix.")
 
         secrets = format_secrets(
             **{
@@ -557,11 +557,12 @@ if __name__ == "__main__":
         secrets = format_secrets(
             **{
                 "servicePrincipal": {
-                  "tenant_id": tenant_id,
-                  "client_id": application_id,
+                  "tenantId": tenant_id,
+                  "clientId": application_id,
                   "credential": application_credential,
                   "batchAccountResourceId": batch_account_id,
-                  "storageAccountResourceId": storage_account_id
+                  "storageAccountResourceId": storage_account_id,
+                  "storageEndpointSuffix": kwargs["storage_account_endpoint_suffix"]
                 }
             }
         )
