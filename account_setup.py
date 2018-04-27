@@ -333,14 +333,28 @@ def format_secrets(**kwargs):
     Returns the secrets for the created resources to be placed in credentials.json
     The following form is returned:
 
-        service_principal:
-            tenant_id: <AAD Diretory ID>
-            client_id: <AAD App Application ID>
-            credential: <AAD App Password>
-            batch_account_resource_id: </batch/account/resource/id>
-            storage_account_resource_id: </storage/account/resource/id>
+    For Azure Acitve Directory Authentication:
+        "service_principal": {
+            "tenantId": "<AAD Diretory ID>"
+            "clientId": "<AAD App Application ID>"
+            "credential": "<AAD App Password>"
+            "batchAccountResourceId": "</batch/account/resource/id>"
+            "storageAccountResourceId": "</storage/account/resource/id>"
+            "storageEndpointSuffix": "<storage account endpoint suffix>"
+
+    For Shared Key Authentication:
+        "batchAccount": {
+            "name": "<batch account name>",
+            "key": "<batch account key>",
+            "url": "https://batchaccount.region.batch.azure.com"
+        },
+        "storageAccount": {
+            "name": "<storage account name>",
+            "key": "<storage account key>",
+            "endpointSuffix": "core.windows.net"
+        }
     '''
-    return json.dumps({"service_principal": kwargs}, indent = 4)
+    return json.dumps(kwargs, indent = 4)
 
 
 def prompt_for_confirmation(prompt, deny_error, unrecognized_input_error):
