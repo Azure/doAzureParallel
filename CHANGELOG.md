@@ -1,5 +1,19 @@
 # Change Log
 
+## [0.7.0] 2018-04-27
+### Added
+- Support for Azure Active Directory (AAD) authentication
+- Ability to use Virtual Networks with AAD authentication
+### Changed
+- Added environment parameter on setCredentials for national cloud support
+
+## [0.6.3] 2018-04-26
+### Added
+- Support for national clouds
+- More detailed outputs for pool/job submissions
+### Changed
+- Improved merge task performance for expected failures
+
 ## [0.6.2] 2018-01-05
 ### Added
 - Support for users to create cluster asynchronously using makeCluster with wait = TRUE parameter and use getCluster to check cluster creation progress
