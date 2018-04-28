@@ -77,21 +77,21 @@ validationClass <- R6::R6Class(
 
       TRUE
     },
-    isValidClusterConfig = function(clusterSetting) {
-      if (class(clusterSetting) == "character") {
-        clusterFilePath <- clusterSetting
+    isValidClusterConfig = function(cluster) {
+      if (class(cluster) == "character") {
+        clusterFilePath <- cluster
         if (file.exists(clusterFilePath)) {
           pool <- rjson::fromJSON(file = clusterFilePath)
         }
         else{
           pool <- rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
         }
-      } else if (class(clusterSetting) == "list") {
-        pool <- clusterSetting
+      } else if (class(cluster) == "list") {
+        pool <- cluster
       } else {
         stop(sprintf(
           "cluster setting type is not supported: %s\n",
-          class(clusterSetting)
+          class(cluster)
         ))
       }
 

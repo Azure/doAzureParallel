@@ -35,8 +35,11 @@ listStorageContainers <- function(prefix = "") {
 #'
 #' @export
 deleteStorageContainer <- function(container, verbose = TRUE) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
   response <-
-    rAzureBatch::deleteContainer(container, content = "response")
+    storageClient$containerOperations$deleteContainer(container, content = "response")
 
   tryCatch({
       httr::stop_for_status(response)

@@ -4,16 +4,30 @@ doAzureParallel is configured to run in public Azure cloud by default. To run wo
 
 EndpointSuffix is the last part of the connection string shown in the Storage Account Access keys blade from Azure portal. The possible values usually are:
 
-Azure public cloud: core.windows.net
-Azure China cloud: core.chinacloudapi.cn
-Azure US government cloud: core.usgovcloudapi.net
-Azure German cloud: core.cloudapi.de
+| Azure Environment        | Storage Endpoint Suffix | 
+| ------------- |:-------------:|
+| Public     | core.windows.net |
+| China      | core.chinacloudapi.cn |
+| German | core.cloudapi.de |
+| US Government | core.usgovcloudapi.net |
 
 The value may be different if a DNS redirect is used, so it is better to double check its value on Storage Account Access keys blade.
 
+In national clouds, you will also need to change Azure environment in the setCredentials function. The possible values are:
+
+- Azure
+- AzureChina
+- AzureGermany
+- AzureUSGov
+
+``` R
+# Sets credentials to authenticate with US Government national cloud
+setCredentials("credentials.json", environment = "AzureUSGov")
+```
+
 Below is a sample of credential config with endpoint suffix specified:
 
-```R
+``` R
 { 
   "batchAccount": {
     "name": <Azure Batch Account Name>,

@@ -4,11 +4,11 @@
 \alias{makeCluster}
 \title{Creates an Azure cloud-enabled cluster.}
 \usage{
-makeCluster(clusterSetting = "cluster_settings.json", fullName = FALSE,
-  wait = TRUE, resourceFiles = list())
+makeCluster(cluster = "cluster.json", fullName = FALSE, wait = TRUE,
+  resourceFiles = list())
 }
 \arguments{
-\item{clusterSetting}{Cluster configuration object or file name}
+\item{cluster}{Cluster configuration object or file name}
 
 \item{fullName}{A boolean flag for checking the file full name}
 

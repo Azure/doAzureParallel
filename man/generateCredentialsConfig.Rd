@@ -4,10 +4,12 @@
 \alias{generateCredentialsConfig}
 \title{Creates a credentials file for rAzureBatch package authentication}
 \usage{
-generateCredentialsConfig(fileName, ...)
+generateCredentialsConfig(fileName, authenticationType = "SharedKey", ...)
 }
 \arguments{
 \item{fileName}{Credentials file name}
+
+\item{authenticationType}{The type of authentication for Azure: SharedKey, ServicePrincipal}
 
 \item{...}{Further named parameters
 \itemize{
@@ -16,6 +18,8 @@ generateCredentialsConfig(fileName, ...)
  \item{"batchUrl"}: {Batch service url for account.}
  \item{"storageAccount"}: {Storage account for storing output results.}
  \item{"storageKey"}: {Storage account key for storage service authentication.}
+ \item{"storageEndpointSuffix"}: {Values: core.windows.net,
+ core.chinacloudapi.cn, core.cloudapi.de, core.usgovcloudapi.net }
  \item{"githubAuthenticationToken"}: {GitHub authentication token for pulling R
                                       packages from private GitHub repositories}
  \item{"dockerAuthentication"}: {Docker authentication for pulling Docker images
@@ -37,6 +41,7 @@ Creates a credentials file for rAzureBatch package authentication
 generateCredentialsConfig("test_config.json")
 generateCredentialsConfig("test_config.json", batchAccount = "testbatchaccount",
    batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com",
-   storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
+   storageAccount = "teststorageaccount", storageKey = "test_storage_account_key",
+   storageEndpointSuffix = "core.windows.net")
 }
 }

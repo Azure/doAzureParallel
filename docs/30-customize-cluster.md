@@ -128,3 +128,7 @@ Configuring the host node is not a common operation but sometimes required. This
 ```
 
 Within the container, you can now access that directory using the environment variable **AZ\_BATCH\_ROOT\_DIR**, for example $AZ\_BATCH\_ROOT\_DIR\shared\fileshare
+
+### Setting up Virtual Networks
+
+You need to authenticate using Azure Active Directory (AAD) by configuring the Service Principal in your credentials file. You will need to create the [Virtual Network (VNET)](https://azure.microsoft.com/en-us/services/virtual-network/) beforehand then provide the resource ID to a subnet within the VNET in your cluster configuration file. 

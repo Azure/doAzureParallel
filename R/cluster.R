@@ -28,7 +28,8 @@ generateClusterConfig <- function(fileName) {
         github = vector(),
         bioconductor = vector()
       ),
-      commandLine = vector()
+      commandLine = vector(),
+      subnetId = ""
     )
 
     configJson <-
@@ -49,7 +50,7 @@ generateClusterConfig <- function(fileName) {
 
 #' Creates an Azure cloud-enabled cluster.
 #'
-#' @param clusterSetting Cluster configuration object or file name
+#' @param cluster Cluster configuration object or file name
 #' @param fullName A boolean flag for checking the file full name
 #' @param wait A boolean flag to wait for all nodes to boot up
 #' @param resourceFiles A list of files that Batch will download to the compute node before running the command line
@@ -61,24 +62,24 @@ generateClusterConfig <- function(fileName) {
 #' }
 #' @export
 makeCluster <-
-  function(clusterSetting = "cluster_settings.json",
+  function(cluster = "cluster.json",
            fullName = FALSE,
            wait = TRUE,
            resourceFiles = list()) {
-    if (class(clusterSetting) == "character") {
+    if (class(cluster) == "character") {
       if (fullName) {
-        poolConfig <- rjson::fromJSON(file = paste0(clusterSetting))
+        poolConfig <- rjson::fromJSON(file = paste0(cluster))
       }
       else {
         poolConfig <-
-          rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
+          rjson::fromJSON(file = paste0(getwd(), "/", cluster))
       }
-    } else if (class(clusterSetting) == "list") {
-      poolConfig <- clusterSetting
+    } else if (class(cluster) == "list") {
+      poolConfig <- cluster
     } else {
       stop(sprintf(
         "cluster setting type is not supported: %s\n",
-        class(clusterSetting)
+        class(cluster)
       ))
     }
 
@@ -197,12 +198,21 @@ makeCluster <-
         )
     }
 
+    networkConfiguration <- NULL
+    if (!is.null(poolConfig$subnetId) &&
+        poolConfig$subnetId != "") {
+      networkConfiguration <-
+        list(
+          subnetId = poolConfig$subnetId
+        )
+    }
+
     if (!is.null(poolConfig[["pool"]])) {
-      validation$isValidDeprecatedClusterConfig(clusterSetting)
+      validation$isValidDeprecatedClusterConfig(cluster)
       poolConfig <- poolConfig[["pool"]]
     }
     else {
-      validation$isValidClusterConfig(clusterSetting)
+      validation$isValidClusterConfig(cluster)
     }
 
     tryCatch({
@@ -215,12 +225,13 @@ makeCluster <-
 
     printCluster(poolConfig, resourceFiles)
 
-    response <- .addPool(
+    response <- BatchUtilitiesOperations$addPool(
       pool = poolConfig,
       packages = packages,
       environmentSettings = environmentSettings,
       resourceFiles = resourceFiles,
-      commandLine = commandLine
+      commandLine = commandLine,
+      networkConfiguration = networkConfiguration
     )
 
     if (nchar(response) > 0) {
@@ -235,40 +246,42 @@ makeCluster <-
           "or create one with a different name"
         )
 
-        if (wait == TRUE) {
-          pool <- rAzureBatch::getPool(poolConfig$name)
+      if (wait == TRUE) {
+        pool <- config$batchClient$poolOperations$getPool(poolConfig$name)
 
-          cat(sprintf(message,
-                      poolConfig$name),
-              fill = TRUE)
+        cat(sprintf(message,
+                    poolConfig$name),
+            fill = TRUE)
 
-          while (!is.null(pool) && !is.null(pool$state) && pool$state == "deleting") {
-            cat(".")
-            Sys.sleep(10)
-            pool <- rAzureBatch::getPool(poolConfig$name)
-          }
+        while (!is.null(pool) && !is.null(pool$state) && pool$state == "deleting") {
+          cat(".")
+          Sys.sleep(10)
+          pool <- config$batchClient$poolOperations$getPool(
+            poolConfig$name)
+        }
 
-          cat("\n")
+        cat("\n")
 
-          response <- .addPool(
-            pool = poolConfig,
-            packages = packages,
-            environmentSettings = environmentSettings,
-            resourceFiles = resourceFiles,
-            commandLine = commandLine
-          )
+        response <- BatchUtilitiesOperations$addPool(
+          pool = poolConfig,
+          packages = packages,
+          environmentSettings = environmentSettings,
+          resourceFiles = resourceFiles,
+          commandLine = commandLine
+        )
 
-          if (nchar(response) > 0) {
-            responseObj <- rjson::fromJSON(response)
-            errorMessage <- getHttpErrorMessage(responseObj)
-          }
-          else {
-            responseObj <- NULL
-            errorMessage <- NULL
-          }
-        } else {
-          stop(sprintf(message,
-                       poolConfig$name))
+        if (nchar(response) > 0) {
+          responseObj <- rjson::fromJSON(response)
+          errorMessage <- getHttpErrorMessage(responseObj)
+        }
+        else {
+          responseObj <- NULL
+          errorMessage <- NULL
+        }
+      }
+      else {
+        stop(sprintf(message,
+                     poolConfig$name))
         }
       }
 
@@ -284,7 +297,8 @@ makeCluster <-
       }
     }
 
-    pool <- rAzureBatch::getPool(poolConfig$name)
+    pool <- config$batchClient$poolOperations$getPool(
+      poolConfig$name)
 
     if (grepl("PoolExists", response)) {
       cat(
@@ -366,7 +380,9 @@ makeCluster <-
 #' }
 #' @export
 getCluster <- function(clusterName, verbose = TRUE) {
-  pool <- rAzureBatch::getPool(clusterName)
+  config <- getOption("az_config")
+  pool <- config$batchClient$poolOperations$getPool(
+    clusterName)
 
   if (!is.null(pool$code) && !is.null(pool$message)) {
     stop(sprintf("Code: %s - Message: %s", pool$code, pool$message))
@@ -395,7 +411,9 @@ getCluster <- function(clusterName, verbose = TRUE) {
     stop(resizeErrors)
   }
 
-  nodes <- rAzureBatch::listPoolNodes(clusterName)
+  config <- getOption("az_config")
+  nodes <- config$batchClient$poolOperations$listPoolNodes(
+    clusterName)
 
   if (!is.null(nodes$value) && length(nodes$value) > 0) {
     nodesInfo <- .processNodeCount(nodes)
@@ -429,7 +447,7 @@ getCluster <- function(clusterName, verbose = TRUE) {
 
   config$poolId <- clusterName
   options("az_config" = config)
-  return (config)
+  return(config)
 }
 
 #' Get a list of clusters by state from the given filter
@@ -518,7 +536,9 @@ getClusterList <- function(filter = NULL) {
 #' }
 #' @export
 stopCluster <- function(cluster) {
-  rAzureBatch::deletePool(cluster$poolId)
+  config <- getOption("az_config")
+  config$batchClient$poolOperations$deletePool(
+    cluster$poolId)
 
   print(sprintf("Your %s cluster is being deleted.", cluster$poolId))
 }
@@ -527,7 +547,9 @@ getPoolWorkers <- function(poolId, ...) {
   args <- list(...)
   raw <- !is.null(args$RAW)
 
-  nodes <- rAzureBatch::listPoolNodes(poolId)
+  config <- getOption("az_config")
+  nodes <- config$batchClient$poolOperations$listPoolNodes(
+    poolId)
 
   if (length(nodes$value) > 0) {
     for (i in 1:length(nodes$value)) {
