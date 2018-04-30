@@ -26,14 +26,24 @@ Specifying a docker container is done by updating your cluster.json file. Simply
   "rPackages": {
     "cran": [],
     "github": [],
-    "bioconductor": [],
-    "githubAuthenticationToken": ""
+    "bioconductor": []
   },
   "commandLine": []
 }
 ```
 
 Note: \_If no 'containerImage' property is set, rocker/tidyverse:latest will be used. This usually points to one of the latest versions of R.\_
+
+### List of tested container images
+
+The following containers were tested and cover the most common cases for end users.
+
+Container Image | R type | Description
+--- | --- | ---
+[rocker/tidyverse](https://hub.docker.com/r/rocker/r-ver/) | Open source R | Tidyverse is provided by the rocker org and uses a standard version of R developed by the open soruce community. rocker/tidyverse typically keeps up with the latest releases or R quite quickly and has versions back to R 3.1
+[nuest/mro](https://hub.docker.com/r/nuest/mro/) | Microsoft R Open | [Microsoft R Open](https://mran.microsoft.com/open/) is an open source SKU of R that provides out of the box support for math packages, version package support with MRAN and improved performance over standard Open Source R.
+
+* We recommend reading the details of each package before using it to make sure you understand any limitaions or requirements of using the container images.
 
 ### Building your own container
 
@@ -53,18 +63,11 @@ FROM ubuntu:16.04
 CMD ["R"]
 ```
 
-There is no requirement to be debian based. For consistency with other pacakges it is recommeneded though. Please note though that the container **must be based off a Linux distribution as Windows is not supported**.
+For more information and samples on how to build images, deploy them to dockerhub and use them in your cluster please refer to the [Building Containers](./32-building-containers.md) documentation.
 
-### List of tested container images
+There is no requirement to be debian based. For consistency with other packages it is recommeneded though. Please note though that the container **must be based off a Linux distribution as Windows is not supported**.
 
-The following containers were tested and cover the most common cases for end users.
 
-Container Image | R type | Description
---- | --- | ---
-[rocker/tidyverse](https://hub.docker.com/r/rocker/r-ver/) | Open source R | Tidyverse is provided by the rocker org and uses a standard version of R developed by the open soruce community. rocker/tidyverse typically keeps up with the latest releases or R quite quickly and has versions back to R 3.1
-[nuest/mro](https://hub.docker.com/r/nuest/mro/) | Microsoft R Open | [Microsoft R Open](https://mran.microsoft.com/open/) is an open source SKU of R that provides out of the box support for math packages, version pacakge support with MRAN and improved performance over standard Open Source R.
-
-* We recommend reading the details of each package before using it to make sure you understand any limitaions or requirements of using the container images.
 
 ## Running Commands when the Cluster Starts
 
@@ -113,7 +116,7 @@ The following examples show how to configure the host node, or R package via the
 
 #### Installing apt-get packages or configuring the host node
 
-Configuring the host node is not a common operation but sometimes required. This can include installing packages, downloading data or setting up directories. The below example shows how to mount and Azure File Share to the node and expose it to the Azure Batch shared directory so it can be consumed by any R process running in the containers.
+Configuring the host node is not a common operation but sometimes required. This can include installing packages, downloading data or setting up directories. The following example shows how to mount an Azure File Share to the node and expose it to the Azure Batch shared directory so it can be consumed by any R process running in the containers.
 
 ```json
 {
@@ -125,3 +128,7 @@ Configuring the host node is not a common operation but sometimes required. This
 ```
 
 Within the container, you can now access that directory using the environment variable **AZ\_BATCH\_ROOT\_DIR**, for example $AZ\_BATCH\_ROOT\_DIR\shared\fileshare
+
+### Setting up Virtual Networks
+
+You need to authenticate using Azure Active Directory (AAD) by configuring the Service Principal in your credentials file. You will need to create the [Virtual Network (VNET)](https://azure.microsoft.com/en-us/services/virtual-network/) beforehand then provide the resource ID to a subnet within the VNET in your cluster configuration file. 

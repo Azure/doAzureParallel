@@ -46,6 +46,7 @@ Install doAzureParallel directly from Github.
 install.packages("devtools")
 
 # install the doAzureParallel and rAzureBatch package
+devtools::install_github("Azure/rAzureBatch")
 devtools::install_github("Azure/doAzureParallel")
 ```
 
@@ -141,11 +142,13 @@ Use your credential config JSON file to enter your credentials.
   "storageAccount": {
     "name": <Azure Storage Account Name>,
     "key": <Azure Storage Account Key>
-  }
+  },
+  "githubAuthenticationToken": {}
 }
 ```
 Learn more:
  - [Batch account / Storage account](./README.md#azure-requirements)
+ - [Create your secrets configuration in code](./docs/33-programmatically-generate-config.md)
 
 
 #### Cluster Settings
@@ -169,8 +172,7 @@ Use your pool configuration JSON file to define your pool in Azure.
   },
   "rPackages": {
     "cran": ["some_cran_package", "some_other_cran_package"],
-    "github": ["username/some_github_package", "another_username/some_other_github_package"],
-    "githubAuthenticationToken": {}
+    "github": ["username/some_github_package", "another_username/some_other_github_package"]
   },
   "commandLine": []
 }
@@ -179,6 +181,7 @@ NOTE: If you do **not** want your cluster to autoscale, simply set the number of
 
 Learn more:
  - [Choosing VM size](./docs/10-vm-sizes.md#vm-size-table)
+ - [Create your cluster configuration in code](./docs/33-programmatically-generate-config.md)
  - [MaxTasksPerNode](./docs/22-parallelizing-cores.md)
  - [LowPriorityNodes](#low-priority-vms)
  - [Autoscale](./docs/11-autoscale.md)

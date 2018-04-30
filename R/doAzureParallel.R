@@ -36,7 +36,11 @@ registerDoAzureParallel <- function(cluster) {
 
 workers <- function(data) {
   id <- data$poolId
-  pool <- rAzureBatch::getPool(id)
+
+  config <- getConfiguration()
+  batchClient <- config$batchClient
+
+  pool <- batchClient$poolOperations$getPool(id)
 
   verboseFlag <- getOption("azureVerbose")
   if (!is.null(verboseFlag) && verboseFlag) {
@@ -71,6 +75,20 @@ setChunkSize <- function(value = 1) {
   value <- max(round(value), 1)
 
   assign("chunkSize", value, envir = .doAzureBatchGlobals)
+}
+
+#' Specify whether to delete job and its result after asychronous job is completed.
+#'
+#' @param value boolean of TRUE or FALSE
+#'
+#' @examples
+#' setAutoDeleteJob(FALSE)
+#' @export
+setAutoDeleteJob <- function(value = TRUE) {
+  if (!is.logical(value))
+    stop("setAutoDeleteJob requires a boolean argument")
+
+  assign("autoDeleteJob", value, envir = .doAzureBatchGlobals)
 }
 
 #' Apply reduce function on a group of iterations of the foreach loop together per task.
@@ -128,6 +146,9 @@ setHttpTraffic <- function(value = FALSE) {
 
 .doAzureParallel <- function(obj, expr, envir, data) {
   stopifnot(inherits(obj, "foreach"))
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+  batchClient <- config$batchClient
 
   githubPackages <- eval(obj$args$github)
   bioconductorPackages <- eval(obj$args$bioconductor)
@@ -140,8 +161,6 @@ setHttpTraffic <- function(value = FALSE) {
   if (!is.null(obj$args[["bioconductor"]])) {
     obj$args[["bioconductor"]] <- NULL
   }
-
-  storageCredentials <- rAzureBatch::getStorageCredentials()
 
   it <- iterators::iter(obj)
   argsList <- as.list(it)
@@ -210,6 +229,12 @@ setHttpTraffic <- function(value = FALSE) {
   assign("bioconductor", bioconductorPackages, .doAzureBatchGlobals)
   assign("pkgName", pkgName, .doAzureBatchGlobals)
 
+  isDataSet <- hasDataSet(argsList)
+
+  if (!isDataSet) {
+    assign("argsList", argsList, .doAzureBatchGlobals)
+  }
+
   if (!is.null(obj$options$azure$job)) {
     id <- obj$options$azure$job
   }
@@ -232,15 +257,27 @@ setHttpTraffic <- function(value = FALSE) {
     wait <- obj$options$azure$wait
   }
 
+  # by default, delete both job and job result after synchronous job is completed
+  autoDeleteJob <- TRUE
+
+  if (exists("autoDeleteJob", envir = .doAzureBatchGlobals)) {
+    autoDeleteJob <- get("autoDeleteJob", envir = .doAzureBatchGlobals)
+  }
+
+  if (!is.null(obj$options$azure$autoDeleteJob) &&
+      is.logical(obj$options$azure$autoDeleteJob)) {
+    autoDeleteJob <- obj$options$azure$autoDeleteJob
+  }
+
   inputs <- FALSE
   if (!is.null(obj$options$azure$inputs)) {
-    storageCredentials <- rAzureBatch::getStorageCredentials()
-    sasToken <- rAzureBatch::createSasToken("r", "c", inputs)
+    sasToken <- storageClient$generateSasToken("r", "c", inputs)
 
     assign(
       "inputs",
-      list(name = storageCredentials$name,
-           sasToken = sasToken),
+      list(name = storageClient$authentication$name,
+           sasToken = sasToken,
+           endpointSuffix = storageClient$authentication$endpointSuffix),
       .doAzureBatchGlobals
     )
   }
@@ -267,6 +304,7 @@ setHttpTraffic <- function(value = FALSE) {
 
   assign("enableCloudCombine", enableCloudCombine, envir = .doAzureBatchGlobals)
   assign("cloudCombine", cloudCombine, envir = .doAzureBatchGlobals)
+  assign("localCombine", obj$combineInfo$fun, .doAzureBatchGlobals)
 
   resourceFiles <- list()
   if (!is.null(obj$options$azure$resourceFiles)) {
@@ -282,6 +320,10 @@ setHttpTraffic <- function(value = FALSE) {
 
   chunkSize <- 1
 
+  if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
+    chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
+  }
+
   if (!is.null(obj$options$azure$chunkSize)) {
     chunkSize <- obj$options$azure$chunkSize
   }
@@ -290,30 +332,46 @@ setHttpTraffic <- function(value = FALSE) {
     chunkSize <- obj$options$azure$chunksize
   }
 
-  if (exists("chunkSize", envir = .doAzureBatchGlobals)) {
-    chunkSize <- get("chunkSize", envir = .doAzureBatchGlobals)
-  }
-
   chunkSizeKeyValuePair <-
     list(name = "chunkSize", value = as.character(chunkSize))
 
-  if (is.null(obj$packages)) {
-    metadata <-
-      list(enableCloudCombineKeyValuePair, chunkSizeKeyValuePair)
-  } else {
+  metadata <-
+    list(enableCloudCombineKeyValuePair, chunkSizeKeyValuePair)
+
+  if (!is.null(obj$packages)) {
     packagesKeyValuePair <-
       list(name = "packages",
            value = paste(obj$packages, collapse = ";"))
 
-    metadata <-
-      list(enableCloudCombineKeyValuePair,
-           chunkSizeKeyValuePair,
-           packagesKeyValuePair)
+    metadata[[length(metadata) + 1]] <- packagesKeyValuePair
   }
+
+  if (!is.null(obj$errorHandling)) {
+    errorHandlingKeyValuePair <-
+      list(name = "errorHandling",
+           value = as.character(obj$errorHandling))
+
+    metadata[[length(metadata) + 1]] <- errorHandlingKeyValuePair
+  }
+
+  if (!is.null(obj$options$azure$wait)) {
+    waitKeyValuePair <-
+      list(name = "wait",
+           value = as.character(obj$options$azure$wait))
+
+  }
+  else {
+    waitKeyValuePair <-
+      list(name = "wait",
+           value = as.character(FALSE))
+  }
+
+  metadata[[length(metadata) + 1]] <- waitKeyValuePair
 
   retryCounter <- 0
   maxRetryCount <- 5
   startupFolderName <- "startup"
+
   repeat {
     if (retryCounter > maxRetryCount) {
       stop(
@@ -327,7 +385,9 @@ setHttpTraffic <- function(value = FALSE) {
       retryCounter <- retryCounter + 1
     }
 
-    containerResponse <- rAzureBatch::createContainer(id, content = "response")
+    containerResponse <- storageClient$containerOperations$createContainer(
+      id, content = "response"
+    )
 
     if (containerResponse$status_code >= 400 && containerResponse$status_code <= 499) {
       containerContent <- xml2::as_list(httr::content(containerResponse))
@@ -351,46 +411,67 @@ setHttpTraffic <- function(value = FALSE) {
     }
 
     # Uploading common job files for the worker node
-    rAzureBatch::uploadBlob(id,
+    storageClient$blobOperations$uploadBlob(id,
                             system.file(startupFolderName, "worker.R", package = "doAzureParallel"))
-    rAzureBatch::uploadBlob(id,
+    storageClient$blobOperations$uploadBlob(id,
                             system.file(startupFolderName, "merger.R", package = "doAzureParallel"))
-    rAzureBatch::uploadBlob(
-      id,
-      system.file(startupFolderName, "install_github.R", package = "doAzureParallel")
-    )
-    rAzureBatch::uploadBlob(
-      id,
-      system.file(startupFolderName, "install_cran.R", package = "doAzureParallel")
-    )
-    rAzureBatch::uploadBlob(
-      id,
-      system.file(startupFolderName, "install_bioconductor.R", package = "doAzureParallel")
-    )
+    storageClient$blobOperations$uploadBlob(id,
+                            system.file(startupFolderName, "install_github.R", package = "doAzureParallel"))
+    storageClient$blobOperations$uploadBlob(id,
+                            system.file(startupFolderName, "install_cran.R", package = "doAzureParallel"))
+    storageClient$blobOperations$uploadBlob(id,
+                            system.file(startupFolderName, "install_bioconductor.R", package = "doAzureParallel"))
 
     # Creating common job environment for all tasks
     jobFileName <- paste0(id, ".rds")
     saveRDS(.doAzureBatchGlobals, file = jobFileName)
-    rAzureBatch::uploadBlob(id, paste0(getwd(), "/", jobFileName))
+    storageClient$blobOperations$uploadBlob(
+      id,
+      paste0(getwd(), "/", jobFileName)
+    )
     file.remove(jobFileName)
 
     # Creating read-only SAS token blob resource file urls
-    sasToken <- rAzureBatch::createSasToken("r", "c", id)
+    sasToken <- storageClient$generateSasToken("r", "c", id)
     workerScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "worker.R", sasToken)
+      rAzureBatch::createBlobUrl(storageClient$authentication$name,
+                                 containerName = id,
+                                 fileName = "worker.R",
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
+
     mergerScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "merger.R", sasToken)
+      rAzureBatch::createBlobUrl(storageClient$authentication$name,
+                                 containerName = id,
+                                 fileName = "merger.R",
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
+
     installGithubScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name,
-                                 id,
-                                 "install_github.R",
-                                 sasToken)
+      rAzureBatch::createBlobUrl(storageClient$authentication$name,
+                                 containerName = id,
+                                 fileName = "install_github.R",
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
     installCranScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_cran.R", sasToken)
+      rAzureBatch::createBlobUrl(storageClient$authentication$name,
+                                 containerName = id,
+                                 fileName = "install_cran.R",
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
+
     installBioConductorScriptUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, "install_bioconductor.R", sasToken)
+      rAzureBatch::createBlobUrl(storageClient$authentication$name,
+                                 containerName = id,
+                                 fileName = "install_bioconductor.R",
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
     jobCommonFileUrl <-
-      rAzureBatch::createBlobUrl(storageCredentials$name, id, jobFileName, sasToken)
+      rAzureBatch::createBlobUrl(storageClient$authentication$name,
+                                 containerName = id,
+                                 fileName = jobFileName,
+                                 sasToken = sasToken,
+                                 storageEndpointSuffix = config$endpointSuffix)
 
     requiredJobResourceFiles <- list(
       rAzureBatch::createResourceFile(url = workerScriptUrl, fileName = "worker.R"),
@@ -404,7 +485,23 @@ setHttpTraffic <- function(value = FALSE) {
     resourceFiles <-
       append(resourceFiles, requiredJobResourceFiles)
 
-    response <- .addJob(
+    ntasks <- length(argsList)
+
+    startIndices <- seq(1, length(argsList), chunkSize)
+
+    endIndices <-
+      if (chunkSize >= length(argsList)) {
+        c(length(argsList))
+      }
+      else {
+        seq(chunkSize, length(argsList), chunkSize)
+      }
+
+    if (length(startIndices) > length(endIndices)) {
+      endIndices[length(startIndices)] <- ntasks
+    }
+
+    response <- BatchUtilitiesOperations$addJob(
       jobId = id,
       poolId = data$poolId,
       resourceFiles = resourceFiles,
@@ -417,6 +514,14 @@ setHttpTraffic <- function(value = FALSE) {
 
     if (response$status_code == 201) {
       break
+    }
+    else if (response$status_code == 403) {
+      stop(
+        paste(
+          "Error in creating job: Server failed to authenticate the request.",
+          "Make sure your batch account credential is set correctly."
+        )
+      )
     }
     else {
       jobContent <- httr::content(response, content = "parsed")
@@ -450,68 +555,143 @@ setHttpTraffic <- function(value = FALSE) {
     }
   }
 
-  cat("Job Summary: ", fill = TRUE)
-  job <- rAzureBatch::getJob(id)
-  cat(sprintf("Id: %s", job$id), fill = TRUE)
+  job <- batchClient$jobOperations$getJob(id)
+
+  outputContainerUrl <-
+    rAzureBatch::createBlobUrl(
+      storageAccount = storageClient$authentication$name,
+      containerName = id,
+      sasToken = storageClient$generateSasToken("w", "c", id),
+      storageEndpointSuffix = config$endpointSuffix
+    )
+
+  printJobInformation(
+    jobId = job$id,
+    chunkSize = chunkSize,
+    enableCloudCombine = enableCloudCombine,
+    errorHandling = obj$errorHandling,
+    wait = wait,
+    autoDeleteJob = autoDeleteJob,
+    cranPackages = obj$packages,
+    githubPackages = githubPackages,
+    bioconductorPackages = bioconductorPackages
+  )
+
+  if (!is.null(job$id)) {
+    saveMetadataBlob(job$id, metadata)
+  }
 
   ntasks <- length(argsList)
 
   startIndices <- seq(1, length(argsList), chunkSize)
 
   endIndices <-
-    if (chunkSize >= length(argsList))
-    {
+    if (chunkSize >= length(argsList)) {
       c(length(argsList))
     }
-  else {
-    seq(chunkSize, length(argsList), chunkSize)
-  }
+    else {
+      seq(chunkSize, length(argsList), chunkSize)
+    }
 
   if (length(startIndices) > length(endIndices)) {
     endIndices[length(startIndices)] <- ntasks
   }
 
+  maxTaskRetryCount <- 3
+  if (!is.null(obj$options$azure$maxTaskRetryCount)) {
+    maxTaskRetryCount <- obj$options$azure$maxTaskRetryCount
+  }
+
   tasks <- lapply(1:length(endIndices), function(i) {
     startIndex <- startIndices[i]
     endIndex <- endIndices[i]
-    taskId <- paste0(id, "-task", i)
+    taskId <- as.character(i)
 
-    .addTask(
+    args <- NULL
+    if (isDataSet) {
+      args <- argsList[startIndex:endIndex]
+    }
+
+    resultFile <- paste0(taskId, "-result", ".rds")
+
+    mergeOutput <- list(
+      list(
+        filePattern = resultFile,
+        destination = list(container = list(
+          path = paste0("results", "/", resultFile),
+          containerUrl = outputContainerUrl
+        )),
+        uploadOptions = list(uploadCondition = "taskCompletion")
+      )
+    )
+    mergeOutput <- append(obj$options$azure$outputFiles, mergeOutput)
+
+    BatchUtilitiesOperations$addTask(
       jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R > $AZ_BATCH_TASK_ID.txt"),
-      args = argsList[startIndex:endIndex],
+        paste("Rscript --no-save --no-environ --no-restore --no-site-file",
+              "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/worker.R %i %i %i %s > $AZ_BATCH_TASK_ID.txt"),
+        startIndex,
+        endIndex,
+        isDataSet,
+        as.character(obj$errorHandling)),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
-      outputFiles = obj$options$azure$outputFiles,
-      containerImage = data$containerImage
+      outputFiles = mergeOutput,
+      containerImage = data$containerImage,
+      args = args,
+      maxRetryCount = maxTaskRetryCount
     )
+
+    cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")
+    flush.console()
 
     return(taskId)
   })
 
-  rAzureBatch::updateJob(id)
-
   if (enableCloudCombine) {
-    mergeTaskId <- paste0(id, "-merge")
-    .addTask(
+    cat("\nSubmitting merge task")
+    taskDependencies <- list(taskIdRanges = list(list(
+      start = 1,
+      end = length(tasks))))
+
+    resultFile <- paste0("merge", "-result", ".rds")
+
+    mergeOutput <- list(
+      list(
+        filePattern = resultFile,
+        destination = list(container = list(
+          path = paste0("results", "/", resultFile),
+          containerUrl = outputContainerUrl
+        )),
+        uploadOptions = list(uploadCondition = "taskCompletion")
+      )
+    )
+
+    BatchUtilitiesOperations$addTask(
       jobId = id,
-      taskId = mergeTaskId,
+      taskId = "merge",
       rCommand = sprintf(
-        "Rscript --vanilla --verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt",
+        paste("Rscript --no-save --no-environ --no-restore --no-site-file",
+              "--verbose $AZ_BATCH_JOB_PREP_WORKING_DIR/merger.R %s %s %s > $AZ_BATCH_TASK_ID.txt"),
         length(tasks),
         chunkSize,
         as.character(obj$errorHandling)
       ),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
-      dependsOn = tasks,
+      dependsOn = taskDependencies,
       cloudCombine = cloudCombine,
-      outputFiles = obj$options$azure$outputFiles,
+      outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
       containerImage = data$containerImage
     )
+
+    cat(". . .")
   }
+
+  # Updating the job to terminate after all tasks are completed
+  batchClient$jobOperations$updateJob(id)
 
   if (wait) {
     if (!is.null(obj$packages) ||
@@ -526,54 +706,57 @@ setHttpTraffic <- function(value = FALSE) {
         if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           tempFile <- tempfile("doAzureParallel", fileext = ".rds")
 
-          response <-
-            rAzureBatch::downloadBlob(
-              id,
-              paste0("result/", id, "-merge-result.rds"),
-              sasToken = sasToken,
-              accountName = storageCredentials$name,
-              downloadPath = tempFile,
-              overwrite = TRUE
-            )
+          response <- storageClient$blobOperations$downloadBlob(
+            id,
+            paste0("results/", "merge-result.rds"),
+            sasToken = sasToken,
+            accountName = storageClient$authentication$name,
+            endpointSuffix = config$endpointSuffix,
+            downloadPath = tempFile,
+            overwrite = TRUE
+          )
 
           results <- readRDS(tempFile)
-
           failTasks <- sapply(results, .isError)
 
           numberOfFailedTasks <- sum(unlist(failTasks))
 
-          if (numberOfFailedTasks > 0) {
+          if (numberOfFailedTasks > 0 && autoDeleteJob == FALSE) {
             .createErrorViewerPane(id, failTasks)
           }
 
-          accumulator <- foreach::makeAccum(it)
-
-          tryCatch(
-            accumulator(results, seq(along = results)),
+          if (!identical(function(a, ...) c(a, list(...)),
+                        obj$combineInfo$fun, ignore.environment = TRUE)){
+            tryCatch({
+              accumulator <- foreach::makeAccum(it)
+              accumulator(results, as.numeric(names(results)))
+            },
             error = function(e) {
               cat("error calling combine function:\n")
               print(e)
             }
-          )
+            )
 
-          # check for errors
-          errorValue <- foreach::getErrorValue(it)
-          errorIndex <- foreach::getErrorIndex(it)
+            # check for errors
+            errorValue <- foreach::getErrorValue(it)
+            errorIndex <- foreach::getErrorIndex(it)
 
-          cat(sprintf("Number of errors: %i", numberOfFailedTasks),
-              fill = TRUE)
-
-          rAzureBatch::deleteJob(id)
-
-          if (identical(obj$errorHandling, "stop") &&
-              !is.null(errorValue)) {
-            msg <- sprintf("task %d failed - '%s'",
-                           errorIndex,
-                           conditionMessage(errorValue))
-            stop(simpleError(msg, call = expr))
-          }
-          else {
-            foreach::getResult(it)
+            if (identical(obj$errorHandling, "stop") &&
+                !is.null(errorValue)) {
+              msg <-
+                sprintf(
+                  paste0(
+                    "task %d failed - '%s'.\r\nBy default a job and its result is deleted after run is over, use",
+                    " setAutoDeleteJob(FALSE) or autoDeleteJob = FALSE option to keep them for investigation."
+                  ),
+                  errorIndex,
+                  conditionMessage(errorValue)
+                )
+              stop(simpleError(msg, call = expr))
+            }
+            else {
+              results <- foreach::getResult(it)
+            }
           }
         }
       },
@@ -581,6 +764,14 @@ setHttpTraffic <- function(value = FALSE) {
         message(ex)
       }
     )
+
+    # delete job from batch service and job result from storage blob
+    if (autoDeleteJob) {
+      # Default behavior is to delete the job data
+      deleteJob(id, verbose = !autoDeleteJob)
+    }
+
+    return(results)
   }
   else{
     print(
@@ -595,10 +786,10 @@ setHttpTraffic <- function(value = FALSE) {
 }
 
 .createErrorViewerPane <- function(id, failTasks) {
-  storageCredentials <- rAzureBatch::getStorageCredentials()
+  config <- getConfiguration()
+  storageClient <- config$storageClient
 
-  sasToken <- rAzureBatch::createSasToken("r", "c", id)
-
+  sasToken <- storageClient$generateSasToken("r", "c", id)
   queryParameterUrl <- "?"
 
   for (query in names(sasToken)) {
@@ -619,7 +810,7 @@ setHttpTraffic <- function(value = FALSE) {
   azureStorageUrl <-
     paste0("http://",
            storageCredentials$name,
-           ".blob.core.windows.net/",
+           sprintf(".blob.%s/", storageCredentials$endpointSuffix),
            id)
 
   staticHtml <- "<h1>Errors:</h1>"

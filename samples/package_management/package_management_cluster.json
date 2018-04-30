@@ -16,8 +16,7 @@
   "rPackages": {
     "cran": ["xml2"],
     "github": ["azure/rAzureBatch"],
-    "bioconductor": ["GenomeInfoDb", "IRange"],
-    "githubAuthenticationToken": ""
+    "bioconductor": ["GenomeInfoDb", "IRange"]
   },
   "commandLine": []
 }

@@ -2,6 +2,15 @@
 args <- commandArgs(trailingOnly = TRUE)
 workerErrorStatus <- 0
 
+startIndex <- as.integer(args[1])
+endIndex <- as.integer(args[2])
+isDataSet <- as.logical(as.integer(args[3]))
+errorHandling <- args[4]
+
+isError <- function(x) {
+  return(inherits(x, "simpleError") || inherits(x, "try-error"))
+}
+
 jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 .libPaths(c(
   jobPrepDirectory,
@@ -68,9 +77,26 @@ setwd(batchTaskWorkingDirectory)
 
 azbatchenv <-
   readRDS(paste0(batchJobPreparationDirectory, "/", batchJobEnvironment))
-taskArgs <- readRDS(batchTaskEnvironment)
+
+localCombine <- azbatchenv$localCombine
+isListCombineFunction <- identical(function(a, ...) c(a, list(...)),
+          localCombine, ignore.environment = TRUE)
+
+if (isDataSet) {
+  argsList <- readRDS(batchTaskEnvironment)
+} else {
+  argsList <- azbatchenv$argsList[startIndex:endIndex]
+}
 
 for (package in azbatchenv$packages) {
+  library(package, character.only = TRUE)
+}
+
+for (package in azbatchenv$github) {
+  library(package, character.only = TRUE)
+}
+
+for (package in azbatchenv$bioconductor) {
   library(package, character.only = TRUE)
 }
 
@@ -83,7 +109,7 @@ if (!is.null(azbatchenv$inputs)) {
   options("az_config" = list(container = azbatchenv$inputs))
 }
 
-result <- lapply(taskArgs, function(args) {
+result <- lapply(argsList, function(args) {
   tryCatch({
     lapply(names(args), function(n)
       assign(n, args[[n]], pos = azbatchenv$exportenv))
@@ -99,8 +125,15 @@ result <- lapply(taskArgs, function(args) {
   })
 })
 
-if (!is.null(azbatchenv$gather) && length(taskArgs) > 1) {
+if (!is.null(azbatchenv$gather) && length(argsList) > 1) {
   result <- Reduce(azbatchenv$gather, result)
+}
+
+names(result) <- seq(startIndex, endIndex)
+
+if (errorHandling == "remove"
+    && isListCombineFunction) {
+  result <- Filter(function(x) !isError(x), result)
 }
 
 saveRDS(result,

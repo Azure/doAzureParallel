@@ -1,67 +1,3 @@
-#' Creates a credentials file for rAzureBatch package authentication
-#'
-#' @param fileName Credentials file name
-#' @param ... Further named parameters
-#' \itemize{
-#'  \item{"batchAccount"}: {Batch account name for Batch Service authentication.}
-#'  \item{"batchKey"}: {Batch account key for signing REST signatures.}
-#'  \item{"batchUrl"}: {Batch service url for account.}
-#'  \item{"storageAccount"}: {Storage account for storing output results.}
-#'  \item{"storageKey"}: {Storage account key for storage service authentication.}
-#'}
-#' @return The request to the Batch service was successful.
-#' @examples {
-#' generateCredentialsConfig("test_config.json")
-#' generateCredentialsConfig("test_config.json", batchAccount = "testbatchaccount",
-#'    batchKey = "test_batch_account_key", batchUrl = "http://testbatchaccount.azure.com",
-#'    storageAccount = "teststorageaccount", storageKey = "test_storage_account_key")
-#' }
-#' @export
-generateCredentialsConfig <- function(fileName, ...) {
-  args <- list(...)
-
-  batchAccount <-
-    ifelse(is.null(args$batchAccount),
-           "batch_account_name",
-           args$batchAccount)
-  batchKey <-
-    ifelse(is.null(args$batchKey), "batch_account_key", args$batchKey)
-  batchUrl <-
-    ifelse(is.null(args$batchUrl), "batch_account_url", args$batchUrl)
-
-  storageName <-
-    ifelse(is.null(args$storageAccount),
-           "storage_account_name",
-           args$storageAccount)
-  storageKey <-
-    ifelse(is.null(args$storageKey),
-           "storage_account_key",
-           args$storageKey)
-
-  if (!file.exists(paste0(getwd(), "/", fileName))) {
-    config <- list(
-      batchAccount = list(
-        name = batchAccount,
-        key = batchKey,
-        url = batchUrl
-      ),
-      storageAccount = list(name = storageName,
-                            key = storageKey)
-    )
-
-    configJson <-
-      jsonlite::toJSON(config, auto_unbox = TRUE, pretty = TRUE)
-    write(configJson, file = paste0(getwd(), "/", fileName))
-
-    print(
-      sprintf(
-        "A config file has been generated %s. Please enter your Batch credentials.",
-        paste0(getwd(), "/", fileName)
-      )
-    )
-  }
-}
-
 #' Creates a configuration file for the user's cluster setup.
 #'
 #' @param fileName Cluster settings file name
@@ -90,10 +26,10 @@ generateClusterConfig <- function(fileName) {
       rPackages = list(
         cran = vector(),
         github = vector(),
-        bioconductor = vector(),
-        githubAuthenticationToken = ""
+        bioconductor = vector()
       ),
-      commandLine = vector()
+      commandLine = vector(),
+      subnetId = ""
     )
 
     configJson <-
@@ -114,7 +50,7 @@ generateClusterConfig <- function(fileName) {
 
 #' Creates an Azure cloud-enabled cluster.
 #'
-#' @param clusterSetting Cluster configuration's file name
+#' @param cluster Cluster configuration object or file name
 #' @param fullName A boolean flag for checking the file full name
 #' @param wait A boolean flag to wait for all nodes to boot up
 #' @param resourceFiles A list of files that Batch will download to the compute node before running the command line
@@ -126,16 +62,25 @@ generateClusterConfig <- function(fileName) {
 #' }
 #' @export
 makeCluster <-
-  function(clusterSetting = "cluster_settings.json",
+  function(cluster = "cluster.json",
            fullName = FALSE,
            wait = TRUE,
            resourceFiles = list()) {
-    if (fullName) {
-      poolConfig <- rjson::fromJSON(file = paste0(clusterSetting))
-    }
-    else {
-      poolConfig <-
-        rjson::fromJSON(file = paste0(getwd(), "/", clusterSetting))
+    if (class(cluster) == "character") {
+      if (fullName) {
+        poolConfig <- rjson::fromJSON(file = paste0(cluster))
+      }
+      else {
+        poolConfig <-
+          rjson::fromJSON(file = paste0(getwd(), "/", cluster))
+      }
+    } else if (class(cluster) == "list") {
+      poolConfig <- cluster
+    } else {
+      stop(sprintf(
+        "cluster setting type is not supported: %s\n",
+        class(cluster)
+      ))
     }
 
     config <- getOption("az_config")
@@ -170,13 +115,13 @@ makeCluster <-
 
     packages <- c()
     if (!is.null(installCranCommand)) {
-      packages <- c(installCranCommand, packages)
+      packages <- c(packages, installCranCommand)
     }
     if (!is.null(installGithubCommand)) {
-      packages <- c(installGithubCommand, packages)
+      packages <- c(packages, installGithubCommand)
     }
     if (!is.null(installBioconductorCommand)) {
-      packages <- c(installBioconductorCommand, packages)
+      packages <- c(packages, installBioconductorCommand)
     }
 
     if (length(packages) == 0) {
@@ -185,31 +130,53 @@ makeCluster <-
 
     commandLine <- NULL
 
-    # install docker and create docker container
+    # install docker
     dockerImage <- "rocker/tidyverse:latest"
-    if (!is.null(poolConfig$containerImage)) {
+    if (!is.null(poolConfig$containerImage) &&
+        nchar(poolConfig$containerImage) > 0) {
       dockerImage <- poolConfig$containerImage
     }
 
     config$containerImage <- dockerImage
-    installAndStartContainerCommand <- paste("cluster_setup.sh",
-                                             dockerImage,
-                                             sep = " ")
+    installAndStartContainerCommand <- "cluster_setup.sh"
 
-    containerInstallCommand <- c(
+    # Note: Revert it to master once PR is approved
+    dockerInstallCommand <- c(
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "master/inst/startup/cluster_setup.sh"),
+        "master/inst/startup/cluster_setup.sh"
+      ),
       "chmod u+x cluster_setup.sh",
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "master/inst/startup/install_bioconductor.R"),
+        "master/inst/startup/install_bioconductor.R"
+      ),
       "chmod u+x install_bioconductor.R",
       installAndStartContainerCommand
     )
 
+    commandLine <- dockerInstallCommand
+
+    # log into private registry if registry credentials were provided
+    if (!is.null(config$dockerAuthentication) &&
+        nchar(config$dockerAuthentication$username) > 0 &&
+        nchar(config$dockerAuthentication$password) > 0 &&
+        nchar(config$dockerAuthentication$registry) > 0) {
+
+      username <- config$dockerAuthentication$username
+      password <- config$dockerAuthentication$password
+      registry <- config$dockerAuthentication$registry
+
+      loginCommand <- dockerLoginCommand(username, password, registry)
+      commandLine <- c(commandLine, loginCommand)
+    }
+
+    # pull docker image
+    pullImageCommand <- dockerPullCommand(dockerImage)
+    commandLine <- c(commandLine, pullImageCommand)
+
     if (!is.null(poolConfig$commandLine)) {
-      commandLine <- c(containerInstallCommand, poolConfig$commandLine)
+      commandLine <- c(commandLine, poolConfig$commandLine)
     }
 
     if (!is.null(packages)) {
@@ -220,24 +187,32 @@ makeCluster <-
     }
 
     environmentSettings <- NULL
-    if (!is.null(poolConfig$rPackages) &&
-        !is.null(poolConfig$rPackages$githubAuthenticationToken) &&
-        poolConfig$rPackages$githubAuthenticationToken != "") {
+    if (!is.null(config$githubAuthenticationToken) &&
+        config$githubAuthenticationToken != "") {
       environmentSettings <-
         list(
           list(
             name = "GITHUB_PAT",
-            value = poolConfig$rPackages$githubAuthenticationToken
+            value = config$githubAuthenticationToken
           )
         )
     }
 
+    networkConfiguration <- NULL
+    if (!is.null(poolConfig$subnetId) &&
+        poolConfig$subnetId != "") {
+      networkConfiguration <-
+        list(
+          subnetId = poolConfig$subnetId
+        )
+    }
+
     if (!is.null(poolConfig[["pool"]])) {
-      validation$isValidDeprecatedClusterConfig(clusterSetting)
+      validation$isValidDeprecatedClusterConfig(cluster)
       poolConfig <- poolConfig[["pool"]]
     }
     else {
-      validation$isValidClusterConfig(clusterSetting)
+      validation$isValidClusterConfig(cluster)
     }
 
     tryCatch({
@@ -248,50 +223,82 @@ makeCluster <-
                  e))
     })
 
-    response <- .addPool(
+    printCluster(poolConfig, resourceFiles)
+
+    response <- BatchUtilitiesOperations$addPool(
       pool = poolConfig,
       packages = packages,
       environmentSettings = environmentSettings,
       resourceFiles = resourceFiles,
-      commandLine = commandLine
+      commandLine = commandLine,
+      networkConfiguration = networkConfiguration
     )
 
-    if (grepl("AuthenticationFailed", response)) {
-      stop("Check your credentials and try again.")
-    }
+    if (nchar(response) > 0) {
+      responseObj <- rjson::fromJSON(response)
+      errorMessage <- getHttpErrorMessage(responseObj)
 
-    if (grepl("PoolBeingDeleted", response)) {
-      pool <- rAzureBatch::getPool(poolConfig$name)
-
-      cat(sprintf(
-        paste(
+      if (responseObj$code == "PoolBeingDeleted") {
+        message <- paste(
           "Cluster '%s' already exists and is being deleted.",
           "Another cluster with the same name cannot be created",
           "until it is deleted. Please wait for the cluster to be deleted",
           "or create one with a different name"
-        ),
-        poolConfig$name
-      ),
-      fill = TRUE)
+        )
 
-      while (areShallowEqual(rAzureBatch::getPool(poolConfig$name)$state,
-                             "deleting")) {
-        cat(".")
-        Sys.sleep(10)
+      if (wait == TRUE) {
+        pool <- config$batchClient$poolOperations$getPool(poolConfig$name)
+
+        cat(sprintf(message,
+                    poolConfig$name),
+            fill = TRUE)
+
+        while (!is.null(pool) && !is.null(pool$state) && pool$state == "deleting") {
+          cat(".")
+          Sys.sleep(10)
+          pool <- config$batchClient$poolOperations$getPool(
+            poolConfig$name)
+        }
+
+        cat("\n")
+
+        response <- BatchUtilitiesOperations$addPool(
+          pool = poolConfig,
+          packages = packages,
+          environmentSettings = environmentSettings,
+          resourceFiles = resourceFiles,
+          commandLine = commandLine
+        )
+
+        if (nchar(response) > 0) {
+          responseObj <- rjson::fromJSON(response)
+          errorMessage <- getHttpErrorMessage(responseObj)
+        }
+        else {
+          responseObj <- NULL
+          errorMessage <- NULL
+        }
+      }
+      else {
+        stop(sprintf(message,
+                     poolConfig$name))
+        }
       }
 
-      cat("\n")
-
-      response <- .addPool(
-        pool = poolConfig,
-        packages = packages,
-        environmentSettings = environmentSettings,
-        resourceFiles = resourceFiles,
-        commandLine = commandLine
-      )
+      if (nchar(response) > 0) {
+        if (responseObj$code == "AuthenticationFailed") {
+          stop(paste0("Check your credentials and try again.\r\n", errorMessage))
+        }
+        else {
+          if (responseObj$code != "PoolExists") {
+            stop(errorMessage)
+          }
+        }
+      }
     }
 
-    pool <- rAzureBatch::getPool(poolConfig$name)
+    pool <- config$batchClient$poolOperations$getPool(
+      poolConfig$name)
 
     if (grepl("PoolExists", response)) {
       cat(
@@ -347,8 +354,10 @@ makeCluster <-
       }
     }
 
-    if (wait && !grepl("PoolExists", response)) {
-      waitForNodesToComplete(poolConfig$name, 60000)
+    if (wait) {
+      if (!grepl("PoolExists", response)) {
+        waitForNodesToComplete(poolConfig$name, 60000)
+      }
     }
 
     cat("Your cluster has been registered.", fill = TRUE)
@@ -356,11 +365,165 @@ makeCluster <-
         fill = TRUE)
     cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
         fill = TRUE)
-
     config$poolId <- poolConfig$name
     options("az_config" = config)
     return(getOption("az_config"))
   }
+
+#' Gets the cluster from your Azure account.
+#'
+#' @param clusterName The cluster configuration that was created in \code{makeCluster}
+#'
+#' @examples
+#' \dontrun{
+#' cluster <- getCluster("myCluster")
+#' }
+#' @export
+getCluster <- function(clusterName, verbose = TRUE) {
+  config <- getOption("az_config")
+  pool <- config$batchClient$poolOperations$getPool(
+    clusterName)
+
+  if (!is.null(pool$code) && !is.null(pool$message)) {
+    stop(sprintf("Code: %s - Message: %s", pool$code, pool$message))
+  }
+
+  if (pool$targetDedicatedNodes + pool$targetLowPriorityNodes <= 0) {
+    stop("Cluster node count needs to be greater than 0.")
+  }
+
+  if (!is.null(pool$resizeErrors)) {
+    cat("\n")
+
+    resizeErrors <- ""
+    for (i in 1:length(pool$resizeErrors)) {
+      resizeErrors <-
+        paste0(
+          resizeErrors,
+          sprintf(
+            "Code: %s - Message: %s \n",
+            pool$resizeErrors[[i]]$code,
+            pool$resizeErrors[[i]]$message
+          )
+        )
+    }
+
+    stop(resizeErrors)
+  }
+
+  config <- getOption("az_config")
+  nodes <- config$batchClient$poolOperations$listPoolNodes(
+    clusterName)
+
+  if (!is.null(nodes$value) && length(nodes$value) > 0) {
+    nodesInfo <- .processNodeCount(nodes)
+    nodesState <- nodesInfo$nodesState
+    nodesWithFailures <- nodesInfo$nodesWithFailures
+
+    if (verbose == TRUE) {
+      cat("\nnodes:", fill = TRUE)
+      cat(sprintf("\tidle:                %s", nodesState$idle), fill = TRUE)
+      cat(sprintf("\tcreating:            %s", nodesState$creating), fill = TRUE)
+      cat(sprintf("\tstarting:            %s", nodesState$starting), fill = TRUE)
+      cat(sprintf("\twaitingforstarttask: %s", nodesState$waitingforstarttask), fill = TRUE)
+      cat(sprintf("\tstarttaskfailed:     %s", nodesState$starttaskfailed), fill = TRUE)
+      cat(sprintf("\tpreempted:           %s", nodesState$preempted), fill = TRUE)
+      cat(sprintf("\trunning:             %s", nodesState$running), fill = TRUE)
+      cat(sprintf("\tother:               %s", nodesState$other), fill = TRUE)
+    }
+
+    .showNodesFailure(nodesWithFailures)
+  }
+
+  cat("Your cluster has been registered.", fill = TRUE)
+
+  config <- getOption("az_config")
+  config$targetDedicatedNodes <- pool$targetDedicatedNodes
+  config$targetLowPriorityNodes <- pool$targetLowPriorityNodes
+  cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
+      fill = TRUE)
+  cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
+      fill = TRUE)
+
+  config$poolId <- clusterName
+  options("az_config" = config)
+  return(config)
+}
+
+#' Get a list of clusters by state from the given filter
+#'
+#' @param filter A filter containing cluster state
+#'
+#' @examples
+#' \dontrun{
+#' getClusterList()
+#' }
+#' @export
+getClusterList <- function(filter = NULL) {
+  filterClause <- ""
+
+  if (!is.null(filter)) {
+    if (!is.null(filter$state)) {
+      for (i in 1:length(filter$state)) {
+        filterClause <-
+          paste0(filterClause,
+                 sprintf("state eq '%s'", filter$state[i]),
+                 " or ")
+      }
+
+      filterClause <-
+        substr(filterClause, 1, nchar(filterClause) - 3)
+    }
+  }
+
+  pools <-
+    rAzureBatch::listPools(
+      query = list(
+        "$filter" = filterClause,
+        "$select" = paste0("id,state,allocationState,vmSize,currentDedicatedNodes,",
+                    "targetDedicatedNodes,currentLowPriorityNodes,targetLowPriorityNodes")
+      )
+    )
+
+  count <- length(pools$value)
+  id <- character(count)
+  state <- character(count)
+  allocationState <- character(count)
+  vmSize <- integer(count)
+  currentDedicatedNodes <- integer(count)
+  targetDedicatedNodes <- integer(count)
+  currentLowPriorityNodes <- integer(count)
+  targetLowPriorityNodes <- integer(count)
+
+  if (count > 0) {
+    if (is.null(pools$value[[1]]$id)) {
+      stop(pools$value)
+    }
+    for (j in 1:length(pools$value)) {
+      id[j] <- pools$value[[j]]$id
+      state[j] <- pools$value[[j]]$state
+      allocationState[j] <- pools$value[[j]]$allocationState
+      vmSize[j] <- pools$value[[j]]$vmSize
+      currentDedicatedNodes[j] <- pools$value[[j]]$currentDedicatedNodes
+      targetDedicatedNodes[j] <- pools$value[[j]]$targetDedicatedNodes
+      currentLowPriorityNodes[j] <- pools$value[[j]]$currentLowPriorityNodes
+      targetLowPriorityNodes[j] <- pools$value[[j]]$targetLowPriorityNodes
+    }
+  }
+
+  return (
+    data.frame(
+      Id = id,
+      State = state,
+      AllocationState = allocationState,
+      VmSize = vmSize,
+      CurrentDedicatedNodes = currentDedicatedNodes,
+      targetDedicatedNodes = targetDedicatedNodes,
+      currentLowPriorityNodes = currentLowPriorityNodes,
+      targetLowPriorityNodes = targetLowPriorityNodes
+    )
+  )
+}
 
 #' Deletes the cluster from your Azure account.
 #'
@@ -373,33 +536,20 @@ makeCluster <-
 #' }
 #' @export
 stopCluster <- function(cluster) {
-  rAzureBatch::deletePool(cluster$poolId)
+  config <- getOption("az_config")
+  config$batchClient$poolOperations$deletePool(
+    cluster$poolId)
 
-  print(sprintf("Your %s cluster has been destroyed.", cluster$poolId))
-}
-
-#' Set azure credentials to R session.
-#'
-#' @param fileName The cluster configuration that was created in \code{makeCluster}
-#'
-#' @export
-setCredentials <- function(fileName = "az_config.json") {
-  if (file.exists(fileName)) {
-    config <- rjson::fromJSON(file = paste0(fileName))
-  }
-  else{
-    config <- rjson::fromJSON(file = paste0(getwd(), "/", fileName))
-  }
-
-  options("az_config" = config)
-  print("Your azure credentials have been set.")
+  print(sprintf("Your %s cluster is being deleted.", cluster$poolId))
 }
 
 getPoolWorkers <- function(poolId, ...) {
   args <- list(...)
   raw <- !is.null(args$RAW)
 
-  nodes <- rAzureBatch::listPoolNodes(poolId)
+  config <- getOption("az_config")
+  nodes <- config$batchClient$poolOperations$listPoolNodes(
+    poolId)
 
   if (length(nodes$value) > 0) {
     for (i in 1:length(nodes$value)) {

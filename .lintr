@@ -1,1 +1,1 @@
-exclusions: list("R/validationUtilities.R")
+exclusions: list("R/validationUtilities.R", "R/batchApi.R")

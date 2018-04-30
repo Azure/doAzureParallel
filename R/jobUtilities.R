@@ -13,13 +13,16 @@ getJob <- function(jobId, verbose = TRUE) {
     stop("must specify the jobId parameter")
   }
 
-  job <- rAzureBatch::getJob(jobId = jobId)
+  config <- getConfiguration()
+  job <- config$batchClient$jobOperations$getJob(jobId)
 
   metadata <-
     list(
       chunkSize = 1,
       enableCloudCombine = "TRUE",
-      packages = ""
+      packages = "",
+      errorHandling = "stop",
+      wait = "TRUE"
     )
 
   if (!is.null(job$metadata)) {
@@ -37,9 +40,14 @@ getJob <- function(jobId, verbose = TRUE) {
         fill = TRUE)
     cat(sprintf("\tpackages: %s", metadata$packages),
         fill = TRUE)
+    cat(sprintf("\terrorHandling: %s", metadata$errorHandling),
+        fill = TRUE)
+    cat(sprintf("\twait: %s", metadata$wait),
+        fill = TRUE)
   }
 
-  taskCounts <- rAzureBatch::getJobTaskCounts(jobId = jobId)
+  taskCounts <- config$batchClient$jobOperations$getJobTaskCounts(
+    jobId)
 
   tasks <- list(
     active = taskCounts$active,
@@ -63,11 +71,13 @@ getJob <- function(jobId, verbose = TRUE) {
       ),
       fill = TRUE
     )
+    cat(sprintf("\njob state: %s", job$state), fill = TRUE)
   }
 
   jobObj <- list(jobId = job$id,
                  metadata = metadata,
-                 tasks = tasks)
+                 tasks = tasks,
+                 jobState = job$state)
 
   return(jobObj)
 }
@@ -97,9 +107,10 @@ getJobList <- function(filter = NULL) {
         substr(filterClause, 1, nchar(filterClause) - 3)
     }
   }
-
+  config <- getOption("az_config")
   jobs <-
-    rAzureBatch::listJobs(query = list("$filter" = filterClause, "$select" = "id,state"))
+    config$batchClient$jobOperations$listJobs(
+      query = list("$filter" = filterClause, "$select" = "id,state"))
 
   id <- character(length(jobs$value))
   state <- character(length(jobs$value))
@@ -111,11 +122,14 @@ getJobList <- function(filter = NULL) {
     if (is.null(jobs$value[[1]]$id)) {
       stop(jobs$value)
     }
+    config <- getOption("az_config")
+
     for (j in 1:length(jobs$value)) {
       id[j] <- jobs$value[[j]]$id
       state[j] <- jobs$value[[j]]$state
       taskCounts <-
-        rAzureBatch::getJobTaskCounts(jobId = jobs$value[[j]]$id)
+        config$batchClient$jobOperations$getJobTaskCounts(
+          jobId = jobs$value[[j]]$id)
       failedTasks[j] <-
         as.integer(taskCounts$failed)
       totalTasks[j] <-
@@ -155,25 +169,223 @@ getJobList <- function(filter = NULL) {
 #' @export
 getJobResult <- function(jobId) {
   cat("Getting job results...", fill = TRUE)
+  config <- getConfiguration()
+  storageClient <- config$storageClient
 
   if (nchar(jobId) < 3) {
     stop("jobId must contain at least 3 characters.")
   }
 
-  tempFile <- tempFile <- tempfile("getJobResult", fileext = ".rds")
+  metadata <- readMetadataBlob(jobId)
 
-  results <- rAzureBatch::downloadBlob(
-    jobId,
-    paste0("result/", jobId, "-merge-result.rds"),
-    downloadPath = tempFile,
-    overwrite = TRUE
-  )
+  if (!is.null(metadata)) {
+    job <- getJob(jobId, verbose = FALSE)
 
-  if (is.vector(results)) {
-    results <- readRDS(tempFile)
+    if (job$jobState == "active") {
+      stop(sprintf("job %s has not finished yet, please try again later",
+                   job$jobId))
+    } else if (job$jobState != "completed") {
+      stop(sprintf(
+        "job %s is in %s state, no job result is available",
+        job$jobId,
+        job$jobState
+      ))
+    }
+
+    # if the job has failed task
+    if (job$tasks$failed > 0) {
+      if (metadata$errorHandling == "stop") {
+        stop(
+          sprintf(
+            "job %s has failed tasks and error handling is set to 'stop', no result will be available",
+            job$jobId
+          )
+        )
+      } else {
+        if (job$tasks$succeeded == 0) {
+          stop(sprintf(
+            "all tasks failed for job %s, no result will be available",
+            job$jobId
+          ))
+        }
+      }
+    }
+
+    if (metadata$enableCloudCombine == "FALSE") {
+      cat("enableCloudCombine is set to FALSE, we will merge job result locally",
+          fill = TRUE)
+
+      results <- .getJobResultLocal(job)
+      return(results)
+    }
   }
 
+  tempFile <- tempfile("getJobResult", fileext = ".rds")
+
+  retryCounter <- 0
+  maxRetryCount <- 3
+  repeat {
+    if (retryCounter > maxRetryCount) {
+      stop(
+        sprintf(
+          "Error getting job result: Maxmium number of retries (%d) reached\r\n%s",
+          maxRetryCount,
+          paste0(results, "\r\n")
+        )
+      )
+    } else {
+      retryCounter <- retryCounter + 1
+    }
+
+    results <- storageClient$blobOperations$downloadBlob(
+      jobId,
+      "results/merge-result.rds",
+      downloadPath = tempFile,
+      overwrite = TRUE
+    )
+
+    if (is.vector(results)) {
+      results <- readRDS(tempFile)
+      return(results)
+    }
+
+    # wait for 5 seconds for the result to be available
+    Sys.sleep(5)
+  }
+}
+
+.getJobResultLocal <- function(job) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
+  results <- vector("list", job$tasks$completed)
+  count <- 1
+
+  for (i in 1:job$tasks$completed) {
+    retryCounter <- 0
+    maxRetryCount <- 3
+    repeat {
+      if (retryCounter > maxRetryCount) {
+        stop(
+          sprintf("Error getting job result: Maxmium number of retries (%d) reached\r\n",
+                  maxRetryCount)
+        )
+      } else {
+        retryCounter <- retryCounter + 1
+      }
+
+      tryCatch({
+        # Create a temporary file on disk
+        tempFile <- tempfile(fileext = ".rds")
+
+        # Create the temporary file's directory if it doesn't exist
+        dir.create(dirname(tempFile), showWarnings = FALSE)
+
+        # Download the blob to the temporary file
+        storageClient$blobOperations$downloadBlob(
+          containerName = job$jobId,
+          blobName = paste0("results/", i, "-result.rds"),
+          downloadPath = tempFile,
+          overwrite = TRUE
+        )
+
+        #Read the rds as an object in memory
+        taskResult <- readRDS(tempFile)
+
+        for (t in 1:length(taskResult)) {
+          if (isError(taskResult[[t]])) {
+            if (metadata$errorHandling == "stop") {
+              stop("Error found")
+            }
+            else if (metadata$errorHandling == "pass") {
+              results[[count]] <- NA
+              count <- count + 1
+            }
+          } else {
+            results[[count]] <- taskResult[[t]]
+            count <- count + 1
+          }
+        }
+
+        # Delete the temporary file
+        file.remove(tempFile)
+
+        break
+      },
+      error = function(e) {
+        warning(sprintf(
+          "error downloading task result %s from blob, retrying...\r\n%s",
+          paste0(job$jobId, "results/", i, "-result.rds"),
+          e
+        ))
+      })
+    }
+  }
+  # Return the object
   return(results)
+}
+
+#' Delete a job
+#'
+#' @param jobId A job id
+#'
+#' @examples
+#' \dontrun{
+#' deleteJob("job-001")
+#' }
+#' @export
+deleteJob <- function(jobId, verbose = TRUE) {
+  config <- getConfiguration()
+  batchClient <- config$batchClient
+
+  deleteStorageContainer(jobId, verbose)
+
+  response <- batchClient$jobOperations$deleteJob(jobId, content = "response")
+
+  tryCatch({
+      httr::stop_for_status(response)
+
+      if (verbose) {
+        cat(sprintf("Your job '%s' has been deleted.", jobId),
+            fill = TRUE)
+      }
+    },
+    error = function(e) {
+      if (verbose) {
+        response <- httr::content(response, encoding = "UTF-8")
+        cat("Call: deleteJob", fill = TRUE)
+        cat(sprintf("Exception: %s", response$message$value),
+            fill = TRUE)
+      }
+    }
+  )
+}
+
+#' Terminate a job
+#'
+#' @param jobId A job id
+#'
+#' @examples
+#' \dontrun{
+#' terminateJob("job-001")
+#' }
+#' @export
+terminateJob <- function(jobId) {
+  config <- getConfiguration()
+  batchClient <- config$batchClient
+
+  response <- batchClient$jobOperations$terminateJob(jobId, content = "response")
+
+  if (response$status_code == 202) {
+    cat(sprintf("Your job '%s' has been terminated.", jobId),
+        fill = TRUE)
+  } else if (response$status_code == 404) {
+    cat(sprintf("Job '%s' does not exist.", jobId),
+        fill = TRUE)
+  } else if (response$status_code == 409) {
+    cat(sprintf("Job '%s' has already completed.", jobId),
+        fill = TRUE)
+  }
 }
 
 #' Wait for current tasks to complete
@@ -181,10 +393,15 @@ getJobResult <- function(jobId) {
 #' @export
 waitForTasksToComplete <-
   function(jobId, timeout, errorHandling = "stop") {
-    cat("Waiting for tasks to complete. . .", fill = TRUE)
+    cat("\nWaiting for tasks to complete. . .", fill = TRUE)
+    config <- getConfiguration()
+    batchClient <- config$batchClient
 
     totalTasks <- 0
-    currentTasks <- rAzureBatch::listTask(jobId)
+    currentTasks <- batchClient$taskOperations$list(jobId)
+
+    jobInfo <- getJob(jobId, verbose = FALSE)
+    enableCloudCombine <- as.logical(jobInfo$metadata$enableCloudCombine)
 
     if (is.null(currentTasks$value)) {
       stop(paste0("Error: ", currentTasks$message$value))
@@ -208,17 +425,52 @@ waitForTasksToComplete <-
                nchar(skipTokenParameter))
 
       currentTasks <-
-        rAzureBatch::listTask(jobId, skipToken = URLdecode(skipTokenValue))
+        batchClient$taskOperations$list(jobId, skipToken = URLdecode(skipTokenValue))
 
       totalTasks <- totalTasks + length(currentTasks$value)
     }
 
-    pb <- txtProgressBar(min = 0, max = totalTasks, style = 3)
+    if (enableCloudCombine) {
+      totalTasks <- totalTasks - 1
+    }
+
     timeToTimeout <- Sys.time() + timeout
 
     repeat {
-      taskCounts <- rAzureBatch::getJobTaskCounts(jobId)
-      setTxtProgressBar(pb, taskCounts$completed)
+      taskCounts <- batchClient$jobOperations$getJobTaskCounts(jobId)
+
+      # Assumption: Merge task will always be the last one in the queue
+      if (enableCloudCombine) {
+        if (taskCounts$completed > totalTasks) {
+          taskCounts$completed <- totalTasks
+        }
+
+        if (taskCounts$completed == totalTasks && taskCounts$running == 1) {
+          taskCounts$running <- 0
+        }
+
+        if (taskCounts$active >= 1) {
+          taskCounts$active <- taskCounts$active - 1
+        }
+      }
+
+      runningOutput <- paste0("Running: ", taskCounts$running)
+      queueOutput <- paste0("Queued: ", taskCounts$active)
+      completedOutput <- paste0("Completed: ", taskCounts$completed)
+      failedOutput <- paste0("Failed: ", taskCounts$failed)
+
+      cat("\r",
+          sprintf("| %s | %s | %s | %s | %s |",
+                  paste0("Progress: ", sprintf("%.2f%% (%s/%s)", (taskCounts$completed / totalTasks) * 100,
+                                               taskCounts$completed,
+                                               totalTasks)),
+                  runningOutput,
+                  queueOutput,
+                  completedOutput,
+                  failedOutput),
+          sep = "")
+
+      flush.console()
 
       validationFlag <-
         (taskCounts$validationStatus == "Validated" &&
@@ -232,7 +484,7 @@ waitForTasksToComplete <-
 
         select <- "id, executionInfo"
         failedTasks <-
-          rAzureBatch::listTask(jobId, select = select)
+          batchClient$taskOperations$list(jobId, select = select)
 
         tasksFailureWarningLabel <-
           sprintf(
@@ -246,7 +498,8 @@ waitForTasksToComplete <-
           )
 
         for (i in 1:length(failedTasks$value)) {
-          if (failedTasks$value[[i]]$executionInfo$result == "Failure") {
+          if (!is.null(failedTasks$value[[i]]$executionInfo$result) &&
+              failedTasks$value[[i]]$executionInfo$result == "Failure") {
             tasksFailureWarningLabel <-
               paste0(tasksFailureWarningLabel,
                      sprintf("%s\n", failedTasks$value[[i]]$id))
@@ -256,22 +509,11 @@ waitForTasksToComplete <-
         warning(sprintf(tasksFailureWarningLabel,
                         taskCounts$failed))
 
-        response <- rAzureBatch::terminateJob(jobId)
+        response <- batchClient$jobOperations$terminateJob(jobId)
         httr::stop_for_status(response)
 
         stop(sprintf(
-          paste(
-            "Errors have occurred while running the job '%s'.",
-            "Error handling is set to 'stop' and has proceeded to terminate the job.",
-            "The user will have to handle deleting the job.",
-            "If this is not the correct behavior, change the errorHandling property to 'pass'",
-            " or 'remove' in the foreach object. Use the 'getJobFile' function to obtain the logs.",
-            "For more information about getting job logs, follow this link:",
-            paste0(
-              "https://github.com/Azure/doAzureParallel/blob/master/docs/",
-              "40-troubleshooting.md#viewing-files-directly-from-compute-node"
-            )
-          ),
+          getTaskFailedErrorString("Errors have occurred while running the job '%s'."),
           jobId
         ))
       }
@@ -293,15 +535,55 @@ waitForTasksToComplete <-
           (taskCounts$validationStatus == "Validated" ||
            totalTasks >= 200000)) {
         cat("\n")
-        return(0)
+        break
       }
 
       Sys.sleep(10)
     }
+
+    cat("Tasks have completed. ")
+    if (enableCloudCombine) {
+      cat("Merging results")
+
+      # Wait for merge task to complete
+      repeat {
+        # Verify that the merge cloud task didn't have any errors
+        mergeTask <- batchClient$taskOperations$get(jobId, "merge")
+
+        # This test needs to go first as Batch service will not return an execution info as null
+        if (is.null(mergeTask$executionInfo$result)) {
+          cat(".")
+          Sys.sleep(5)
+          next
+        }
+
+        if (mergeTask$executionInfo$result == "Success") {
+          cat(" Completed.")
+          break
+        }
+        else {
+          batchClient$jobOperations$terminateJob(jobId)
+
+          # The foreach will not be able to run properly if the merge task fails
+          # Stopping the user from processing a merge task that has failed
+          stop(sprintf(
+            getTaskFailedErrorString("An error has occurred in the merge task of the job '%s'."),
+            jobId
+          ))
+        }
+
+        cat(".")
+        Sys.sleep(5)
+      }
+    }
+
+    cat("\n")
   }
 
 waitForJobPreparation <- function(jobId, poolId) {
   cat("Job Preparation Status: Package(s) being installed")
+  config <- getConfiguration()
+  batchClient <- config$batchClient
 
   filter <- paste(
     sprintf("poolId eq '%s' and", poolId),
@@ -311,10 +593,12 @@ waitForJobPreparation <- function(jobId, poolId) {
   select <- "jobPreparationTaskExecutionInfo"
 
   repeat {
-    statuses <- rAzureBatch::getJobPreparationStatus(jobId,
-                                                     content = "parsed",
-                                                     filter = filter,
-                                                     select = select)
+    statuses <- batchClient$jobOperations$getJobPreparationStatus(
+      jobId,
+      content = "parsed",
+      filter = filter,
+      select = select
+    )
 
     statuses <- sapply(statuses$value, function(x) {
       x$jobPreparationTaskExecutionInfo$result == "Success"
@@ -341,4 +625,8 @@ waitForJobPreparation <- function(jobId, poolId) {
   }
 
   cat("\n")
+}
+
+isError <- function(x) {
+  inherits(x, "simpleError") || inherits(x, "try-error")
 }

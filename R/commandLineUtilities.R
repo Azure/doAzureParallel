@@ -21,8 +21,6 @@ getJobPackageInstallationCommand <- function(type, packages) {
 }
 
 getPoolPackageInstallationCommand <- function(type, packages) {
-  poolInstallationCommand <- character(length(packages))
-
   sharedPackagesDirectory <- "/mnt/batch/tasks/shared/R/packages"
 
   libPathsCommand <- paste0('\'.libPaths( c( \\\"',
@@ -35,37 +33,69 @@ getPoolPackageInstallationCommand <- function(type, packages) {
 
   # At this point we cannot use install_cran.R and install_github.R because they are not yet available.
   if (type == "cran") {
-    script <-
+    poolInstallationCommand <-
       paste(installCommand,
             paste("-e",
                   libPathsCommand,
-                  "install.packages(args[1])\' %s")
+                  "install.packages(args)\'")
             )
   }
   else if (type == "github") {
-    script <-
+    poolInstallationCommand <-
       paste(
         installCommand,
         paste(
           "-e",
           libPathsCommand,
-          "devtools::install_github(args[1])\' %s"
+          "devtools::install_github(args)\'"
         )
       )
   }
   else if (type == "bioconductor") {
-    script <- "Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R %s"
+    poolInstallationCommand <- "Rscript /mnt/batch/tasks/startup/wd/install_bioconductor.R"
   }
   else {
     stop("Using an incorrect package source")
   }
 
   for (i in 1:length(packages)) {
-    poolInstallationCommand[i] <- sprintf(script, packages[i])
+    poolInstallationCommand <- paste(poolInstallationCommand, packages[i])
   }
 
   poolInstallationCommand
 }
+
+dockerLoginCommand <-
+  function(username,
+           password,
+           registry) {
+    writePasswordCommand <- paste(
+      "echo",
+      password,
+      ">> ~/pwd.txt"
+    )
+
+    loginCommand <- paste(
+      "cat ~/pwd.txt |",
+      "docker login",
+      "-u",
+      username,
+      "--password-stdin",
+      registry
+    )
+
+    return(c(writePasswordCommand, loginCommand))
+  }
+
+dockerPullCommand <-
+  function(containerImage) {
+    pullCommand <- paste(
+      "docker pull",
+      containerImage
+    )
+
+    return(pullCommand)
+  }
 
 dockerRunCommand <-
   function(containerImage,
@@ -77,8 +107,7 @@ dockerRunCommand <-
       "--rm",
       "-v $AZ_BATCH_NODE_ROOT_DIR:$AZ_BATCH_NODE_ROOT_DIR",
       "-e AZ_BATCH_NODE_ROOT_DIR=$AZ_BATCH_NODE_ROOT_DIR",
-      "-e AZ_BATCH_NODE_STARTUP_DIR=$AZ_BATCH_NODE_STARTUP_DIR",
-      sep = " "
+      "-e AZ_BATCH_NODE_STARTUP_DIR=$AZ_BATCH_NODE_STARTUP_DIR"
     )
 
     if (runAsDaemon) {
@@ -87,7 +116,7 @@ dockerRunCommand <-
 
     if (!is.null(containerName)) {
       dockerOptions <-
-        paste(dockerOptions, "--name", containerName, dockerOptions, sep = " ")
+        paste(dockerOptions, "--name", containerName, dockerOptions)
     }
 
     if (includeEnvironmentVariables) {
@@ -98,13 +127,12 @@ dockerRunCommand <-
           "-e AZ_BATCH_JOB_ID=$AZ_BATCH_JOB_ID",
           "-e AZ_BATCH_TASK_WORKING_DIR=$AZ_BATCH_TASK_WORKING_DIR",
           "-e AZ_BATCH_JOB_PREP_WORKING_DIR=$AZ_BATCH_JOB_PREP_WORKING_DIR",
-          "-e BLOBXFER_SASKEY=$BLOBXFER_SASKEY",
-          sep = " "
+          "-e BLOBXFER_SASKEY=$BLOBXFER_SASKEY"
         )
     }
 
     dockerRunCommand <-
-      paste("docker run", dockerOptions, containerImage, command, sep = " ")
+      paste("docker run", dockerOptions, containerImage, command)
     dockerRunCommand
   }
 

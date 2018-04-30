@@ -67,7 +67,18 @@ This issue is due to certain compiler flags not available in the default version
 Since doAzureParallel uses Microsoft R Open version 3.3 as the default version of R, it will automatically try to pull package from [MRAN](https://mran.microsoft.com/) rather than CRAN. This is a big benefit when wanting to use a constant version of a package but does not always contain references to the latest versions. To use a specific version from CRAN or a different MRAN snapshot date, use the [command line](./30-customize-cluster.md#running-commands-when-the-cluster-starts) in the cluster configuration to manually install the packages you need.
 
 ## Viewing files from Azure Storage
-In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. For more information on reading log files, check out [managing storage](./41-managing-storage-via-R.md). 
+In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. For more information on reading log files, check out [managing storage](./41-managing-storage-via-R.md).
+
+By default, when wait is set to TRUE, job and its result is automatically deleted after the run is completed. To keep the job and its result for investigation purpose, you can set a global environment setting or specify an option in foreach loop to keep it.
+
+```R
+# This will set a global setting to keep job and its result after run is completed. 
+setAutoDeleteJob(FALSE)
+
+# This will keep job and its result at each job level after run is completed.
+options <- list(autoDeleteJob = FALSE)
+foreach::foreach(i = 1:4, .options.azure = opt) %dopar% { ... }
+```
 
 ## Viewing files directly from compute node
 Cluster setup logs are not persisted. `getClusterFile` function will fetch any files including stdout and stderr log files in the cluster. This is particularly useful for users that utilizing [customize script](./30-customize-cluster.md) on their nodes and installing specific [packages](./20-package-management.md).
