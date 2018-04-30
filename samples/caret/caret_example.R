@@ -20,7 +20,7 @@ setCredentials("credentials.json")
 generateClusterConfig("cluster-caret.json")
 
 # Creating an Azure parallel backend
-cluster <- makeCluster(clusterSetting = "cluster-caret.json")
+cluster <- makeCluster(cluster = "cluster-caret.json")
 
 # Register your Azure parallel backend to the foreach implementation
 registerDoAzureParallel(cluster)
