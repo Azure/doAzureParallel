@@ -36,7 +36,11 @@ registerDoAzureParallel <- function(cluster) {
 
 workers <- function(data) {
   id <- data$poolId
-  pool <- rAzureBatch::getPool(id)
+
+  config <- getConfiguration()
+  batchClient <- config$batchClient
+
+  pool <- batchClient$poolOperations$getPool(id)
 
   verboseFlag <- getOption("azureVerbose")
   if (!is.null(verboseFlag) && verboseFlag) {
