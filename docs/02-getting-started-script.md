@@ -60,11 +60,11 @@ For Azure Active Directory Authentication:
 
 ```
 "servicePrincipal": {
-    "tenantId": "<AAD Diretory ID>"
-    "clientId": "<AAD App Application ID>"
-    "credential": "<AAD App Password>"
-    "batchAccountResourceId": "</batch/account/resource/id>"
-    "storageAccountResourceId": "</storage/account/resource/id>"
+    "tenantId": "<AAD Diretory ID>",
+    "clientId": "<AAD App Application ID>",
+    "credential": "<AAD App Password>",
+    "batchAccountResourceId": "</batch/account/resource/id>",
+    "storageAccountResourceId": "</storage/account/resource/id>",
     "storageEndpointSuffix": "</storage/account/endpoint/suffix>"
 }
 ```
