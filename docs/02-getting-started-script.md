@@ -59,12 +59,13 @@ For Shared Key Authentication (Default):
 For Azure Active Directory Authentication:
 
 ```
-"service_principal": {
-    "tenant_id": "<AAD Diretory ID>"
-    "client_id": "<AAD App Application ID>"
-    "credential": "<AAD App Password>"
-    "batch_account_resource_id": "</batch/account/resource/id>"
-    "storage_account_resource_id": "</storage/account/resource/id>"
+"servicePrincipal": {
+    "tenantId": "<AAD Diretory ID>",
+    "clientId": "<AAD App Application ID>",
+    "credential": "<AAD App Password>",
+    "batchAccountResourceId": "</batch/account/resource/id>",
+    "storageAccountResourceId": "</storage/account/resource/id>",
+    "storageEndpointSuffix": "</storage/account/endpoint/suffix>"
 }
 ```
 
