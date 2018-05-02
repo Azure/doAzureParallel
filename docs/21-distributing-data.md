@@ -38,18 +38,18 @@ Here's an example that uses data stored in a public location on Azure Blob Stora
 ```R
 # define where to download data from
 resource_files = list(
-    list(
+    rAzureBatch::createResourceFile(
         url = "https://<accountname>.blob.core.windows.net/<container>/2010.csv",
-        filePath = "2010.csv"
+        fileName = "2010.csv"
     ),
-    list(
+    rAzureBatch::createResourceFile(
         url = "https://<accountname>.blob.core.windows.net/<container>/2011.csv",
-        filePath = "2011.csv"
+        fileName = "2011.csv"
     )
 )
 
 # add the parameter 'resourceFiles'
-cluster <- makeCluster("creds.json", "cluster.json", resourceFiles = resource_files)
+cluster <- makeCluster("cluster.json", resourceFiles = resource_files)
 
 # when the cluster is provisioned, register the cluster as your parallel backend
 registerDoAzureParallel(cluster)
