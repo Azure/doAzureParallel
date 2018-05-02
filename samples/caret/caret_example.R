@@ -2,10 +2,13 @@
 # === Setup ===
 # =============
 
-# install packages from github
+# install packages from github. Force to latest
 library(devtools)
-install_github("azure/razurebatch")
-install_github("azure/doazureparallel")
+install_github("azure/razurebatch", force=T)
+install_github("azure/doazureparallel", force=T)
+# We use Github version of caret due to https://github.com/topepo/caret/issues/706 in CRAN/MRAN. 
+# We can change in the future.
+install_github('topepo/caret/pkg/caret', force=T) 
 
 # import packages
 library(doAzureParallel)
