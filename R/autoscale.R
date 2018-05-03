@@ -97,10 +97,10 @@ resizeCluster <- function(cluster,
                           algorithm = "QUEUE",
                           timeInterval = "PT5M") {
   config <- getOption("az_config")
-  pool <- config$batchClient$poolOperations$getPool(
+  cluster <- config$batchClient$poolOperations$getPool(
     cluster$poolId)
 
-  rAzureBatch::resizePool(
+  config$batchClient$poolOperations$resizePool(
     cluster$poolId,
     autoscaleFormula = getAutoscaleFormula(
       algorithm,

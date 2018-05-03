@@ -10,8 +10,12 @@
 #' }
 #' @export
 listStorageContainers <- function(prefix = "") {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
   xmlResponse <-
-    rAzureBatch::listContainers(prefix, content = "parsed")
+    storageClient$containerOperations$deleteContainer$listContainers(
+      prefix, content = "parsed")
 
   name <- getXmlValues(xmlResponse, ".//Container/Name")
   lastModified <-
@@ -74,8 +78,14 @@ deleteStorageContainer <- function(container, verbose = TRUE) {
 #' }
 #' @export
 listStorageFiles <- function(container, prefix = "", ...) {
-  xmlResponse <-
-    rAzureBatch::listBlobs(container, prefix, content = "parsed", ...)
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
+  xmlResponse <- storageClient$blobOperations$listBlobs(
+    container,
+    prefix,
+    content = "parsed",
+    ...)
 
   filePath <- getXmlValues(xmlResponse, ".//Blob/Name")
 
@@ -126,14 +136,18 @@ getStorageFile <-
            overwrite = FALSE,
            verbose = TRUE,
            ...) {
-    jobFileContent <- rAzureBatch::downloadBlob(
-      container,
-      blobPath,
-      downloadPath = downloadPath,
-      overwrite = overwrite,
-      progress = TRUE,
-      ...
-    )
+    config <- getConfiguration()
+    storageClient <- config$storageClient
+
+    jobFileContent <-
+      storageClient$blobOperations$downloadBlob(
+        container,
+        blobPath,
+        downloadPath = downloadPath,
+        overwrite = overwrite,
+        progress = TRUE,
+        ...
+      )
 
     jobFileContent
   }
@@ -145,8 +159,15 @@ getStorageFile <-
 #'
 #' @export
 deleteStorageFile <- function(container, blobPath, ...) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
   response <-
-    rAzureBatch::deleteBlob(container, blobPath, content = "response", ...)
+    storageClient$blobOperations$deleteBlob(
+      container,
+      blobPath,
+      content = "response",
+      ...)
 
   if (response$status_code == 202) {
     cat(
