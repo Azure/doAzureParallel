@@ -7,13 +7,16 @@ test_that("set credentials/cluster config programmatically scenario test", {
 
   # set your credentials
   credentials <- list(
-    "batchAccount" = list(
-      "name" = "batchaccountname",
-      "key" = "batchaccountkey",
-      "url" = "https://batchaccountname.region.batch.azure.com"
+    "sharedKey" = list(
+      "batchAccount" = list(
+        "name" = "batchaccountname",
+        "key" = "batchaccountkey",
+        "url" = "https://batchaccountname.region.batch.azure.com"
+      ),
+      "storageAccount" = list("name" = "storageaccountname",
+                              "key" = "storageaccountkey"
+      )
     ),
-    "storageAccount" = list("name" = "storageaccountname",
-                            "key" = "storageaccountkey"),
     "githubAuthenticationToken" = ""
   )
   doAzureParallel::setCredentials(credentials)

@@ -8,15 +8,17 @@ You can generate credentials by creating a R object as shown below:
 
 ```R
   credentials <- list(
-    "batchAccount" = list(
-      "name" = "batchaccountname",
-      "key" = "batchaccountkey",
-      "url" = "https://batchaccountname.region.batch.azure.com"
-    ),
-    "storageAccount" = list(
-      "name" = "storageaccountname",
-      "key" = "storageaccountkey",
-      "endpointSuffix" = "core.windows.net"
+    "sharedKey" = list(
+      "batchAccount" = list(
+        "name" = "batchaccountname",
+        "key" = "batchaccountkey",
+        "url" = "https://batchaccountname.region.batch.azure.com"
+      ),
+      "storageAccount" = list(
+        "name" = "storageaccountname",
+        "key" = "storageaccountkey",
+        "endpointSuffix" = "core.windows.net"
+      )
     ),
     "githubAuthenticationToken" = "",
     "dockerAuthentication" = list("username" = "",

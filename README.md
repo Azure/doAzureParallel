@@ -134,14 +134,16 @@ Use your credential config JSON file to enter your credentials.
 
 ```javascript 
 { 
-  "batchAccount": {
-    "name": <Azure Batch Account Name>,
-    "key": <Azure Batch Account Key>,
-    "url": <Azure Batch Account URL>
-  },
-  "storageAccount": {
-    "name": <Azure Storage Account Name>,
-    "key": <Azure Storage Account Key>
+  "sharedKey": {
+    "batchAccount": {
+      "name": <Azure Batch Account Name>,
+      "key": <Azure Batch Account Key>,
+      "url": <Azure Batch Account URL>
+    },
+    "storageAccount": {
+      "name": <Azure Storage Account Name>,
+      "key": <Azure Storage Account Key>
+    }
   },
   "githubAuthenticationToken": {}
 }

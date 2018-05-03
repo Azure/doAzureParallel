@@ -49,7 +49,7 @@ This section will provide information about how Azure works, how best to take ad
 
    Generate credentials and cluster config at runtime programmatically
 
-13. **National Cloud configuration" [(link)](/.34-national-clouds.md)
+13. **National Cloud configuration" [(link)](./34-national-clouds.md)
 
    How to run workload in Azure national clouds
 
