@@ -341,17 +341,20 @@ def format_secrets(**kwargs):
             "batchAccountResourceId": "</batch/account/resource/id>"
             "storageAccountResourceId": "</storage/account/resource/id>"
             "storageEndpointSuffix": "<storage account endpoint suffix>"
+        }
 
     For Shared Key Authentication:
-        "batchAccount": {
-            "name": "<batch account name>",
-            "key": "<batch account key>",
-            "url": "https://batchaccount.region.batch.azure.com"
-        },
-        "storageAccount": {
-            "name": "<storage account name>",
-            "key": "<storage account key>",
-            "endpointSuffix": "core.windows.net"
+        "sharedKey": {
+          "batchAccount": {
+              "name": "<batch account name>",
+              "key": "<batch account key>",
+              "url": "https://batchaccount.region.batch.azure.com"
+          },
+          "storageAccount": {
+              "name": "<storage account name>",
+              "key": "<storage account key>",
+              "endpointSuffix": "core.windows.net"
+          }
         }
     '''
     return json.dumps(kwargs, indent = 4)

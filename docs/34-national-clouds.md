@@ -29,15 +29,17 @@ Below is a sample of credential config with endpoint suffix specified:
 
 ``` R
 { 
-  "batchAccount": {
-    "name": <Azure Batch Account Name>,
-    "key": <Azure Batch Account Key>,
-    "url": <Azure Batch Account URL>
-  },
-  "storageAccount": {
-    "name": <Azure Storage Account Name>,
-    "key": <Azure Storage Account Key>,
-    "endpointSuffix": <Azure Storage Account Endpoint Suffix>
+  "sharedKey": {
+    "batchAccount": {
+      "name": <Azure Batch Account Name>,
+      "key": <Azure Batch Account Key>,
+      "url": <Azure Batch Account URL>
+    },
+    "storageAccount": {
+      "name": <Azure Storage Account Name>,
+      "key": <Azure Storage Account Key>,
+      "endpointSuffix": <Azure Storage Account Endpoint Suffix>
+    }
   },
   "githubAuthenticationToken": {}
 }

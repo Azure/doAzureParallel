@@ -186,11 +186,13 @@ To use a private docker registry simply add the docker registry information to t
 ### Updating the credentials.json file
 Add the following section inside the credentials file
 ```json
-"batchAccount": {
-    ...
-  },
-  "storageAccount": {
-    ...
+  "sharedKey": {
+    "batchAccount": {
+      ...
+    },
+    "storageAccount": {
+      ...
+    }
   },
   "githubAuthenticationToken": "",
   "dockerAuthentication": {
@@ -204,11 +206,13 @@ Add the following section inside the credentials file
 Add the following list to your credentials object
 ```R
   credentials <- list(
-    "batchAccount" = list(
-      ...
-    ),
-    "storageAccount" = list(
-      ...
+    "sharedKey" = list(
+      "batchAccount" = list(
+        ...
+      ),
+      "storageAccount" = list(
+        ...
+      )
     ),
     "githubAuthenticationToken" = "",
     "dockerAuthentication" = list("username" = "registry_username",

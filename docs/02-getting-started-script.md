@@ -44,6 +44,7 @@ Once the script has finished running you will see the following output:
 For Shared Key Authentication (Default):
 
 ```
+"sharedKey": {
   "batchAccount": {
     "name": "batchaccountname",
     "key": "batch account key",
@@ -54,6 +55,7 @@ For Shared Key Authentication (Default):
     "key": "storage account key",
     "endpointSuffix": "core.windows.net"
   }
+}
 ```
 
 For Azure Active Directory Authentication:
