@@ -108,7 +108,7 @@ resizeCluster <- function(cluster,
       dedicatedMax,
       lowPriorityMin,
       lowPriorityMax,
-      maxTasksPerNode = pool$maxTasksPerNode
+      maxTasksPerNode = cluster$maxTasksPerNode
     ),
     autoscaleInterval = timeInterval
   )

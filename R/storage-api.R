@@ -14,7 +14,7 @@ listStorageContainers <- function(prefix = "") {
   storageClient <- config$storageClient
 
   xmlResponse <-
-    storageClient$containerOperations$deleteContainer$listContainers(
+    storageClient$containerOperations$listContainers(
       prefix, content = "parsed")
 
   name <- getXmlValues(xmlResponse, ".//Container/Name")

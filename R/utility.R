@@ -178,7 +178,6 @@ createOutputFile <- function(filePattern, url) {
   # parsedValue[2] is ""
   # parsedValue[3] is "accountname.blob.core.windows.net"
   # parsedValue[4] is "outputs?se=2017-07-31&sr=c&st=2017-07-12"
-
   parsedValue <- strsplit(url, "/")[[1]]
 
   baseUrl <- paste0(parsedValue[1], "//", parsedValue[3])

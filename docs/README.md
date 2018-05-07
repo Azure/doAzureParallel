@@ -5,9 +5,9 @@ This section will provide information about how Azure works, how best to take ad
 
    Using the *Data Science Virtual Machine (DSVM)* & *Azure Batch*
 
-2. **Getting Started Script** [(link)](./02-getting-started-script.md)
+2. **Getting Started** [(link)](./02-getting-started.md)
 
-   Using the *Getting Started Script* to create credentials 
+   Using the *Getting Started* to create credentials 
 
 3. **Virtual Machine Sizes** [(link)](./10-vm-sizes.md)
 
