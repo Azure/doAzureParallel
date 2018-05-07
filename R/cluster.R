@@ -380,7 +380,8 @@ makeCluster <-
 #' }
 #' @export
 getCluster <- function(clusterName, verbose = TRUE) {
-  config <- getOption("az_config")
+  config <- getConfiguration()
+
   pool <- config$batchClient$poolOperations$getPool(
     clusterName)
 
@@ -476,14 +477,14 @@ getClusterList <- function(filter = NULL) {
     }
   }
 
-  pools <-
-    rAzureBatch::listPools(
-      query = list(
-        "$filter" = filterClause,
-        "$select" = paste0("id,state,allocationState,vmSize,currentDedicatedNodes,",
-                    "targetDedicatedNodes,currentLowPriorityNodes,targetLowPriorityNodes")
-      )
+  config <- getOption("az_config")
+  pools <- config$batchClient$poolOperations$listPools(
+    query = list(
+      "$filter" = filterClause,
+      "$select" = paste0("id,state,allocationState,vmSize,currentDedicatedNodes,",
+                         "targetDedicatedNodes,currentLowPriorityNodes,targetLowPriorityNodes")
     )
+  )
 
   count <- length(pools$value)
   id <- character(count)
