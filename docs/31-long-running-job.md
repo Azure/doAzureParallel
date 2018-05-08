@@ -6,6 +6,48 @@ The doAzureParallel package allows you to manage long running jobs easily. There
 
 Long running job should run in asynchronous mode.
 
+### Long-running Jobs + Job Management
+
+doAzureParallel also helps you manage your jobs so that you can run many jobs at once while managing it through a few simple methods.
+
+
+```R 
+# List your jobs:
+getJobList()
+# Get your job by job id:
+getJob(jobId = 'unique_job_id', verbose = TRUE)
+```
+
+This will also let you run *long running jobs* easily.
+
+With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
+
+```R
+# set the .options.azure option in the foreach loop 
+opt <- list(job = 'unique_job_id', wait = FALSE)
+
+# NOTE - if the option wait = FALSE, foreach will return your unique job id
+job_id <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar % { ... }
+
+# get back your job results with your unique job id
+results <- getJobResult(job_id)
+```
+
+Finally, you may also want to track the status of jobs by state (active, completed etc):
+
+```R
+# List jobs in completed state:
+filter <- list()
+filter$state <- c("active", "completed")
+jobList <- getJobList(filter)
+View(jobList)
+```
+
+You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md). 
+
+With long-running jobs, you can take advantage of Azure's autoscaling capabilities to save time and/or money. Learn more about autoscale [here](./docs/11-autoscale.md).
+
+
 ## How to configure a job to run asynchronously
 You can configure a job to run asynchronously by specifying wait = FALSE in job options:
 

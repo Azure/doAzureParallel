@@ -1,4 +1,4 @@
-# Getting Started
+# Getting Started Script
 
 The provided account setup script creates and configures all of the required Azure resources.
 

@@ -1,4 +1,31 @@
-## Debugging and Troubleshooting
+# Debugging and Troubleshooting
+
+## Debugging Tools
+
+### Setting Verbose Mode to Debug
+
+To debug your doAzureParallel jobs, you can set the package to operate on *verbose* mode:
+
+```R
+# turn on verbose mode
+setVerbose(TRUE)
+
+# turn off verbose mode
+setVerbose(FALSE)
+```
+### Setting HttpTraffic to Debug
+
+To debug your doAzureParallel jobs, you can set the package to operate on *verbose* mode:
+
+```R
+# turn on verbose mode
+setVerbose(TRUE)
+
+# turn off verbose mode
+setVerbose(FALSE)
+```
+
+## Common Scenarios
 
 ### After creating my cluster, my nodes go to a 'startTaskFailed' state. Why?
 The most common case for this is that there was an issue with package installation or the custom script failed to run. To troubleshoot this you can simply download the output logs from the node.
@@ -9,7 +36,6 @@ tvm-769611554_1-20170912t183413z-p
 tvm-769611554_2-20170912t183413z-p
 
 The following steps show how to debug this by pulling logs off of the nodes:
-
 
 ```r
 cluster <- makeCluster('myConfig.json')

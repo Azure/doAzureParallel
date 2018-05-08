@@ -366,17 +366,6 @@ resizeCluster(cluster,
     lowPriorityMax = 0)
 ```
 
-### Setting Verbose Mode to Debug
-
-To debug your doAzureParallel jobs, you can set the package to operate on *verbose* mode:
-
-```R
-# turn on verbose mode
-setVerbose(TRUE)
-
-# turn off verbose mode
-setVerbose(FALSE)
-```
 ### Bypassing merge task 
 
 Skipping the merge task is useful when the tasks results don't need to be merged into a list. To bypass the merge task, you can pass the *enableMerge* flag to the foreach object:
