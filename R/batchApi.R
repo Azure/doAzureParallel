@@ -30,7 +30,7 @@ BatchUtilities <- R6::R6Class(
         )
         file.remove(envFile)
 
-        readToken <- rAzureBatch::createSasToken("r", "c", jobId)
+        readToken <- storageClient$generateSasToken("r", "c", jobId)
         envFileUrl <-
           rAzureBatch::createBlobUrl(
             storageClient$authentication$name,
