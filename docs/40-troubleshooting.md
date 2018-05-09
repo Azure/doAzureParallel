@@ -27,6 +27,9 @@ setVerbose(FALSE)
 
 ## Common Scenarios
 
+## My job failed but I can't find my job and its result?
+if you set wait = TRUE, job and its result is automatically deleted, to keep them for investigation purpose, you can set global option using setAutoDeleteJob(FALSE), or use autoDeleteJob option at foreach level.
+
 ### After creating my cluster, my nodes go to a 'startTaskFailed' state. Why?
 The most common case for this is that there was an issue with package installation or the custom script failed to run. To troubleshoot this you can simply download the output logs from the node.
 

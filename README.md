@@ -313,59 +313,6 @@ You can learn more about how to execute long-running jobs [here](./docs/23-persi
 
 With long-running jobs, you can take advantage of Azure's autoscaling capabilities to save time and/or money. Learn more about autoscale [here](./docs/11-autoscale.md).
 
-### Using the 'chunkSize' option
-
-doAzureParallel also supports custom chunk sizes. This option allows you to group iterations of the foreach loop together and execute them in a single R session.
-
-```R
-# set the chunkSize option
-opt <- list(chunkSize = 3)
-results <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar% { ... }
-```
-
-You should consider using the chunkSize if each iteration in the loop executes very quickly.
-
-If you have a static cluster and want to have a single chunk for each worker, you can compute the chunkSize as follows:
-
-```R
-# compute the chunk size
-cs <- ceiling(number_of_iterations / getDoParWorkers())
-
-# run the foreach loop with chunkSize optimized
-opt <- list(chunkSize = cs)
-results <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar% { ... }
-```
-
-### Resizing Your Cluster
-
-At some point, you may also want to resize your cluster manually. You can do this simply with the command *resizeCluster*.
-
-```R
-cluster <- makeCluster("cluster.json")
-
-# resize so that we have a min of 10 dedicated nodes and a max of 20 dedicated nodes
-# AND a min of 10 low priority nodes and a max of 20 low priority nodes
-resizeCluster(
-    cluster, 
-    dedicatedMin = 10, 
-    dedicatedMax = 20, 
-    lowPriorityMin = 10, 
-    lowPriorityMax = 20, 
-    algorithm = 'QUEUE', 
-    timeInterval = '5m' )
-```
-
-If your cluster is using autoscale but you want to set it to a static size of 10, you can also use this method:
-
-```R
-# resize to a static cluster of 10
-resizeCluster(cluster, 
-    dedicatedMin = 10, 
-    dedicatedMax = 10,
-    lowPriorityMin = 0,
-    lowPriorityMax = 0)
-```
-
 ### Bypassing merge task 
 
 Skipping the merge task is useful when the tasks results don't need to be merged into a list. To bypass the merge task, you can pass the *enableMerge* flag to the foreach object:

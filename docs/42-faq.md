@@ -4,9 +4,10 @@
 No. At the moment doAzureParallel is only being distributed via GitHub.
 
 ## Which version of R does doAzureParallel use?
-By default, doAzureParallel uses Microsoft R Open 3.3.
+By default, doAzureParallel uses _rocker/tidyverse:latest_, the latest R environment provided by the R Studio community pre-packaged with a large number of popular R packages.
 
 ## Does doAzureParallel support a custom version of R?
+
 No. We are looking into support for different versions of R as well as custom versions of R but that is not supported today.
 
 ## How much does doAzureParallel cost?

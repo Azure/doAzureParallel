@@ -1,4 +1,24 @@
-### Resizing Your Cluster
+# Clusters
+
+## Commands
+
+### Listing clusters
+
+You can list all clusters currently running in your account by running:
+
+``` R
+cluster <- listClusters()
+```
+
+### Viewing a Cluster
+
+To view details about your cluster:
+
+``` R
+cluster <- getCluster("pool-001")
+```
+
+### Resizing a Cluster
 
 At some point, you may also want to resize your cluster manually. You can do this simply with the command *resizeCluster*.
 
