@@ -1,11 +1,9 @@
 args <- commandArgs(trailingOnly = TRUE)
 
-if (length(args) > 2) {
-  if (is.null(args[2])) {
-    pattern = NULL
-  }
-  else {
-    pattern = args[2]
+pattern <- NULL
+if (length(args) > 1) {
+  if (!is.null(args[2])) {
+    pattern <- args[2]
   }
 }
 
