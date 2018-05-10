@@ -581,7 +581,7 @@ waitForTasksToComplete <-
   }
 
 waitForJobPreparation <- function(jobId, poolId) {
-  cat("Job Preparation Status: Package(s) being installed")
+  cat("\nJob Preparation Status: Package(s) being installed")
   config <- getConfiguration()
   batchClient <- config$batchClient
 
@@ -623,8 +623,6 @@ waitForJobPreparation <- function(jobId, poolId) {
     cat(".")
     Sys.sleep(10)
   }
-
-  cat("\n")
 }
 
 isError <- function(x) {

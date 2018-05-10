@@ -774,8 +774,9 @@ setHttpTraffic <- function(value = FALSE) {
     return(results)
   }
   else{
-    print(
+    cat(
       paste0(
+        "\n",
         "Because the 'wait' parameter is set to FALSE, the returned value is the job ID associated with ",
         "the foreach loop. Use this returned value with getJobResults(job_id) to get the results ",
         "when the foreach loop is completed in Azure"
