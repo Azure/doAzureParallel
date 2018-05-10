@@ -20,7 +20,7 @@
   },
   "commandLine": [
     "mkdir /mnt/batch/tasks/shared/data",
-    "mount -t cifs //<STORAGE_ACCOUNT_NAME>.file.core.windows.net/<FILE_SHARE_NAME> /mnt/batch/tasks/shared/data -o vers=3.0,username=<STORAGE_ACCOUNT_NAME>,password=<STORAGE_ACCOUNT_KEY>==,dir_mode=0777,file_mode=0777,sec=ntlmssp",
+    "mount -t cifs //<STORAGE_ACCOUNT_NAME>.file.core.windows.net/<FILE_SHARE_NAME> /mnt/batch/tasks/shared/data -o vers=3.0,username=<STORAGE_ACCOUNT_NAME>,password=<STORAGE_ACCOUNT_KEY>,dir_mode=0777,file_mode=0777,sec=ntlmssp",
     "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/custom-package/inst/startup/install_custom.R",
     "docker run --rm -v $AZ_BATCH_NODE_ROOT_DIR:$AZ_BATCH_NODE_ROOT_DIR  -e AZ_BATCH_NODE_ROOT_DIR=$AZ_BATCH_NODE_ROOT_DIR -e AZ_BATCH_NODE_STARTUP_DIR=$AZ_BATCH_NODE_STARTUP_DIR --rm -v $AZ_BATCH_NODE_ROOT_DIR:$AZ_BATCH_NODE_ROOT_DIR -e AZ_BATCH_NODE_SHARED_DIR=$AZ_BATCH_NODE_SHARED_DIR	-e AZ_BATCH_NODE_ROOT_DIR=$AZ_BATCH_NODE_ROOT_DIR  -e AZ_BATCH_NODE_STARTUP_DIR=$AZ_BATCH_NODE_STARTUP_DIR rocker/tidyverse:latest Rscript --no-save --no-environ --no-restore --no-site-file --verbose $AZ_BATCH_NODE_STARTUP_DIR/wd/install_custom.R /mnt/batch/tasks/shared/data"
     ]
