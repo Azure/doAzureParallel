@@ -1,5 +1,16 @@
 args <- commandArgs(trailingOnly = TRUE)
 
+sharedPackageDirectory <- file.path(
+  Sys.getenv("AZ_BATCH_NODE_SHARED_DIR"),
+  "R",
+  "packages")
+
+tempDir <- file.path(
+  Sys.getenv("AZ_BATCH_NODE_STARTUP_DIR"),
+  "tmp")
+
+.libPaths(c(sharedPackageDirectory, .libPaths()))
+
 pattern <- NULL
 if (length(args) > 1) {
   if (!is.null(args[2])) {
@@ -13,15 +24,26 @@ if (!require(devtoolsPackage, character.only = TRUE)) {
   require(devtoolsPackage, character.only = TRUE)
 }
 
-packages <- list.files(args[1], full.names = TRUE, pattern = pattern)
-for (i in 1:length(packages)) {
-  devtools::install(packages[i],
-                    lib = paste0(Sys.getenv("AZ_BATCH_NODE_SHARED_DIR"),
-                                 "/R/packages"))
-  # install.packages(packages[i],
-  #                  lib = paste0(Sys.getenv("AZ_BATCH_NODE_SHARED_DIR"),
-  #                               "/R/packages"),
-  #                  dependencies = TRUE,
-  #                  repos = "https://cloud.r-project.org",
-  #                  type = "source")
+packageDirs <- list.files(
+  path = tempDir,
+  full.names = TRUE,
+  recursive = FALSE)
+
+for (i in 1:length(packageDirs)) {
+  print("Package Directories")
+  print(packageDirs[i])
+
+  devtools::install(packageDirs[i],
+                    args = c(
+                      paste0(
+                        "--library=",
+                        "'",
+                        sharedPackageDirectory,
+                        "'")))
+
+  print("Package Directories Completed")
 }
+
+unlink(
+  tempDir,
+  recursive = TRUE)
