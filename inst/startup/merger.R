@@ -18,7 +18,9 @@ batchJobPreparationDirectory <-
   Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 batchTaskWorkingDirectory <- Sys.getenv("AZ_BATCH_TASK_WORKING_DIR")
 taskPackageDirectory <- paste0(batchTaskWorkingDirectory)
-clusterPackageDirectory <- paste0(Sys.getenv("AZ_BATCH_NODE_SHARED_DIR", "/R/packages"))
+clusterPackageDirectory <- file.path(Sys.getenv("AZ_BATCH_NODE_SHARED_DIR"),
+                                     "R",
+                                     "packages")
 
 libPaths <- c(
   taskPackageDirectory,
@@ -35,11 +37,9 @@ azbatchenv <-
 
 setwd(batchTaskWorkingDirectory)
 
-print("Package referenced")
 for (package in azbatchenv$packages) {
   library(package, character.only = TRUE)
 }
-print("Package reference completed")
 
 parent.env(azbatchenv$exportenv) <- globalenv()
 
