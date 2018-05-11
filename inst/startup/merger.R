@@ -28,7 +28,6 @@ libPaths <- c(
   clusterPackageDirectory,
   .libPaths()
 )
-print(libPaths)
 
 .libPaths(libPaths)
 
