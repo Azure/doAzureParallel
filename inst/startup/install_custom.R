@@ -14,5 +14,6 @@ for (i in 1:length(packages)) {
                    lib = paste0(Sys.getenv("AZ_BATCH_NODE_SHARED_DIR"),
                                 "/R/packages"),
                    dependencies = TRUE,
+                   repos = "https://cloud.r-project.org",
                    type = "source")
 }
