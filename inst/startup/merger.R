@@ -26,6 +26,7 @@ libPaths <- c(
   clusterPackageDirectory,
   .libPaths()
 )
+print(libPaths)
 
 .libPaths(libPaths)
 
@@ -34,9 +35,11 @@ azbatchenv <-
 
 setwd(batchTaskWorkingDirectory)
 
+print("Package referenced")
 for (package in azbatchenv$packages) {
   library(package, character.only = TRUE)
 }
+print("Package reference completed")
 
 parent.env(azbatchenv$exportenv) <- globalenv()
 
