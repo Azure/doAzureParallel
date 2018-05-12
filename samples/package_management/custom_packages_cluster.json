@@ -1,0 +1,27 @@
+{
+  "name": "custom-package-pool",
+  "vmSize": "Standard_D2_v2",
+  "maxTasksPerNode": 1,
+  "poolSize": {
+    "dedicatedNodes": {
+      "min": 2,
+      "max": 2
+    },
+    "lowPriorityNodes": {
+      "min": 0,
+      "max": 0
+    },
+    "autoscaleFormula": "QUEUE"
+  },
+  "rPackages": {
+    "cran": [],
+    "github": [],
+    "bioconductor": []
+  },
+  "commandLine": [
+    "mkdir /mnt/batch/tasks/shared/data",
+    "mount -t cifs //<Account Name>.file.core.windows.net/<File Share> /mnt/batch/tasks/shared/data -o vers=3.0,username=<Account Name>,password=<Account Key>,dir_mode=0777,file_mode=0777,sec=ntlmssp",
+    "mkdir $AZ_BATCH_NODE_STARTUP_DIR/tmp | for i in `ls $AZ_BATCH_NODE_SHARED_DIR/data/*.tar.gz | awk '{print $NF}'`; do tar -xvf $i -C $AZ_BATCH_NODE_STARTUP_DIR/tmp; done",
+    "docker run --rm -v $AZ_BATCH_NODE_ROOT_DIR:$AZ_BATCH_NODE_ROOT_DIR -e AZ_BATCH_NODE_SHARED_DIR=$AZ_BATCH_NODE_SHARED_DIR	-e AZ_BATCH_NODE_ROOT_DIR=$AZ_BATCH_NODE_ROOT_DIR  -e AZ_BATCH_NODE_STARTUP_DIR=$AZ_BATCH_NODE_STARTUP_DIR rocker/tidyverse:latest Rscript --no-save --no-environ --no-restore --no-site-file --verbose $AZ_BATCH_NODE_STARTUP_DIR/wd/install_custom.R /mnt/batch/tasks/shared/data"
+    ]
+}
