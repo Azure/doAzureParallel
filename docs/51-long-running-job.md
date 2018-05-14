@@ -1,5 +1,4 @@
 # Job Management and Asynchronous Jobs
-
 The doAzureParallel package allows you to manage long running jobs easily. There are 2 ways to run a job:
 - Synchronous
 - Asynchronous

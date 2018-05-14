@@ -207,9 +207,6 @@ For more information about low-priority VMs, please visit the [documentation](ht
 
 You can also check out information on low-priority pricing [here](https://azure.microsoft.com/en-us/pricing/details/batch/).
 
-### Distributing Data
-When developing at scale, you may also want to chunk up your data and distribute the data across your nodes. Learn more about that [here](./docs/21-distributing-data.md#chunking-data)
-
 ### Using %do% vs %dopar%
 When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
 
@@ -220,111 +217,6 @@ results <- foreach(i = 1:number_of_iterations) %do% { ... }
 # use the doAzureParallel backend to run your code in parallel across your Azure cluster
 results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
 ```
-
-### Error Handling
-The errorhandling option specifies how failed tasks should be evaluated. By default, the error handling is 'stop' to ensure users' can have reproducible results. If a combine function is assigned, it must be able to handle error objects.
-
-Error Handling Type | Description
---- | ---
-stop | The execution of the foreach will stop if an error occurs
-pass | The error object of the task is included the results
-remove | The result of a failed task will not be returned 
-
-```R 
-# Remove R error objects from the results
-res <- foreach::foreach(i = 1:4, .errorhandling = "remove") %dopar% {
-  if (i == 2 || i == 4) {
-    randomObject
-  }
-  
-  mean(1:3)
-}
-
-#> res
-#[[1]]
-#[1] 2
-#
-#[[2]]
-#[1] 2
-```
-
-```R 
-# Passing R error objects into the results 
-res <- foreach::foreach(i = 1:4, .errorhandling = "pass") %dopar% {
-  if (i == 2|| i == 4) {
-    randomObject
-  }
-  
-  sum(i, 1)
-}
-
-#> res
-#[[1]]
-#[1] 2
-#
-#[[2]]
-#<simpleError in eval(expr, envir, enclos): object 'randomObject' not found>
-#
-#[[3]]
-#[1] 4
-#
-#[[4]]
-#<simpleError in eval(expr, envir, enclos): object 'randomObject' not found>
-```
-
-### Long-running Jobs + Job Management
-
-doAzureParallel also helps you manage your jobs so that you can run many jobs at once while managing it through a few simple methods.
-
-
-```R 
-# List your jobs:
-getJobList()
-# Get your job by job id:
-getJob(jobId = 'unique_job_id', verbose = TRUE)
-```
-
-This will also let you run *long running jobs* easily.
-
-With long running jobs, you will need to keep track of your jobs as well as set your job to a non-blocking state. You can do this with the *.options.azure* options:
-
-```R
-# set the .options.azure option in the foreach loop 
-opt <- list(job = 'unique_job_id', wait = FALSE)
-
-# NOTE - if the option wait = FALSE, foreach will return your unique job id
-job_id <- foreach(i = 1:number_of_iterations, .options.azure = opt) %dopar % { ... }
-
-# get back your job results with your unique job id
-results <- getJobResult(job_id)
-```
-
-Finally, you may also want to track the status of jobs by state (active, completed etc):
-
-```R
-# List jobs in completed state:
-filter <- list()
-filter$state <- c("active", "completed")
-jobList <- getJobList(filter)
-View(jobList)
-```
-
-You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md). 
-
-With long-running jobs, you can take advantage of Azure's autoscaling capabilities to save time and/or money. Learn more about autoscale [here](./docs/11-autoscale.md).
-
-### Bypassing merge task 
-
-Skipping the merge task is useful when the tasks results don't need to be merged into a list. To bypass the merge task, you can pass the *enableMerge* flag to the foreach object:
-
-```R
-# Enable merge task
-foreach(i = 1:3, .options.azure = list(enableMerge = TRUE))
-
-# Disable merge task
-foreach(i = 1:3, .options.azure = list(enableMerge = FALSE))
-```
-Note: User defined functions for the merge task is on our list of features that we are planning on doing.
 
 ## Next Steps
 
