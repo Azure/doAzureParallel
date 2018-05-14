@@ -13,7 +13,7 @@ to build their own containers.
 For detailed steps on uploading files to Azure Files in the Portal can be found
 [here](https://docs.microsoft.com/en-us/azure/storage/files/storage-how-to-use-files-portal)
 
-### Tips
+### Notes
 1) In order to build the custom packages' dependencies, we need to untar the R packages and build them within their directories. By default, we will build custom packages in the *$AZ_BATCH_NODE_SHARED_DIR/tmp* directory. 
 2) By default, the custom package cluster configuration file will install any packages that are a *.tar.gz file in the file share. If users want to specify R packages, they must use change this line in the cluster configuration file.
 
@@ -28,5 +28,5 @@ Finds files that end with *.tar.gz in the current Azure File Share directory
     ]
 }
 ```
-
-
+3) For more information on using Azure Files on Batch, follow our other [sample](./azure_files/readme.md) of using Azure Files
+4) Replace your Storage Account name, endpoint and key in the cluster configuration file 

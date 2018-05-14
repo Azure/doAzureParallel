@@ -12,4 +12,4 @@ This samples shows how to update the cluster configuration to create a new mount
 
 For large data sets or large traffic applications be sure to review the Azure Files [scalability and performance targets](https://docs.microsoft.com/en-us/azure/storage/common/storage-scalability-targets#scalability-targets-for-blobs-queues-tables-and-files).
 
-For very large data sets we recommend using Azure Blobs. You can learn more in the [persistent storage](../../docs/23-persistent-storage.md) and [distrubuted data](../../docs/21-distributing-data.md) docs.
+For very large data sets we recommend using Azure Blobs. You can learn more in the [persistent storage](../../docs/23-persistent-storage.md) and [distributing data](../../docs/21-distributing-data.md) docs.
