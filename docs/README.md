@@ -7,53 +7,69 @@ This section will provide information about how Azure works, how best to take ad
 
 2. **Getting Started** [(link)](./02-getting-started.md)
 
-   Using the *Getting Started* to create credentials 
+   Using the *Getting Started* to create credentials
+  
+  a.
+  
+  b. **Programmatically** [(link)](./33-programmatically-generate-config.md)
+   Generate credentials and cluster config at runtime programmatically
+   
+  c. **National Cloud Support** [(link)](./34-national-clouds.md)
 
-3. **Virtual Machine Sizes** [(link)](./10-vm-sizes.md)
+   How to run workload in Azure national clouds
 
-   How do you choose the best VM type/size for your workload?
+3. **Customize Cluster** [(link)](./30-customize-cluster.md)
 
-4. **Autoscale** [(link)](./11-autoscale.md)
+    Setting up your cluster to user's specific needs
+  a. **Virtual Machine Sizes** [(link)](./10-vm-sizes.md)
+    How do you choose the best VM type/size for your workload?
+  b. **Autoscale** [(link)](./11-autoscale.md)
+    Automatically scale up/down your cluster to save time and/or money.
+  c. **Building Containers** [(link)](./32-building-containers.md)
 
-   Automatically scale up/down your cluster to save time and/or money.
+4. **Managing Cluster** [(link)](./33-clusters.md)
+
+    Setting up your cluster to user's specific needs
+    
+    a. Setting up your cluster to user's specific needs
+
+6. **Package Management** [(link)](./20-package-management.md)
+
+   Best practices for managing your R packages in code. This includes installation at the cluster or job level as well as how to use different package providers.
+
+7. **Storage Management** [(link)](./31-long-running-job.md)
+
+  a. **Distributing your Data** [(link)](./21-distributing-data.md)
+
+   Best practices and limitations for working with distributed data.
+
+  b. **Persistent Storage** [(link)](./23-persistent-storage.md)
+
+   Taking advantage of persistent storage for long-running jobs
+   
+  c. **Accessing Azure Storage through R** [(link)](./23-persistent-storage.md)
+
+   Taking advantage of persistent storage for long-running jobs
+
+8. **Performance Tuning** [(link)](./30-customize-cluster.md)
+
+    Setting up your cluster to user's specific needs
+    
+  a. **Parallelizing on each VM Core** [(link)](./22-parallelizing-cores.md)
+    Best practices and limitations for parallelizing your R code to each core in each VM in your pool
+  b. 
+
+9. **Asynchronous Jobs** [(link)](./31-long-running-job.md)
+
+    Best practices for managing long running jobs
+
+10. **Debugging and Troubleshooting** [(link)](./40-troubleshooting.md)
+
+    Best practices on diagnosing common issues
 
 5. **Azure Limitations** [(link)](./12-quota-limitations.md)
 
    Learn about the limitations around the size of your cluster and the number of foreach jobs you can run in Azure.
    
-6. **Package Management** [(link)](./20-package-management.md)
-
-   Best practices for managing your R packages in code. This includes installation at the cluster or job level as well as how to use different package providers.
-   
-7. **Distributing your Data** [(link)](./21-distributing-data.md)
-
-   Best practices and limitations for working with distributed data.
-   
-8. **Parallelizing on each VM Core** [(link)](./22-parallelizing-cores.md)
-
-   Best practices and limitations for parallelizing your R code to each core in each VM in your pool 
-
-9. **Persistent Storage** [(link)](./23-persistent-storage.md)
-
-   Taking advantage of persistent storage for long-running jobs
-
-10. **Customize Cluster** [(link)](./30-customize-cluster.md)
-
-   Setting up your cluster to user's specific needs
-
-11. **Long Running Job** [(link)](./31-long-running-job.md)
-
-   Best practices for managing long running jobs
-
-12. **Programmatically generated config** [(link)](./33-programmatically-generate-config.md)
-
-   Generate credentials and cluster config at runtime programmatically
-
-13. **National Cloud configuration" [(link)](./34-national-clouds.md)
-
-   How to run workload in Azure national clouds
-
 ## Additional Documentation
-Take a look at our [**Troubleshooting Guide**](./40-troubleshooting.md) for information on how to diagnose common issues.
-
 Read our [**FAQ**](./42-faq.md) for known issues and common questions.
