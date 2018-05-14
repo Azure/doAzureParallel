@@ -153,7 +153,7 @@ makeCluster <-
       ),
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "feature/custom-package/inst/startup/install_custom.R"
+        "master/inst/startup/install_custom.R"
       ),
       "chmod u+x install_bioconductor.R",
       installAndStartContainerCommand
