@@ -1,7 +1,7 @@
 ## Installing Custom Packages
 doAzureParallel supports custom package installation in the cluster. Custom packages are R packages that cannot be hosted on Github or be built on a docker image. The recommended approach for custom packages is building them from source and uploading them to an Azure File Share.
 
-Note: If the package requires a compilation such as apt-get installations, users will be require
+Note: If the package requires a compilation such as apt-get installations, users will be required
 to build their own containers.
 
 ### Building Package from Source in RStudio
@@ -15,7 +15,7 @@ For detailed steps on uploading files to Azure Files in the Portal can be found
 
 ### Notes
 1) In order to build the custom packages' dependencies, we need to untar the R packages and build them within their directories. By default, we will build custom packages in the *$AZ_BATCH_NODE_SHARED_DIR/tmp* directory. 
-2) By default, the custom package cluster configuration file will install any packages that are a *.tar.gz file in the file share. If users want to specify R packages, they must use change this line in the cluster configuration file.
+2) By default, the custom package cluster configuration file will install any packages that are a *.tar.gz file in the file share. If users want to specify R packages, they must change this line in the cluster configuration file.
 
 Finds files that end with *.tar.gz in the current Azure File Share directory 
 ``` json

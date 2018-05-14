@@ -166,9 +166,9 @@ Note: Container references that are not provided by tidyverse do not support Bio
 ## Installing Custom Packages
 doAzureParallel supports custom package installation in the cluster. Custom packages installation on the per-*foreach* loop level is not supported. 
 
-For steps on installing on custom packages, it can be found [here](../samples/package_management/custom/README.md).
+For steps on installing custom packages, it can be found [here](../samples/package_management/custom/README.md).
 
-Note: If the package requires a compilation such as apt-get installations, users will be require
+Note: If the package requires a compilation such as apt-get installations, users will be required
 to build their own containers.
 
 ## Uninstalling a Package

@@ -1,4 +1,4 @@
-#Please see documentation at docs/20-package-management.md for more details on packagement management.
+#Please see documentation at docs/20-package-management.md for more details on package management.
 
 # import the doAzureParallel library and its dependencies
 library(doAzureParallel)
