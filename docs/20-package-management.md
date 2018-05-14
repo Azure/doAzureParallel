@@ -164,9 +164,12 @@ The default deployment of R used in the cluster (see [Customizing the cluster](.
 Note: Container references that are not provided by tidyverse do not support Bioconductor installs. If you choose another container, you must make sure that Bioconductor is installed.
 
 ## Installing Custom Packages
-Our recommendation for installing custom packages is uploading your R packages sources to an Azure file share. 
+doAzureParallel supports custom package installation in the cluster. Custom packages installation on the per-*foreach* loop level is not supported. 
 
-Custom packages installation on the per-*foreach* loop level is not supported.
+For steps on installing on custom packages, it can be found [here](../samples/package_management/custom/README.md).
+
+Note: If the package requires a compilation such as apt-get installations, users will be require
+to build their own containers.
 
 ## Uninstalling a Package
 Uninstalling packages from your pool is not supported. However, you may consider rebuilding your pool.
