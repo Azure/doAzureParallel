@@ -40,9 +40,9 @@ jobList <- getJobList(filter)
 View(jobList)
 ```
 
-You can learn more about how to execute long-running jobs [here](./docs/23-persistent-storage.md). 
+You can learn more about how to execute long-running jobs [here](./docs/72-persistent-storage.md). 
 
-With long-running jobs, you can take advantage of Azure's autoscaling capabilities to save time and/or money. Learn more about autoscale [here](./docs/11-autoscale.md).
+With long-running jobs, you can take advantage of Azure's autoscaling capabilities to save time and/or money. Learn more about autoscale [here](./docs/32-autoscale.md).
 
 ## Configuring an asynchronous job
 You can configure a job to run asynchronously by specifying wait = FALSE in job options:

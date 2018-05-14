@@ -63,7 +63,7 @@ FROM ubuntu:16.04
 CMD ["R"]
 ```
 
-For more information and samples on how to build images, deploy them to dockerhub and use them in your cluster please refer to the [Building Containers](./32-building-containers.md) documentation.
+For more information and samples on how to build images, deploy them to dockerhub and use them in your cluster please refer to the [Building Containers](./33-building-containers.md) documentation.
 
 There is no requirement to be debian based. For consistency with other packages it is recommeneded though. Please note though that the container **must be based off a Linux distribution as Windows is not supported**.
 
