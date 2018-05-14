@@ -63,4 +63,19 @@ The list above covers most scenarios that run R jobs. For special scenarios (suc
 
 To get a sense of what each VM costs, please visit the Azure Virtual Machine pricing page [here](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/linux/).
 
+# Low Priority VMs
+Low-priority VMs are a way to obtain and consume Azure compute at a much lower price using Azure Batch. Since doAzureParallel is built on top of Azure Batch, this package is able to take advantage of low-priority VMs and allocate compute resources from Azure's surplus capacity at up to **80% discount**. 
 
+Low-priority VMs come with the understanding that when you request it, there is the possibility that we'll need to take some or all of it back. Hence the name *low-priority* - VMs may not be allocated or may be preempted due to higher priority allocations, which equate to full-priced VMs that have an SLA.
+
+And as the name suggests, this significant cost reduction is ideal for *low priority* workloads that do not have a strict performance requirement.
+
+With Azure Batch's first-class support for low-priority VMs, you can use them in conjunction with normal on-demand VMs (*dedicated VMs*) and enable job cost to be balanced with job execution flexibility:
+
+ * Batch pools can contain both on-demand nodes and low-priority nodes. The two types can be independently scaled, either explicitly with the resize operation or automatically using auto-scale. Different configurations can be used, such as maximizing cost savings by always using low-priority nodes or spinning up on-demand nodes at full price, to maintain capacity by replacing any preempted low-priority nodes.
+ * If any low-priority nodes are preempted, then Batch will automatically attempt to replace the lost capacity, continually seeking to maintain the target amount of low-priority capacity in the pool.
+ * If tasks are interrupted when the node on which it is running is preempted, then the tasks are automatically re-queued to be re-run.
+
+For more information about low-priority VMs, please visit the [documentation](https://docs.microsoft.com/en-us/azure/batch/batch-low-pri-vms).
+
+You can also check out information on low-priority pricing [here](https://azure.microsoft.com/en-us/pricing/details/batch/).

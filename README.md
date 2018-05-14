@@ -1,23 +1,6 @@
 [![Build Status](https://travis-ci.org/Azure/doAzureParallel.svg?branch=master)](https://travis-ci.org/Azure/doAzureParallel)
 # doAzureParallel
 
-```R
-# set your credentials
-setCredentials("credentials.json")
-
-# setup your cluster with a simple config file
-cluster<- makeCluster("cluster.json")
-
-# register the cluster as your parallel backend
-registerDoAzureParallel(cluster)
-
-# run your foreach loop on a distributed cluster in Azure
-number_of_iterations <- 10
-results <- foreach(i = 1:number_of_iterations) %dopar% {
-    myParallelAlgorithm()
-}
-```
-
 ## Introduction
 
 The *doAzureParallel* package is a parallel backend for the widely popular *foreach* package. With *doAzureParallel*, each iteration of the *foreach* loop runs in parallel on an Azure Virtual Machine (VM), allowing users to scale up their R jobs to tens or hundreds of machines.
@@ -25,6 +8,10 @@ The *doAzureParallel* package is a parallel backend for the widely popular *fore
 *doAzureParallel* is built to support the *foreach* parallel computing package. The *foreach* package supports parallel execution - it can execute multiple processes across some parallel backend. With just a few lines of code, the *doAzureParallel* package helps create a cluster in Azure, register it as a parallel backend, and seamlessly connects to the *foreach* package.
 
 NOTE: The terms *pool* and *cluster* are used interchangably throughout this document.
+
+## Notable Features
+- Ability to use low-priority VMs for an 80% discount [link](./docs/31-vm-sizes.md#low-priority-vms)
+-  
 
 ## Dependencies
 
@@ -37,9 +24,9 @@ NOTE: The terms *pool* and *cluster* are used interchangably throughout this doc
 - iterators (>= 1.0.8)
 - bitops (>= 1.0.5)
 
-## Installation 
+## Setup 
 
-Install doAzureParallel directly from Github.
+1) Install doAzureParallel directly from Github.
 
 ```R
 # install the package devtools
@@ -50,36 +37,23 @@ devtools::install_github("Azure/rAzureBatch")
 devtools::install_github("Azure/doAzureParallel")
 ```
 
-## Azure Requirements
+2) Create an doAzureParallel's credentials file
+``` R
+library(doAzureParallel)
+generateCredentials.json("credentials.json")
+```
 
-To run your R code across a cluster in Azure, we'll need to get keys and account information.
+3) Login or register for an Azure Account, navigate to [Azure Cloud Shell](https://shell.azure.com)
 
-### Setup Azure Account
-First, set up your Azure Account ([Get started for free!](https://azure.microsoft.com/en-us/free/))
+``` sh 
+wget -q https://raw.githubusercontent.com/Azure/doAzureParallel/master/account_setup.sh &&
+chmod 755 account_setup.sh &&
+/bin/bash account_setup.sh
+```
+4) Follow the on screen prompts to create the necessary Azure resources and copy the output into your credentials file. For more information, see [Getting Started Scripts](./docs/02-getting-started-script.md).
 
-Once you have an Azure account, you'll need to create the following two services in the Azure portal:
-- Azure Batch Account ([Create an Azure Batch Account in the Portal](https://docs.microsoft.com/en-us/azure/Batch/batch-account-create-portal))
-- Azure Storage Account (this can be created with the Batch Account)
-
-### Get Keys and Account Information
-For your Azure Batch Account, we need to get:
-- Batch Account Name
-- Batch Account URL
-- Batch Account Access Key
-
-This information can be found in the Azure Portal inside your Batch Account:
-
-![Azure Batch Acccount in the Portal](./vignettes/doAzureParallel-azurebatch-instructions.PNG "Azure Batch Acccount in the Portal")
-
-For your Azure Storage Account, we need to get:
-- Storage Account Name
-- Storage Account Access Key
-
-This information can be found in the Azure Portal inside your Azure Storage Account:
-
-![Azure Storage Acccount in the Portal](./vignettes/doAzureParallel-azurestorage-instructions.PNG "Azure Storage Acccount in the Portal")
-
-Keep track of the above keys and account information as it will be used to connect your R session with Azure.
+To Learn More:
+- [Azure Account Requirements for doAzureParallel](./docs/04-azure-requirements.md)
 
 ## Getting Started
 
@@ -127,33 +101,7 @@ After you finish running your R code in Azure, you may want to shut down your cl
 stopCluster(cluster)
 ```
 
-Learn more:
- - [Choosing VM size](./docs/10-vm-sizes.md#vm-size-table)
- - [Create your cluster configuration in code](./docs/33-programmatically-generate-config.md)
- - [MaxTasksPerNode](./docs/22-parallelizing-cores.md)
- - [LowPriorityNodes](#low-priority-vms)
- - [Autoscale](./docs/11-autoscale.md)
- - [PoolSize Limitations](./docs/12-quota-limitations.md)
- - [rPackages](./docs/20-package-management.md)
-
-### Low Priority VMs
-Low-priority VMs are a way to obtain and consume Azure compute at a much lower price using Azure Batch. Since doAzureParallel is built on top of Azure Batch, this package is able to take advantage of low-priority VMs and allocate compute resources from Azure's surplus capacity at up to **80% discount**. 
-
-Low-priority VMs come with the understanding that when you request it, there is the possibility that we'll need to take some or all of it back. Hence the name *low-priority* - VMs may not be allocated or may be preempted due to higher priority allocations, which equate to full-priced VMs that have an SLA.
-
-And as the name suggests, this significant cost reduction is ideal for *low priority* workloads that do not have a strict performance requirement.
-
-With Azure Batch's first-class support for low-priority VMs, you can use them in conjunction with normal on-demand VMs (*dedicated VMs*) and enable job cost to be balanced with job execution flexibility:
-
- * Batch pools can contain both on-demand nodes and low-priority nodes. The two types can be independently scaled, either explicitly with the resize operation or automatically using auto-scale. Different configurations can be used, such as maximizing cost savings by always using low-priority nodes or spinning up on-demand nodes at full price, to maintain capacity by replacing any preempted low-priority nodes.
- * If any low-priority nodes are preempted, then Batch will automatically attempt to replace the lost capacity, continually seeking to maintain the target amount of low-priority capacity in the pool.
- * If tasks are interrupted when the node on which it is running is preempted, then the tasks are automatically re-queued to be re-run.
-
-For more information about low-priority VMs, please visit the [documentation](https://docs.microsoft.com/en-us/azure/batch/batch-low-pri-vms).
-
-You can also check out information on low-priority pricing [here](https://azure.microsoft.com/en-us/pricing/details/batch/).
-
-## doAzureParallel Guide 
+## Table of Contents 
 This section will provide information about how Azure works, how best to take advantage of Azure, and best practices when using the doAzureParallel package.
 
 1. **Azure Introduction** [(link)](./docs/00-azure-introduction.md)
