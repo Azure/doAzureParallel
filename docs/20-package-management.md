@@ -38,29 +38,37 @@ You can install packages by specifying the package(s) in your JSON pool configur
 }
 ```
 
+## Installing Packages per-*foreach* Loop
+
+You can also install cran packages by using the **.packages** option in the *foreach* loop. You can also install github/bioconductor packages by using the **github** and **bioconductor" option in the *foreach* loop. Instead of installing packages during pool creation, packages (and its dependencies) can be installed before each iteration in the loop is run on your Azure cluster.
+
+### Installing a Github Package
+
+doAzureParallel supports github package with the **github** option. 
+
+Please do not use "https://github.com/" as prefix for the github package name above.
+
 ## Installing packages from a private GitHub repository
 
-Clusters can be configured to install packages from a private GitHub repository by setting the __githubAuthenticationToken__ property. If this property is blank only public repositories can be used. If a token is added then public and the private github repo can be used together.
+Clusters can be configured to install packages from a private GitHub repository by setting the __githubAuthenticationToken__ property in the credentials file. If this property is blank only public repositories can be used. If a token is added then public and the private github repo can be used together.
 
 When the cluster is created the token is passed in as an environment variable called GITHUB\_PAT on start-up which lasts the life of the cluster and is looked up whenever devtools::install_github is called.
 
+Credentials File for github authentication token
+``` json
+{
+  ...
+  "githubAuthenticationToken": "",
+  ...
+}
+
+```
+
+Cluster File
 ```json
 {
     {
-    "name": <your pool name>,
-    "vmSize": <your pool VM size name>,
-    "maxTasksPerNode": <num tasks to allocate to each node>,
-    "poolSize": {
-        "dedicatedNodes": {
-            "min": 2,
-            "max": 2
-        },
-        "lowPriorityNodes": {
-            "min": 1,
-            "max": 10
-        },
-        "autoscaleFormula": "QUEUE"
-    },
+    ...
     "rPackages": {
         "cran": [],
         "github": ["<project/some_private_repository>"],
@@ -71,10 +79,18 @@ When the cluster is created the token is passed in as an environment variable ca
 }
 ```
 
-_More information regarding github authentication tokens can be found [here](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)_
+_More information regarding github authentication tokens can be found [here](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)
 
-## Installing Packages per-*foreach* Loop
-You can also install cran packages by using the **.packages** option in the *foreach* loop. You can also install github/bioconductor packages by using the **github** and **bioconductor" option in the *foreach* loop. Instead of installing packages during pool creation, packages (and its dependencies) can be installed before each iteration in the loop is run on your Azure cluster.
+### Installing Multiple Packages
+By using character vectors of the packages, 
+
+```R
+number_of_iterations <- 10
+results <- foreach(i = 1:number_of_iterations,
+                  .packages=c('package_1', 'package_2'),
+                  github = c('Azure/rAzureBatch', 'Azure/doAzureParallel'),
+                  bioconductor = c('IRanges', 'Biobase')) %dopar% { ... }
+```
 
 To install a single cran package:
 ```R
@@ -94,7 +110,6 @@ number_of_iterations <- 10
 results <- foreach(i = 1:number_of_iterations, github='azure/rAzureBatch') %dopar% { ... }
 ```
 
-Please do not use "https://github.com/" as prefix for the github package name above.
 
 To install multiple github packages:
 ```R
@@ -114,7 +129,7 @@ number_of_iterations <- 10
 results <- foreach(i = 1:number_of_iterations, bioconductor=c('package_1', 'package_2')) %dopar% { ... }
 ```
 
-## Installing Packages from BioConductor
+## Installing a BioConductor Package
 The default deployment of R used in the cluster (see [Customizing the cluster](./30-customize-cluster.md) for more information) includes the Bioconductor installer by default. Simply add packages to the cluster by adding packages in the array.
 
 ```json
@@ -134,17 +149,27 @@ The default deployment of R used in the cluster (see [Customizing the cluster](.
         },
         "autoscaleFormula": "QUEUE"
     },
+    "containerImage:" "rocker/tidyverse:latest",
     "rPackages": {
         "cran": [],
         "github": [],
         "bioconductor": ["IRanges"]
     },
-    "commandLine": []
+    "commandLine": [],
+    "subnetId": ""
     }
 }
 ```
 
-Note: Container references that are not provided by tidyverse do not support Bioconductor installs. If you choose another container, you must make sure that Biocondunctor is installed.
+Note: Container references that are not provided by tidyverse do not support Bioconductor installs. If you choose another container, you must make sure that Bioconductor is installed.
 
-## Uninstalling packages
+## Installing Custom Packages
+doAzureParallel supports custom package installation in the cluster. Custom packages installation on the per-*foreach* loop level is not supported. 
+
+For steps on installing custom packages, it can be found [here](../samples/package_management/custom/README.md).
+
+Note: If the package requires a compilation such as apt-get installations, users will be required
+to build their own containers.
+
+## Uninstalling a Package
 Uninstalling packages from your pool is not supported. However, you may consider rebuilding your pool.
