@@ -48,7 +48,7 @@ This section will provide information about how Azure works, how best to take ad
         
     - Use Azure package-defined foreach options to improve performance and user experience
   
-    iii. **Error Handling** [(link)](./53-azure-foreach-options.md)
+    iii. **Error Handling** [(link)](./53-error-handling.md)
     
     - How Azure handles errors in your Foreach loop? 
     

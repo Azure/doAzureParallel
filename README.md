@@ -10,8 +10,7 @@ The *doAzureParallel* package is a parallel backend for the widely popular *fore
 NOTE: The terms *pool* and *cluster* are used interchangably throughout this document.
 
 ## Notable Features
-- Ability to use low-priority VMs for an 80% discount [link](./docs/31-vm-sizes.md#low-priority-vms)
--  
+- Ability to use low-priority VMs for an 80% discount [(link)](./docs/31-vm-sizes.md#low-priority-vms)
 
 ## Dependencies
 
@@ -152,7 +151,7 @@ This section will provide information about how Azure works, how best to take ad
         
     - Use Azure package-defined foreach options to improve performance and user experience
   
-    iii. **Error Handling** [(link)](./docs/53-azure-foreach-options.md)
+    iii. **Error Handling** [(link)](./docs/53-error-handling.md)
     
     - How Azure handles errors in your Foreach loop? 
     
