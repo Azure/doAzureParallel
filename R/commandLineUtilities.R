@@ -123,6 +123,7 @@ dockerRunCommand <-
       dockerOptions <-
         paste(
           dockerOptions,
+          "-e AZ_BATCH_NODE_SHARED_DIR=$AZ_BATCH_NODE_SHARED_DIR",
           "-e AZ_BATCH_TASK_ID=$AZ_BATCH_TASK_ID",
           "-e AZ_BATCH_JOB_ID=$AZ_BATCH_JOB_ID",
           "-e AZ_BATCH_TASK_WORKING_DIR=$AZ_BATCH_TASK_WORKING_DIR",
