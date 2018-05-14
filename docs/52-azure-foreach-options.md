@@ -15,8 +15,6 @@
   | ------------- |:-------------:| -----:| -----:|
   | github      | c() | Vector | A vector of github package names. The proper name format of installing a github package is the repository address: username/repo[/subdir]   |
   | bioconductor      | c() | Vector | A vector of bioconductor package names |
-  
-
 
 ### Bypassing merge task 
 

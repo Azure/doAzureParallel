@@ -127,60 +127,6 @@ After you finish running your R code in Azure, you may want to shut down your cl
 stopCluster(cluster)
 ```
 
-### Configuration JSON files
-
-#### Credentials
-Use your credential config JSON file to enter your credentials.
-
-```javascript 
-{ 
-  "sharedKey": {
-    "batchAccount": {
-      "name": <Azure Batch Account Name>,
-      "key": <Azure Batch Account Key>,
-      "url": <Azure Batch Account URL>
-    },
-    "storageAccount": {
-      "name": <Azure Storage Account Name>,
-      "key": <Azure Storage Account Key>
-    }
-  },
-  "githubAuthenticationToken": {}
-}
-```
-Learn more:
- - [Batch account / Storage account](./README.md#azure-requirements)
- - [Create your secrets configuration in code](./docs/33-programmatically-generate-config.md)
-
-
-#### Cluster Settings
-Use your pool configuration JSON file to define your pool in Azure.
-
-```javascript
-{
-  "name": <your pool name>, // example: "myazurecluster"
-  "vmSize": <your pool VM size name>, // example: "Standard_F2"
-  "maxTasksPerNode": <num tasks to allocate to each node>, // example: "2"
-  "poolSize": {
-    "dedicatedNodes": {  // dedicated vms
-        "min": 2,
-        "max": 2
-    },
-    "lowPriorityNodes": { // low priority vms 
-        "min": 1,
-        "max": 10
-    },
-    "autoscaleFormula": "QUEUE"
-  },
-  "rPackages": {
-    "cran": ["some_cran_package", "some_other_cran_package"],
-    "github": ["username/some_github_package", "another_username/some_other_github_package"]
-  },
-  "commandLine": []
-}
-```
-NOTE: If you do **not** want your cluster to autoscale, simply set the number of min nodes equal to max nodes for low-priority and dedicated.
-
 Learn more:
  - [Choosing VM size](./docs/10-vm-sizes.md#vm-size-table)
  - [Create your cluster configuration in code](./docs/33-programmatically-generate-config.md)
@@ -207,16 +153,93 @@ For more information about low-priority VMs, please visit the [documentation](ht
 
 You can also check out information on low-priority pricing [here](https://azure.microsoft.com/en-us/pricing/details/batch/).
 
-### Using %do% vs %dopar%
-When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
+## doAzureParallel Guide 
+This section will provide information about how Azure works, how best to take advantage of Azure, and best practices when using the doAzureParallel package.
 
-```R 
-# run your code sequentially on your local machine
-results <- foreach(i = 1:number_of_iterations) %do% { ... }
+1. **Azure Introduction** [(link)](./docs/00-azure-introduction.md)
 
-# use the doAzureParallel backend to run your code in parallel across your Azure cluster
-results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
-```
+   Using *Azure Batch*
+
+2. **Getting Started** [(link)](./docs/01-getting-started.md)
+
+    Using the *Getting Started* to create credentials
+    
+    i. **Generate Credentials Script** [(link)](./docs/02-getting-started-script.md)
+
+    - Pre-built bash script for getting Azure credentials without Azure Portal
+
+    ii. **National Cloud Support** [(link)](./docs/03-national-clouds.md)
+
+    - How to run workload in Azure national clouds
+
+3. **Customize Cluster** [(link)](./docs/30-customize-cluster.md)
+
+    Setting up your cluster to user's specific needs
+
+    i. **Virtual Machine Sizes** [(link)](./docs/31-vm-sizes.md)
+    
+    - How do you choose the best VM type/size for your workload?
+
+    ii. **Autoscale** [(link)](./docs/32-autoscale.md)
+  
+    - Automatically scale up/down your cluster to save time and/or money.
+  
+    iii. **Building Containers** [(link)](./docs/33-building-containers.md)
+    
+      - Creating your own Docker containers for reproducibility
+
+4. **Managing Cluster** [(link)](./docs/40-clusters.md)
+
+    Managing your cluster's lifespan
+
+5. **Customize Job**
+
+    Setting up your job to user's specific needs
+    
+    i. **Asynchronous Jobs** [(link)](./docs/51-long-running-job.md)
+    
+    - Best practices for managing long running jobs
+  
+    ii. **Foreach Azure Options** [(link)](./docs/52-azure-foreach-options.md)
+        
+    - Use Azure package-defined foreach options to improve performance and user experience
+  
+    iii. **Error Handling** [(link)](./docs/53-azure-foreach-options.md)
+    
+    - How Azure handles errors in your Foreach loop? 
+    
+6. **Package Management** [(link)](./docs/20-package-management.md)
+
+    Best practices for managing your R packages in code. This includes installation at the cluster or job level as well as how to use different package providers.
+
+7. **Storage Management**
+    
+    i. **Distributing your Data** [(link)](./docs/71-distributing-data.md)
+    
+    - Best practices and limitations for working with distributed data.
+
+    ii. **Persistent Storage** [(link)](./docs/72-persistent-storage.md)
+
+    - Taking advantage of persistent storage for long-running jobs
+   
+    iii. **Accessing Azure Storage through R** [(link)](./docs/73-managing-storage.md)
+    
+    - Manage your Azure Storage files via R 
+
+8. **Performance Tuning** [(link)](./docs/80-performance-tuning.md)
+
+    Best practices on optimizing your Foreach loop
+
+9. **Debugging and Troubleshooting** [(link)](./docs/90-troubleshooting.md)
+    
+    Best practices on diagnosing common issues
+
+10. **Azure Limitations** [(link)](./docs/91-quota-limitations.md)
+
+    Learn about the limitations around the size of your cluster and the number of foreach jobs you can run in Azure.
+   
+## Additional Documentation
+Read our [**FAQ**](./docs/92-faq.md) for known issues and common questions.
 
 ## Next Steps
 

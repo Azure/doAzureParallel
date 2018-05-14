@@ -2,6 +2,17 @@
 
 ## Debugging Tools
 
+### Using %do% vs %dopar%
+When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
+
+```R 
+# run your code sequentially on your local machine
+results <- foreach(i = 1:number_of_iterations) %do% { ... }
+
+# use the doAzureParallel backend to run your code in parallel across your Azure cluster
+results <- foreach(i = 1:number_of_iterations) %dopar% { ... }
+```
+
 ### Setting Verbose Mode to Debug
 
 To debug your doAzureParallel jobs, you can set the package to operate on *verbose* mode:
