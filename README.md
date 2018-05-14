@@ -11,6 +11,9 @@ NOTE: The terms *pool* and *cluster* are used interchangably throughout this doc
 
 ## Notable Features
 - Ability to use low-priority VMs for an 80% discount [(link)](./docs/31-vm-sizes.md#low-priority-vms)
+- Users can bring their own Docker Image
+- AAD and VNets Support
+- Built in support for Azure Blob Storage
 
 ## Dependencies
 
