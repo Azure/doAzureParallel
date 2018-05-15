@@ -12,3 +12,4 @@ sudo apt-get install -y mesa-common-dev libx11-dev r-cran-rgl r-cran-rglpk r-cra
 sudo apt-get install -y  r-cran-reshape  r-cran-reshape2 r-cran-rmysql
 
 Rscript -e "getwd(); install.packages('devtools'); devtools::install_deps(dependencies = TRUE);"
+Rscript -e "devtools::build(); devtools::test();"
