@@ -10,7 +10,7 @@ sudo apt-get install -y libssl-dev libxml2-dev libgdal-dev libproj-dev libgsl-de
 
 Rscript \
   -e "getwd();" \
-  -e "install.packages(c('devtools', 'remotes', 'testthat'));" \
+  -e "install.packages(c('devtools', 'remotes', 'testthat', 'roxygen2'));" \
   -e "devtools::install();" \
   -e "devtools::build();" \
   -e "devtools::test();"
