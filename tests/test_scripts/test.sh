@@ -11,3 +11,4 @@ sudo apt-get install -y xml2 default-jre default-jdk mesa-common-dev libglu1-mes
 sudo apt-get install -y mesa-common-dev libx11-dev r-cran-rgl r-cran-rglpk r-cran-rsymphony r-cran-plyr
 sudo apt-get install -y  r-cran-reshape  r-cran-reshape2 r-cran-rmysql
 
+Rscript -e "getwd(); install.packages('devtools'); devtools::install_deps(dependencies = TRUE);"
