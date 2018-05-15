@@ -26,10 +26,10 @@ When the user is ready to get their results in a new session, the user uses the 
 
 ```R
 my_job_id <- "my_unique_job_id"
-results <- GetJobResult(my_job_id)
+results <- getJobResult(my_job_id)
 ```
 
-If the job is not completed, GetJobResult will return the state of your job. Otherwise, GetJobResult will return the results.
+If the job is not completed, getJobResult will return the state of your job. Otherwise, GetJobResult will return the results.
 
 ### Output Files
 Batch will automatically handle your output files when the user assigns a file pattern and storage container url.
