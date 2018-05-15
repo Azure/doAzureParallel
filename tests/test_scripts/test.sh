@@ -5,10 +5,10 @@ gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 gpg -a --export E084DAB9 | sudo apt-key add -
 
 sudo apt-get update
-sudo apt-get install -y r-base r-base-dev r-cran-xml libcurl4-openssl-dev
-sudo apt-get install -y libssl-dev libxml2-dev libgdal-dev libproj-dev libgsl-dev xml2
+sudo apt-get install -y r-base r-base-dev libcurl4-openssl-dev
+sudo apt-get install -y libssl-dev libxml2-dev libgdal-dev libproj-dev libgsl-dev
 
-Rscript \
+sudo R \
   -e "getwd();" \
   -e "install.packages(c('devtools', 'remotes', 'testthat', 'roxygen2'));" \
   -e "devtools::install();" \
