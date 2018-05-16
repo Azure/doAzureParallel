@@ -1,7 +1,7 @@
 context("error handling test")
 test_that("Remove error handling with combine test", {
   testthat::skip_on_travis()
-
+  source("utility.R")
   settings <- getSettings()
 
   # set your credentials

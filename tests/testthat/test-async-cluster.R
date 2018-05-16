@@ -1,7 +1,7 @@
 context("Cluster Management Test")
 test_that("Get Cluster List / Get Cluster test", {
   testthat::skip_on_travis()
-  source("tests/testthat/utility.R")
+  source("utility.R")
 
   settings <- getSettings()
 

@@ -1,7 +1,7 @@
 context("foreach options test")
 test_that("chunksize", {
   testthat::skip_on_travis()
-
+  source("utility.R")
   settings <- getSettings()
 
   # set your credentials

@@ -1,15 +1,3 @@
-setup <- function(){
-  credentialsFileName <- "credentials.json"
-  clusterFileName <- "cluster.json"
-
-  doAzureParallel::generateCredentialsConfig(credentialsFileName)
-  doAzureParallel::generateClusterConfig(clusterFileName)
-
-  doAzureParallel::setCredentials(credentialsFileName)
-  cluster <- doAzureParallel::makeCluster(clusterFileName)
-  doAzureParallel::registerDoAzureParallel(cluster)
-}
-
 getSettings <- function(dedicatedMin = 2,
                         dedicatedMax = 2,
                         lowPriorityMin = 2,
