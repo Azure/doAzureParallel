@@ -2,12 +2,13 @@ context("error handling test")
 test_that("Remove error handling with combine test", {
   testthat::skip_on_travis()
 
-  settings <- getSettings()
+  settings <- getSettings(lowPriorityMin = 1,
+                          lowPriorityMax = 1,
+                          poolName = "error-handling-test")
 
   # set your credentials
   doAzureParallel::setCredentials(settings$credentials)
 
-  settings$clusterConfig$poolId <- "error-handling-test"
   cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 

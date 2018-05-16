@@ -10,7 +10,11 @@ setup <- function(){
   doAzureParallel::registerDoAzureParallel(cluster)
 }
 
-getSettings <- function(){
+getSettings <- function(dedicatedMin = 0,
+                        dedicatedMax = 0,
+                        lowPriorityMin = 1,
+                        lowPriorityMax = 1,
+                        poolName = "test-pool"){
   list(
     credentials = list(
       "sharedKey" = list(
@@ -31,17 +35,17 @@ getSettings <- function(){
                                     "registry" = "")
     ),
     clusterConfig = list(
-      "name" = "test-pool",
+      "name" = poolName,
       "vmSize" = "Standard_D2_v2",
       "maxTasksPerNode" = 1,
       "poolSize" = list(
         "dedicatedNodes" = list(
-          "min" = 0,
-          "max" = 0
+          "min" = dedicatedMin,
+          "max" = dedicatedMax
         ),
         "lowPriorityNodes" = list(
-          "min" = 1,
-          "max" = 1
+          "min" = lowPriorityMin,
+          "max" = lowPriorityMax
         ),
         "autoscaleFormula" = "QUEUE"
       ),

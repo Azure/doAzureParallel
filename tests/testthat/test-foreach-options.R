@@ -1,9 +1,13 @@
 context("foreach options test")
 test_that("chunksize", {
   testthat::skip_on_travis()
-  source("utility.R")
+  source("tests/testthat/utility.R")
 
-  settings <- getSettings()
+  settings <- getSettings(dedicatedMin = 2,
+                          dedicatedMax = 2,
+                          lowPriorityMin = 0,
+                          lowPriorityMax = 0,
+                          poolName = "chunksize")
 
   # set your credentials
   doAzureParallel::setCredentials(settings$credentials)
