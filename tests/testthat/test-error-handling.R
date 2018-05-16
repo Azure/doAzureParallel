@@ -20,9 +20,10 @@ test_that("Remove error handling with combine test", {
       sqrt(i)
     }
 
-  res
+  res <- unname(res)
 
-  testthat::expect_equal(length(res), 2)
+  testthat::expect_equal(length(res), 3)
+  testthat::expect_equal(res, c(sqrt(1), sqrt(2), sqrt(5)))
 })
 
 test_that("Remove error handling test", {
@@ -81,6 +82,7 @@ test_that("Pass error handling test", {
 })
 
 test_that("Stop error handling test", {
+  testthat::skip("Manual Test")
   testthat::skip_on_travis()
   source("utility.R")
   settings <- getSettings()
