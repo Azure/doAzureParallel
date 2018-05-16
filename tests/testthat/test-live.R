@@ -52,8 +52,6 @@ test_that("Basic Test 2", {
                                   "registry" = "")
   )
 
-  print(credentials)
-
   # set your credentials
   doAzureParallel::setCredentials(credentials)
 
