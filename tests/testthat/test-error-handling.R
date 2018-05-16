@@ -8,7 +8,7 @@ test_that("Remove error handling with combine test", {
   doAzureParallel::setCredentials(settings$credentials)
 
   settings$clusterConfig$poolId <- "error-handling-test"
-  cluster <- doAzureParallel::makeClusters(settings$clusterConfig)
+  cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'
@@ -35,7 +35,7 @@ test_that("Remove error handling test", {
   doAzureParallel::setCredentials(settings$credentials)
 
   settings$clusterConfig$poolId <- "error-handling-test"
-  cluster <- doAzureParallel::makeClusters(settings$clusterConfig)
+  cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'
@@ -62,7 +62,7 @@ test_that("Pass error handling test", {
   doAzureParallel::setCredentials(settings$credentials)
 
   settings$clusterConfig$poolId <- "error-handling-test"
-  cluster <- doAzureParallel::makeClusters(settings$clusterConfig)
+  cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'
@@ -90,7 +90,7 @@ test_that("Stop error handling test", {
   doAzureParallel::setCredentials(settings$credentials)
 
   settings$clusterConfig$poolId <- "error-handling-test"
-  cluster <- doAzureParallel::makeClusters(settings$clusterConfig)
+  cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'
