@@ -29,11 +29,9 @@ test_that("Basic scenario test", {
 
 # Run this test for users to make sure the core features
 # of doAzureParallel are still working
-context("live scenario test")
+context("basic code test")
 test_that("Basic Test 2", {
   testthat::skip_on_travis()
-  credentialsFileName <- "credentials.json"
-  clusterFileName <- "cluster.json"
 
   credentials <- list(
     "sharedKey" = list(
@@ -53,6 +51,8 @@ test_that("Basic Test 2", {
                                   "password" = "",
                                   "registry" = "")
   )
+
+  print(credentials)
 
   # set your credentials
   doAzureParallel::setCredentials(credentials)
@@ -93,7 +93,7 @@ test_that("Basic Test 2", {
   res
 
   testthat::expect_equal(length(res), 4)
-  testthat::expect_equal(res, list(2, 2, 2, 2))
+  testthat::expect_equal(unname(res), list(1, 2, 3, 4))
 })
 
 
