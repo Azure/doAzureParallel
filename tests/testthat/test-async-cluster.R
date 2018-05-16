@@ -1,9 +1,7 @@
-# Run this test for users to make sure the async cluster creation features
-# of doAzureParallel are still working
 context("Cluster Management Test")
-test_that("Async cluster scenario test", {
+test_that("Get Cluster List / Get Cluster test", {
   testthat::skip_on_travis()
-  source("utility.R")
+  source("tests/testthat/utility.R")
 
   settings <- getSettings()
 
@@ -14,11 +12,16 @@ test_that("Async cluster scenario test", {
     doAzureParallel::makeCluster(settings$clusterConfig, wait = FALSE)
 
   cluster <- getCluster(cluster$poolId)
-  getClusterList()
+  clusterList <- getClusterList()
   filter <- list()
   filter$state <- c("active", "deleting")
 
-  getClusterList(filter)
+  testthat::expect_true('test-pool' %in% clusterList$Id)
 
-  doAzureParallel::stopCluster(cluster)
+  clusterList <- getClusterList(filter)
+
+  for (i in 1:length(clusterList$State)) {
+    testthat::expect_true(clusterList$State[i] == 'active' ||
+                          clusterList$State[i] == 'deleting')
+  }
 })

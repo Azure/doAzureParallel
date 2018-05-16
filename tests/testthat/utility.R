@@ -10,10 +10,10 @@ setup <- function(){
   doAzureParallel::registerDoAzureParallel(cluster)
 }
 
-getSettings <- function(dedicatedMin = 0,
-                        dedicatedMax = 0,
-                        lowPriorityMin = 1,
-                        lowPriorityMax = 1,
+getSettings <- function(dedicatedMin = 2,
+                        dedicatedMax = 2,
+                        lowPriorityMin = 2,
+                        lowPriorityMax = 2,
                         poolName = "test-pool"){
   list(
     credentials = list(
