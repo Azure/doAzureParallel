@@ -18,4 +18,6 @@ sudo R \
   -e "install.packages(c('devtools', 'remotes', 'testthat', 'roxygen2'));" \
   -e "devtools::install();" \
   -e "devtools::build();" \
-  -e "devtools::test();"
+  -e "res = devtools::test(reporter='summary');"
+  -e "df=as.data.frame(res);"
+  -e "if(sum(df[['failed']]) > 0 || any(df[['error']])) { q(status=1) }"
