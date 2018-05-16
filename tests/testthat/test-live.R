@@ -24,6 +24,4 @@ test_that("simple foreach 1 to 4", {
 
   testthat::expect_equal(length(res), 4)
   testthat::expect_equal(res, list(1, 2, 3, 4))
-
-  doAzureParallel::stopCluster(cluster)
 })

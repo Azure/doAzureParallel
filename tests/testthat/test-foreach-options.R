@@ -6,8 +6,7 @@ test_that("chunksize", {
   settings <- getSettings(dedicatedMin = 2,
                           dedicatedMax = 2,
                           lowPriorityMin = 0,
-                          lowPriorityMax = 0,
-                          poolName = "chunksize")
+                          lowPriorityMax = 0)
 
   # set your credentials
   doAzureParallel::setCredentials(settings$credentials)
