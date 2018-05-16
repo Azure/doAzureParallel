@@ -27,7 +27,7 @@ test_that("Remove error handling with combine test", {
 
 test_that("Remove error handling test", {
   testthat::skip_on_travis()
-
+  source("utility.R")
   settings <- getSettings()
 
   # set your credentials
@@ -54,7 +54,7 @@ test_that("Remove error handling test", {
 
 test_that("Pass error handling test", {
   testthat::skip_on_travis()
-
+  source("utility.R")
   settings <- getSettings()
 
   # set your credentials
@@ -82,7 +82,7 @@ test_that("Pass error handling test", {
 
 test_that("Stop error handling test", {
   testthat::skip_on_travis()
-
+  source("utility.R")
   settings <- getSettings()
 
   # set your credentials
@@ -104,6 +104,4 @@ test_that("Stop error handling test", {
         i
       }
   )
-
-  doAzureParallel::stopCluster(cluster)
 })

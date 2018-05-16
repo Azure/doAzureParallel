@@ -38,6 +38,4 @@ test_that("chunksize", {
     testthat::expect_equal(res[[index]],
                            index)
   }
-
-  doAzureParallel::stopCluster(cluster)
 })

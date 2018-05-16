@@ -2,16 +2,16 @@
 # of doAzureParallel are still working
 context("merge job result locally test")
 test_that("merge job result locally test", {
-  testthat::skip("merge job result locally test")
   testthat::skip_on_travis()
-  credentialsFileName <- "credentials.json"
-  clusterFileName <- "cluster.json"
+  testthat::skip("Skipping merge job locally")
+  source("utility.R")
+  settings <- gettingSettings()
+  settings <- getSettings()
 
-  doAzureParallel::generateCredentialsConfig(credentialsFileName)
-  doAzureParallel::generateClusterConfig(clusterFileName)
+  # set your credentials
+  doAzureParallel::setCredentials(settings$credentials)
 
-  doAzureParallel::setCredentials(credentialsFileName)
-  cluster <- doAzureParallel::makeCluster(clusterFileName)
+  cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   setChunkSize(2)
@@ -37,6 +37,4 @@ test_that("merge job result locally test", {
     testthat::expect_equal(res[[i]],
                            i)
   }
-
-  stopCluster(cluster)
 })
