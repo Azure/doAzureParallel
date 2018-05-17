@@ -116,6 +116,4 @@ test_that("pool multiple github package install Test", {
                          list(c(TRUE, TRUE, TRUE),
                               c(TRUE, TRUE, TRUE),
                               c(TRUE, TRUE, TRUE)))
-
-  doAzureParallel::stopCluster(cluster)
 })

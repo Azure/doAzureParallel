@@ -1,16 +1,13 @@
 context("error handling test")
 test_that("Remove error handling with combine test", {
-  testthat::skip("Live test")
   testthat::skip_on_travis()
-  credentialsFileName <- "credentials.json"
-  clusterFileName <- "cluster.json"
-
-  doAzureParallel::generateCredentialsConfig(credentialsFileName)
-  doAzureParallel::generateClusterConfig(clusterFileName)
+  source("utility.R")
+  settings <- getSettings()
 
   # set your credentials
-  doAzureParallel::setCredentials(credentialsFileName)
-  cluster <- doAzureParallel::makeCluster(clusterFileName)
+  doAzureParallel::setCredentials(settings$credentials)
+
+  cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'
@@ -23,28 +20,27 @@ test_that("Remove error handling with combine test", {
       sqrt(i)
     }
 
-  res
+  res <- unname(res)
 
-  testthat::expect_equal(length(res), 2)
+  testthat::expect_equal(length(res), 3)
+  testthat::expect_equal(res, c(sqrt(1), sqrt(2), sqrt(5)))
 })
 
 test_that("Remove error handling test", {
-  testthat::skip("Live test")
   testthat::skip_on_travis()
-  credentialsFileName <- "credentials.json"
-  clusterFileName <- "cluster.json"
-
-  doAzureParallel::generateCredentialsConfig(credentialsFileName)
-  doAzureParallel::generateClusterConfig(clusterFileName)
+  source("utility.R")
+  settings <- getSettings()
 
   # set your credentials
-  doAzureParallel::setCredentials(credentialsFileName)
-  cluster <- doAzureParallel::makeCluster(clusterFileName)
+  doAzureParallel::setCredentials(settings$credentials)
+
+  settings$clusterConfig$poolId <- "error-handling-test"
+  cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'
   res <-
-    foreach::foreach(i = 1:4, .errorhandling = "remove") %dopar% {
+    foreach::foreach(i = 1:5, .errorhandling = "remove") %dopar% {
       if (i == 3 || i == 4) {
         randomObject
       }
@@ -52,23 +48,21 @@ test_that("Remove error handling test", {
       i
     }
 
-  res
+  res <- unname(res)
 
-  testthat::expect_equal(length(res), 2)
+  testthat::expect_equal(res, list(1, 2, 5))
 })
 
 test_that("Pass error handling test", {
-  testthat::skip("Live test")
   testthat::skip_on_travis()
-  credentialsFileName <- "credentials.json"
-  clusterFileName <- "cluster.json"
-
-  doAzureParallel::generateCredentialsConfig(credentialsFileName)
-  doAzureParallel::generateClusterConfig(clusterFileName)
+  source("utility.R")
+  settings <- getSettings()
 
   # set your credentials
-  doAzureParallel::setCredentials(credentialsFileName)
-  cluster <- doAzureParallel::makeCluster(clusterFileName)
+  doAzureParallel::setCredentials(settings$credentials)
+
+  settings$clusterConfig$poolId <- "error-handling-test"
+  cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'
@@ -88,17 +82,16 @@ test_that("Pass error handling test", {
 })
 
 test_that("Stop error handling test", {
-  testthat::skip("Live test")
+  testthat::skip("Manual Test")
   testthat::skip_on_travis()
-  credentialsFileName <- "credentials.json"
-  clusterFileName <- "cluster.json"
-
-  doAzureParallel::generateCredentialsConfig(credentialsFileName)
-  doAzureParallel::generateClusterConfig(clusterFileName)
+  source("utility.R")
+  settings <- getSettings()
 
   # set your credentials
-  doAzureParallel::setCredentials(credentialsFileName)
-  cluster <- doAzureParallel::makeCluster(clusterFileName)
+  doAzureParallel::setCredentials(settings$credentials)
+
+  settings$clusterConfig$poolId <- "error-handling-test"
+  cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'

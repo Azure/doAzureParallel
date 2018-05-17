@@ -1,38 +1,27 @@
-# Run this test for users to make sure the async cluster creation features
-# of doAzureParallel are still working
-context("async cluster scenario test")
-test_that("Async cluster scenario test", {
-  testthat::skip("Live test")
+context("Cluster Management Test")
+test_that("Get Cluster List / Get Cluster test", {
   testthat::skip_on_travis()
-  credentialsFileName <- "credentials.json"
-  clusterFileName <- "cluster.json"
+  source("utility.R")
 
-  doAzureParallel::generateCredentialsConfig(credentialsFileName)
-  doAzureParallel::generateClusterConfig(clusterFileName)
+  settings <- getSettings()
 
   # set your credentials
-  doAzureParallel::setCredentials(credentialsFileName)
+  doAzureParallel::setCredentials(settings$credentials)
 
   cluster <-
-    doAzureParallel::makeCluster(clusterSetting = clusterFileName, wait = FALSE)
+    doAzureParallel::makeCluster(settings$clusterConfig, wait = FALSE)
 
   cluster <- getCluster(cluster$poolId)
-  getClusterList()
-  filter <- filter <- list()
+  clusterList <- getClusterList()
+  filter <- list()
   filter$state <- c("active", "deleting")
-  getClusterList(filter)
-  doAzureParallel::registerDoAzureParallel(cluster)
 
-  '%dopar%' <- foreach::'%dopar%'
-  res <-
-    foreach::foreach(i = 1:4) %dopar% {
-      mean(1:3)
-    }
+  testthat::expect_true('test-pool' %in% clusterList$Id)
 
-  res
+  clusterList <- getClusterList(filter)
 
-  testthat::expect_equal(length(res), 4)
-  testthat::expect_equal(res, list(2, 2, 2, 2))
-
-  stopCluster(cluster)
+  for (i in 1:length(clusterList$State)) {
+    testthat::expect_true(clusterList$State[i] == 'active' ||
+                          clusterList$State[i] == 'deleting')
+  }
 })

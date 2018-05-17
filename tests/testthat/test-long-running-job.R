@@ -43,7 +43,6 @@ test_that("Long Running Job Test", {
 
   # get job result
   jobResult <- doAzureParallel::getJobResult(jobId)
-  doAzureParallel::stopCluster(cluster)
 
   # verify the job result is correct
   testthat::expect_equal(length(jobResult),

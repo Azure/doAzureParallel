@@ -1,4 +1,4 @@
-context("package installation")
+context("Package Command Line Tests")
 test_that("successfully create cran job package command line", {
   jobInstallation <-
     getJobPackageInstallationCommand("cran", c("hts", "lubridate", "tidyr", "dplyr"))
