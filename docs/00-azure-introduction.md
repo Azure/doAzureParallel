@@ -29,9 +29,11 @@ Learn more about the rocker/tidyverse:latest [here](https://hub.docker.com/r/roc
 ### Docker Pricing
 Using the Docker containers is free and doesn't add to the cost of bare VMs.
 
-## Data Science Virtual Machines (DSVM) [Deprecated]
+## Data Science Virtual Machines (DSVM) 
 
-**This documentation is only valid for versions prior to v0.6.0. After v0.6.0 doAzureParallel uses Docker containers for the run-time. Additional information can be found [here](./30-customize-cluster.md)**
+**doAzureParallel DOES NOT support DSVM as a runtime since v0.6.0**
+
+**The following section on DSVM is only valid for versions prior to v0.6.0. After v0.6.0 doAzureParallel uses Docker containers for the run-time. Additional information can be found [here](./30-customize-cluster.md).**
 
 
 The doAzureParallel package uses the Data Science Virtual Machine (DSVM) for each node in the pool. The DSVM is a customized VM image that has many popular R tools pre-installed. Because these tools are pre-baked into the DSVM VM image, using it gives us considerable speedup when provisioning the pool.
@@ -39,6 +41,8 @@ The doAzureParallel package uses the Data Science Virtual Machine (DSVM) for eac
 This package uses the Linux Edition of the DSVM which comes preinstalled with Microsoft R Server Developer edition as well as many popular packages from Microsoft R Open (MRO). By using and extending open source R, Microsoft R Server is fully compatible with R scripts, functions and CRAN packages.
 
 Learn more about the DSVM [here](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/microsoft-ads.standard-data-science-vm?tab=Overview).
+
+As an aside, if you are working directly with [Azure Batch](https://docs.microsoft.com/azure/batch/) service outside of doAzureParallel library, the DSVM images is one of the virtual machine images that are compatible with the Azure Batch node agents. 
 
 ### DSVM Pricing
 Using the DSVM is free and doesn't add to the cost of bare VMs.
