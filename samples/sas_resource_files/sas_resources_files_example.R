@@ -1,30 +1,45 @@
 library(doAzureParallel)
 
 doAzureParallel::setCredentials("credentials.json")
-storageAccountName <- "<YOUR_STORAGE_ACCOUNT>"
+# Using rAzureBatch directly for storage uploads
+config <- rjson::fromJSON(file = paste0("credentials.json"))
+
+storageCredentials <- rAzureBatch::SharedKeyCredentials$new(
+  name = config$sharedKey$storageAccount$name,
+  key = config$sharedKey$storageAccount$key
+)
+
+storageAccountName <- storageCredentials$name
 inputContainerName <- "datasets"
 
-# Generate a sas tokens with the createSasToken function
+storageClient <- rAzureBatch::StorageServiceClient$new(
+  authentication = storageCredentials,
+  url = sprintf("https://%s.blob.%s",
+               storageCredentials$name,
+               config$sharedKey$storageAccount$endpointSuffix
+               )
+)
 
+# Generate a sas tokens with the createSasToken function
 # Write-only SAS. Will be used for uploading files to storage.
-writeSasToken <- rAzureBatch::createSasToken(permission = "w", sr = "c", path = inputContainerName)
+writeSasToken <- storageClient$generateSasToken(permission = "w", "c", path = inputContainerName)
 
 # Read-only SAS. Will be used for downloading files from storage.
-readSasToken <- rAzureBatch::createSasToken(permission = "r", sr = "c", path = inputContainerName)
+readSasToken <- storageClient$generateSasToken(permission = "r", "c", path = inputContainerName)
 
 # Create a Storage container in the Azure Storage account
-rAzureBatch::createContainer(inputContainerName)
+storageClient$containerOperations$createContainer(inputContainerName, content = "response")
 
 # Upload blobs with a write sasToken
-rAzureBatch::uploadBlob(inputContainerName,
-           fileDirectory = "1989.csv",
-           sasToken = writeSasToken,
-           accountName = storageAccountName)
+storageClient$blobOperations$uploadBlob(inputContainerName,
+                                        fileDirectory = "1989.csv",
+                                        sasToken = writeSasToken,
+                                        accountName = storageAccountName)
 
-rAzureBatch::uploadBlob(inputContainerName,
-           fileDirectory = "1990.csv",
-           sasToken = writeSasToken,
-           accountName = storageAccountName)
+storageClient$blobOperations$uploadBlob(inputContainerName,
+                                        fileDirectory = "1990.csv",
+                                        sasToken = writeSasToken,
+                                        accountName = storageAccountName)
 
 # Create URL paths with read-only permissions
 csvFileUrl1 <- rAzureBatch::createBlobUrl(storageAccount = storageAccountName,
