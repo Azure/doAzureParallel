@@ -5,8 +5,8 @@ doAzureParallel::setCredentials("credentials.json")
 config <- rjson::fromJSON(file = paste0("credentials.json"))
 
 storageCredentials <- rAzureBatch::SharedKeyCredentials$new(
-  name = config$storageAccount$name,
-  key = config$storageAccount$key
+  name = config$sharedKey$storageAccount$name,
+  key = config$sharedKey$storageAccount$key
 )
 
 storageAccountName <- storageCredentials$name
@@ -16,7 +16,7 @@ storageClient <- rAzureBatch::StorageServiceClient$new(
   authentication = storageCredentials,
   url = sprintf("https://%s.blob.%s",
                storageCredentials$name,
-               "core.windows.net"
+               config$sharedKey$storageAccount$endpointSuffix
                )
 )
 
