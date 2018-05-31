@@ -93,7 +93,10 @@ for (package in azbatchenv$packages) {
 }
 
 for (package in azbatchenv$github) {
-  library(package, character.only = TRUE)
+  packageDirectory <- strsplit(package, "/")[[1]]
+  packageName <- packageDirectory[length(packageDirectory)]
+
+  library(packageName, character.only = TRUE)
 }
 
 for (package in azbatchenv$bioconductor) {
