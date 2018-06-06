@@ -24,7 +24,7 @@ Here's an example of how you may want to set your JSON configuration file:
 }
 ```
 
-Note: `maxTasksPerNode` property cannot be changed after the cluster has been provision. The cluster must be tear down and reprovision with the new `maxTasksPerNode` property.
+**Note**: `maxTasksPerNode` property cannot be changed after the cluster has been provision. The cluster must be tear down and reprovision with the new `maxTasksPerNode` property.
 
 ### Nested doParallel 
 To take advantage of all the cores on each node, you can nest a *foreach* loop using *doParallel* package inside the outer *foreach* loop that uses doAzureParallel. 
