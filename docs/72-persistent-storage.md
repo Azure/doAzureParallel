@@ -35,12 +35,32 @@ If the job is not completed, getJobResult will return the state of your job. Oth
 Batch will automatically handle your output files when the user assigns a file pattern and storage container url.
 
 ```R
+doAzureParallel::setCredentials("credentials.json")
+# Using rAzureBatch directly for storage uploads
+config <- rjson::fromJSON(file = paste0("credentials.json"))
+
+storageCredentials <- rAzureBatch::SharedKeyCredentials$new(
+  name = config$sharedKey$storageAccount$name,
+  key = config$sharedKey$storageAccount$key
+)
+
+storageAccountName <- storageCredentials$name
+inputContainerName <- "datasets"
+
+storageClient <- rAzureBatch::StorageServiceClient$new(
+  authentication = storageCredentials,
+  url = sprintf("https://%s.blob.%s",
+               storageCredentials$name,
+               config$sharedKey$storageAccount$endpointSuffix
+               )
+)
+
 # Pushing output files
 storageAccount <- "storageAccountName"
 outputFolder <- "outputs"
 
 createContainer(outputFolder)
-writeToken <- rAzureBatch::createSasToken("w", "c", outputFolder)
+writeToken <- storageClient$generateSasToken("w", "c", outputFolder)
 containerUrl <- rAzureBatch::createBlobUrl(storageAccount = storageAccount,
                                            containerName = outputFolder,
                                            sasToken = writeToken)
@@ -67,7 +87,7 @@ Note: The foreach object always expects a value. We use NULL as a default value 
 
 ```R
 # Bad practice
-writeToken <- rAzureBatch::createSasToken("w", "c", outputFolder)
+writeToken <- storageClient$generateSasToken("w", "c", outputFolder)
 containerUrl <- rAzureBatch::createBlobUrl(storageAccount = storageAccount,
                                            containerName = outputFolder,
                                            sasToken = writeToken)
