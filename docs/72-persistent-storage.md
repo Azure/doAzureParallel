@@ -59,7 +59,7 @@ storageClient <- rAzureBatch::StorageServiceClient$new(
 storageAccount <- "storageAccountName"
 outputFolder <- "outputs"
 
-createContainer(outputFolder)
+storageClient$containerOperations$createContainer(outputFolder)
 writeToken <- storageClient$generateSasToken("w", "c", outputFolder)
 containerUrl <- rAzureBatch::createBlobUrl(storageAccount = storageAccount,
                                            containerName = outputFolder,
