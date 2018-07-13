@@ -18,14 +18,14 @@
 
 ### Bypassing merge task 
 
-Skipping the merge task is useful when the tasks results don't need to be merged into a list. To bypass the merge task, you can pass the *enableMerge* flag to the foreach object:
+Skipping the merge task is useful when the tasks results don't need to be merged into a list. To bypass the merge task, you can pass the *enableCloudCombine* flag to the foreach object:
 
 ```R
 # Enable merge task
-foreach(i = 1:3, .options.azure = list(enableMerge = TRUE))
+foreach(i = 1:3, .options.azure = list(enableCloudCombine = TRUE))
 
 # Disable merge task
-foreach(i = 1:3, .options.azure = list(enableMerge = FALSE))
+foreach(i = 1:3, .options.azure = list(enableCloudCombine = FALSE))
 ```
 Note: User defined functions for the merge task is on our list of features that we are planning on doing.
 
