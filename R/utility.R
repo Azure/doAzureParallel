@@ -10,7 +10,8 @@
 #' @export
 waitForNodesToComplete <- function(poolId, timeout = 86400) {
   cat("Booting compute nodes. . . ", fill = TRUE)
-  pool <- rAzureBatch::getPool(poolId)
+  config <- getConfiguration()
+  pool <- config$batchClient$poolOperations$getPool(poolId)
 
   # Validate the getPool request first, before setting the progress bar
   if (!is.null(pool$code) && !is.null(pool$message)) {
@@ -32,7 +33,7 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
   timeToTimeout <- Sys.time() + timeout
 
   while (Sys.time() < timeToTimeout) {
-    pool <- rAzureBatch::getPool(poolId)
+    pool <- config$batchClient$poolOperations$getPool(poolId)
 
     if (!is.null(pool$resizeErrors)) {
       cat("\n")
@@ -53,66 +54,20 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
       stop(resizeErrors)
     }
 
-    nodes <- rAzureBatch::listPoolNodes(poolId)
+    nodes <- pool <- config$batchClient$poolOperations$listPoolNodes(
+      poolId)
 
     if (!is.null(nodes$value) && length(nodes$value) > 0) {
-      nodesWithFailures <- c()
-      currentProgressBarCount <- 0
+      nodesInfo <- .processNodeCount(nodes)
 
-      for (i in 1:length(nodes$value)) {
-        # The progress total count is the number of the nodes. Each node counts as 1.
-        # If a node is not in idle, prempted, running, or start task failed, the value is
-        # less than 1. The default value is 0 because the node has not been allocated to
-        # the pool yet.
-        nodeValue <- switch(
-          nodes$value[[i]]$state,
-          "idle" = {
-            1
-          },
-          "creating" = {
-            0.25
-          },
-          "starting" = {
-            0.50
-          },
-          "waitingforstartask" = {
-            0.75
-          },
-          "starttaskfailed" = {
-            nodesWithFailures <- c(nodesWithFailures, nodes$value[[i]]$id)
-            1
-          },
-          "preempted" = {
-            1
-          },
-          "running" = {
-            1
-          },
-          0
-        )
-
-        currentProgressBarCount <-
-          currentProgressBarCount + nodeValue
-      }
+      currentProgressBarCount <- nodesInfo$currentNodeCount
+      nodesWithFailures <- nodesInfo$nodesWithFailures
 
       if (currentProgressBarCount >= pb$getVal()) {
         setTxtProgressBar(pb, currentProgressBarCount)
       }
 
-      if (length(nodesWithFailures) > 0) {
-        nodesFailureWarningLabel <-
-          sprintf(
-            "The following %i nodes failed while running the start task:\n",
-            length(nodesWithFailures)
-          )
-        for (i in 1:length(nodesWithFailures)) {
-          nodesFailureWarningLabel <-
-            paste0(nodesFailureWarningLabel,
-                   sprintf("%s\n", nodesWithFailures[i]))
-        }
-
-        warning(nodesFailureWarningLabel)
-      }
+      .showNodesFailure(nodesWithFailures)
     }
 
     if (pb$getVal() >= totalNodes) {
@@ -125,6 +80,82 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
 
   rAzureBatch::deletePool(poolId)
   stop("Timeout expired")
+}
+
+.processNodeCount <- function(nodes) {
+  nodesWithFailures <- c()
+  currentNodeCount <- 0
+  nodesState <- list(
+    idle = as.integer(0),
+    creating = as.integer(0),
+    starting = as.integer(0),
+    waitingforstarttask = as.integer(0),
+    starttaskfailed = as.integer(0),
+    preempted = as.integer(0),
+    running = as.integer(0),
+    other = as.integer(0)
+  )
+
+  for (i in 1:length(nodes$value)) {
+    state <- nodes$value[[i]]$state
+    if (is.null(nodesState[[state]])) {
+      nodesState[["other"]] <- nodesState[["other"]] + 1
+    } else {
+      nodesState[[state]] <- nodesState[[state]] + as.integer(1)
+    }
+
+    # The progress total count is the number of the nodes. Each node counts as 1.
+    # If a node is not in idle, prempted, running, or start task failed, the value is
+    # less than 1. The default value is 0 because the node has not been allocated to
+    # the pool yet.
+    nodeValue <- switch(
+      nodes$value[[i]]$state,
+      "idle" = {
+        1
+      },
+      "creating" = {
+        0.25
+      },
+      "starting" = {
+        0.50
+      },
+      "waitingforstarttask" = {
+        0.75
+      },
+      "starttaskfailed" = {
+        nodesWithFailures <- c(nodesWithFailures, nodes$value[[i]]$id)
+        1
+      },
+      "preempted" = {
+        1
+      },
+      "running" = {
+        1
+      },
+      0
+    )
+
+    currentNodeCount <-
+      currentNodeCount + nodeValue
+  }
+  return(list(currentNodeCount = currentNodeCount, nodesWithFailures = nodesWithFailures, nodesState = nodesState))
+}
+
+.showNodesFailure <- function(nodesWithFailures) {
+  if (length(nodesWithFailures) > 0) {
+    nodesFailureWarningLabel <-
+      sprintf(
+        "The following %i nodes failed while running the start task:\n",
+        length(nodesWithFailures)
+      )
+    for (i in 1:length(nodesWithFailures)) {
+      nodesFailureWarningLabel <-
+        paste0(nodesFailureWarningLabel,
+               sprintf("%s\n", nodesWithFailures[i]))
+    }
+
+    warning(nodesFailureWarningLabel)
+  }
 }
 
 #' Utility function for creating an output file
@@ -141,13 +172,16 @@ createOutputFile <- function(filePattern, url) {
   )
 
   # Parsing url to obtain container's virtual directory path
-  azureDomain <- "blob.core.windows.net"
-  parsedValue <- strsplit(url, azureDomain)[[1]]
+  # sample url: "https://accountname.blob.core.windows.net/outputs?se=2017-07-31&sr=c&st=2017-07-12"
+  # after split by "/"
+  # parsedValue[1] is "https"
+  # parsedValue[2] is ""
+  # parsedValue[3] is "accountname.blob.core.windows.net"
+  # parsedValue[4] is "outputs?se=2017-07-31&sr=c&st=2017-07-12"
+  parsedValue <- strsplit(url, "/")[[1]]
 
-  accountName <- parsedValue[1]
-  urlPath <- parsedValue[2]
-
-  baseUrl <- paste0(accountName, azureDomain)
+  baseUrl <- paste0(parsedValue[1], "//", parsedValue[3])
+  urlPath <- sub(baseUrl, "", url)
   parsedUrlPath <- strsplit(urlPath, "?", fixed = TRUE)[[1]]
 
   storageContainerPath <- parsedUrlPath[1]
@@ -179,6 +213,94 @@ getXmlValues <- function(xmlResponse, xmlPath) {
   xml2::xml_text(xml2::xml_find_all(xmlResponse, xmlPath))
 }
 
-areShallowEqual <- function(a, b) {
-  !is.null(a) && !is.null(b) && a == b
+saveMetadataBlob <- function(jobId, metadata) {
+  xmlNode <- "<metadata>"
+  if (length(metadata) > 0) {
+    for (i in 1:length(metadata)) {
+      xmlNode <-
+        paste0(
+          xmlNode,
+          sprintf(
+            "<%s>%s</%s>",
+            metadata[[i]]$name,
+            metadata[[i]]$value,
+            metadata[[i]]$name
+          )
+        )
+    }
+  }
+  xmlNode <- paste0(xmlNode, "</metadata>")
+  saveXmlBlob(jobId, xmlNode, "metadata")
+}
+
+saveXmlBlob <- function(jobId, xmlBlock, name) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
+  xmlFile <- paste0(jobId, "-", name, ".rds")
+  saveRDS(xmlBlock, file = xmlFile)
+  storageClient$blobOperations$uploadBlob(jobId, paste0(getwd(), "/", xmlFile))
+  file.remove(xmlFile)
+}
+
+readMetadataBlob <- function(jobId) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
+  tempFile <- tempfile(paste0(jobId, "-metadata"), fileext = ".rds")
+  result <- storageClient$blobOperations$downloadBlob(
+    jobId,
+    paste0(jobId, "-metadata.rds"),
+    downloadPath = tempFile,
+    overwrite = TRUE
+  )
+
+  if (is.vector(result)) {
+    result <- readRDS(tempFile)
+    result <- xml2::read_xml(result)
+    chunkSize <- getXmlValues(result, ".//chunkSize")
+    packages <- getXmlValues(result, ".//packages")
+    errorHandling <- getXmlValues(result, ".//errorHandling")
+    wait <- getXmlValues(result, ".//wait")
+    enableCloudCombine <-
+      getXmlValues(result, ".//enableCloudCombine")
+
+    metadata <-
+      list(
+        chunkSize = chunkSize,
+        packages = packages,
+        errorHandling = errorHandling,
+        enableCloudCombine = enableCloudCombine,
+        wait = wait
+      )
+
+    return(metadata)
+  } else {
+    return(NULL)
+  }
+}
+
+hasDataSet <- function(list) {
+  if (length(list) > 0) {
+    for (arg in list[[1]]) {
+      # Data frames are shown as list in the foreach iterator
+      if (typeof(arg) == "list") {
+        return(TRUE)
+      }
+    }
+  }
+
+  return(FALSE)
+}
+
+getHttpErrorMessage <- function(responseObj) {
+  detailMessage <- paste0(responseObj$code, ": ", responseObj$message$value)
+
+  if (length(responseObj$values) > 0) {
+    for (i in 1:length(responseObj$values)) {
+      detailMessage <- paste0(detailMessage, "\r\n", responseObj$values[[i]]$key, ": ", responseObj$values[[i]]$value)
+    }
+  }
+  detailMessage <- paste0(detailMessage, "\r\nodata.metadata: ", responseObj$odata.metadata)
+  return(detailMessage)
 }

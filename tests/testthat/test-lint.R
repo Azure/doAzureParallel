@@ -12,7 +12,6 @@ if (requireNamespace("lintr", quietly = TRUE)) {
       line_length_linter = lintr::line_length_linter(120),
       no_tab_linter = lintr::no_tab_linter,
       object_usage_linter = lintr::object_usage_linter,
-      object_name_linter = lintr::object_name_linter(style = "lowerCamelCase"),
       object_length_linter = lintr::object_length_linter,
       open_curly_linter = lintr::open_curly_linter,
       spaces_inside_linter = lintr::spaces_inside_linter,

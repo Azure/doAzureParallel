@@ -113,6 +113,4 @@ test_that("pool multiple bioconductor package install Test", {
                          list(
                            c(TRUE, TRUE, TRUE),
                            c(TRUE, TRUE, TRUE)))
-
-  doAzureParallel::stopCluster(cluster)
 })

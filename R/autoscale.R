@@ -96,9 +96,11 @@ resizeCluster <- function(cluster,
                           lowPriorityMax,
                           algorithm = "QUEUE",
                           timeInterval = "PT5M") {
-  pool <- rAzureBatch::getPool(cluster$poolId)
+  config <- getOption("az_config")
+  cluster <- config$batchClient$poolOperations$getPool(
+    cluster$poolId)
 
-  rAzureBatch::resizePool(
+  config$batchClient$poolOperations$resizePool(
     cluster$poolId,
     autoscaleFormula = getAutoscaleFormula(
       algorithm,
@@ -106,7 +108,7 @@ resizeCluster <- function(cluster,
       dedicatedMax,
       lowPriorityMin,
       lowPriorityMax,
-      maxTasksPerNode = pool$maxTasksPerNode
+      maxTasksPerNode = cluster$maxTasksPerNode
     ),
     autoscaleInterval = timeInterval
   )

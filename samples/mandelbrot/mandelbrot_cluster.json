@@ -16,8 +16,7 @@
   "rPackages": {
     "cran": [],
     "github": [],
-    "bioconductor": [],
-    "githubAuthenticationToken": ""
+    "bioconductor": []
   },
   "commandLine": []
 }

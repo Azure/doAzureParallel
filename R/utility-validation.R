@@ -23,15 +23,7 @@ validationClass <- R6::R6Class(
       }
     },
     # Validating cluster configuration files below doAzureParallel version 0.3.2
-    isValidDeprecatedClusterConfig = function(clusterFilePath) {
-      if (file.exists(clusterFilePath)) {
-        poolConfig <- rjson::fromJSON(file = clusterFilePath)
-      }
-      else{
-        poolConfig <-
-          rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
-      }
-
+    isValidDeprecatedClusterConfig = function(poolConfig) {
       if (is.null(poolConfig$pool$poolSize)) {
         stop("Missing poolSize entry")
       }
@@ -85,12 +77,22 @@ validationClass <- R6::R6Class(
 
       TRUE
     },
-    isValidClusterConfig = function(clusterFilePath) {
-      if (file.exists(clusterFilePath)) {
-        pool <- rjson::fromJSON(file = clusterFilePath)
-      }
-      else{
-        pool <- rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
+    isValidClusterConfig = function(cluster) {
+      if (class(cluster) == "character") {
+        clusterFilePath <- cluster
+        if (file.exists(clusterFilePath)) {
+          pool <- rjson::fromJSON(file = clusterFilePath)
+        }
+        else{
+          pool <- rjson::fromJSON(file = file.path(getwd(), clusterFilePath))
+        }
+      } else if (class(cluster) == "list") {
+        pool <- cluster
+      } else {
+        stop(sprintf(
+          "cluster setting type is not supported: %s\n",
+          class(cluster)
+        ))
       }
 
       if (is.null(pool$poolSize)) {

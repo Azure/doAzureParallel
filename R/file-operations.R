@@ -34,7 +34,10 @@ getClusterFile <-
 
     filePath <- sprintf(prefixfilePath, filePath)
 
-    nodeFileContent <- rAzureBatch::getNodeFile(
+    config <- getConfiguration()
+    batchClient <- config$batchClient
+
+    nodeFileContent <- batchClient$fileOperations$getNodeFile(
       cluster$poolId,
       nodeId,
       filePath,
@@ -76,15 +79,17 @@ getJobFile <-
       filePath <- substring(filePath, 2)
     }
 
-    jobFileContent <-
-      rAzureBatch::getTaskFile(
-        jobId,
-        taskId,
-        filePath,
-        downloadPath = downloadPath,
-        overwrite = overwrite,
-        progress = TRUE
-      )
+    config <- getConfiguration()
+    batchClient <- config$batchClient
+
+    jobFileContent <- batchClient$fileOperations$getTaskFile(
+      jobId,
+      taskId,
+      filePath,
+      downloadPath = downloadPath,
+      overwrite = overwrite,
+      progress = TRUE
+    )
 
     jobFileContent
   }

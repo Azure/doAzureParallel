@@ -15,34 +15,34 @@ test_that("Long Running Job Test", {
   cluster <- doAzureParallel::makeCluster(clusterFileName)
   doAzureParallel::registerDoAzureParallel(cluster)
 
-  options <- list(wait = FALSE, job = 'myjob')
+  options <- list(wait = FALSE,
+                  enableCloudCombine = TRUE)
   '%dopar%' <- foreach::'%dopar%'
   jobId <-
     foreach::foreach(
       i = 1:4,
       .packages = c('httr'),
+      .errorhandling = "remove",
       .options.azure = options
     ) %dopar% {
       mean(1:3)
     }
 
-  job <- getJob(jobId)
+  job <- doAzureParallel::getJob(jobId)
 
   # get active/running job list
   filter <- filter <- list()
   filter$state <- c("active", "completed")
-  getJobList(filter)
+  doAzureParallel::getJobList(filter)
 
   # get job list for all jobs
-  getJobList()
+  doAzureParallel::getJobList()
 
   # wait 2 minutes for job to finish
   Sys.sleep(120)
 
   # get job result
-  jobResult <- getJobResult(jobId)
-
-  doAzureParallel::stopCluster(cluster)
+  jobResult <- doAzureParallel::getJobResult(jobId)
 
   # verify the job result is correct
   testthat::expect_equal(length(jobResult),
@@ -51,6 +51,6 @@ test_that("Long Running Job Test", {
   testthat::expect_equal(jobResult,
                          list(2, 2, 2, 2))
 
-  # delete the job
-  rAzureBatch::deleteJob(jobId)
+  # delete the job and its result
+  doAzureParallel::deleteJob(jobId)
 })

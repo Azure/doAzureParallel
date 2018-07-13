@@ -10,8 +10,12 @@
 #' }
 #' @export
 listStorageContainers <- function(prefix = "") {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
   xmlResponse <-
-    rAzureBatch::listContainers(prefix, content = "parsed")
+    storageClient$containerOperations$listContainers(
+      prefix, content = "parsed")
 
   name <- getXmlValues(xmlResponse, ".//Container/Name")
   lastModified <-
@@ -34,16 +38,32 @@ listStorageContainers <- function(prefix = "") {
 #' @param container The name of the container
 #'
 #' @export
-deleteStorageContainer <- function(container) {
+deleteStorageContainer <- function(container, verbose = TRUE) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
   response <-
-    rAzureBatch::deleteContainer(container, content = "response")
+    storageClient$containerOperations$deleteContainer(container, content = "response")
 
-  if (response$status_code == 202) {
-    cat(sprintf("Your container '%s' has been deleted.", container),
-        fill = TRUE)
-  }
+  tryCatch({
+      httr::stop_for_status(response)
 
-  response
+      if (verbose) {
+        cat(sprintf("Your storage container '%s' has been deleted.", jobId),
+            fill = TRUE)
+      }
+    },
+    error = function(e) {
+      # Checking for status code instead of using xml2 package
+      # Storage helper functions require xml2 package which requires special installations
+      if (verbose && response$status_code == 404) {
+        cat(sprintf("Call: deleteStorageContainer"),
+            fill = TRUE)
+        cat(sprintf("Exception: %s", "The specified storage container does not exist"),
+            fill = TRUE)
+      }
+    }
+  )
 }
 
 #' List storage files from Azure storage.
@@ -58,8 +78,14 @@ deleteStorageContainer <- function(container) {
 #' }
 #' @export
 listStorageFiles <- function(container, prefix = "", ...) {
-  xmlResponse <-
-    rAzureBatch::listBlobs(container, prefix, content = "parsed", ...)
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
+  xmlResponse <- storageClient$blobOperations$listBlobs(
+    container,
+    prefix,
+    content = "parsed",
+    ...)
 
   filePath <- getXmlValues(xmlResponse, ".//Blob/Name")
 
@@ -110,14 +136,18 @@ getStorageFile <-
            overwrite = FALSE,
            verbose = TRUE,
            ...) {
-    jobFileContent <- rAzureBatch::downloadBlob(
-      container,
-      blobPath,
-      downloadPath = downloadPath,
-      overwrite = overwrite,
-      progress = TRUE,
-      ...
-    )
+    config <- getConfiguration()
+    storageClient <- config$storageClient
+
+    jobFileContent <-
+      storageClient$blobOperations$downloadBlob(
+        container,
+        blobPath,
+        downloadPath = downloadPath,
+        overwrite = overwrite,
+        progress = TRUE,
+        ...
+      )
 
     jobFileContent
   }
@@ -129,8 +159,15 @@ getStorageFile <-
 #'
 #' @export
 deleteStorageFile <- function(container, blobPath, ...) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+
   response <-
-    rAzureBatch::deleteBlob(container, blobPath, content = "response", ...)
+    storageClient$blobOperations$deleteBlob(
+      container,
+      blobPath,
+      content = "response",
+      ...)
 
   if (response$status_code == 202) {
     cat(
