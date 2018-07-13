@@ -1,8 +1,7 @@
-##  (2018-07-13)
+## <small>0.7.1 (2018-07-13)</small>
 
-* Fix: Updated MaxTasksPerNode documentation (#279) ([8e39df1](https://github.com/Azure/doAzureParallel/commit/8e39df1)), closes [#279](https://github.com/Azure/doAzureParallel/issues/279)
-* Fix: Updating Persistent Storage Documentation  (#283) ([2b8f388](https://github.com/Azure/doAzureParallel/commit/2b8f388)), closes [#283](https://github.com/Azure/doAzureParallel/issues/283)
 * add sharedKey to credentials related code and doc (#266) ([6582af4](https://github.com/Azure/doAzureParallel/commit/6582af4)), closes [#266](https://github.com/Azure/doAzureParallel/issues/266)
+* CHANGELOG for v0.7.1 (#285) ([737bf49](https://github.com/Azure/doAzureParallel/commit/737bf49)), closes [#285](https://github.com/Azure/doAzureParallel/issues/285)
 * Clarifying comment on DSVM (#274) ([008b0ad](https://github.com/Azure/doAzureParallel/commit/008b0ad)), closes [#274](https://github.com/Azure/doAzureParallel/issues/274)
 * Documentation rewrite (#273) ([f418cd9](https://github.com/Azure/doAzureParallel/commit/f418cd9)), closes [#273](https://github.com/Azure/doAzureParallel/issues/273)
 * Feature/custom package (#272) ([20c86f1](https://github.com/Azure/doAzureParallel/commit/20c86f1)), closes [#272](https://github.com/Azure/doAzureParallel/issues/272)
@@ -13,6 +12,8 @@
 * Replaced deprecated function (#269) ([23079f5](https://github.com/Azure/doAzureParallel/commit/23079f5)), closes [#269](https://github.com/Azure/doAzureParallel/issues/269)
 * Switched to R6 sas client (#276) ([b24f20c](https://github.com/Azure/doAzureParallel/commit/b24f20c)), closes [#276](https://github.com/Azure/doAzureParallel/issues/276)
 * Tests/r (#275) ([4983fb1](https://github.com/Azure/doAzureParallel/commit/4983fb1)), closes [#275](https://github.com/Azure/doAzureParallel/issues/275)
+* Fix: Updated MaxTasksPerNode documentation (#279) ([8e39df1](https://github.com/Azure/doAzureParallel/commit/8e39df1)), closes [#279](https://github.com/Azure/doAzureParallel/issues/279)
+* Fix: Updating Persistent Storage Documentation  (#283) ([2b8f388](https://github.com/Azure/doAzureParallel/commit/2b8f388)), closes [#283](https://github.com/Azure/doAzureParallel/issues/283)
 
 
 
