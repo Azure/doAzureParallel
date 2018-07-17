@@ -250,9 +250,9 @@ BatchUtilities <- R6::R6Class(
 
         virtualMachineConfiguration <- list(
           imageReference = list(
-            publisher = "Canonical",
-            offer = "UbuntuServer",
-            sku = "16.04-LTS",
+            publisher = "microsoft-azure-batch",
+            offer = "ubuntu-server-container",
+            sku = "16-04-lts",
             version = "latest"
           ),
           nodeAgentSKUId = "batch.node.ubuntu 16.04"

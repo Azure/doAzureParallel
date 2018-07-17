@@ -92,11 +92,13 @@ makeCluster <-
     installGithubCommand <- NULL
     installBioconductorCommand <- NULL
 
+    packages <- c()
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$cran) &&
         length(poolConfig$rPackages$cran) > 0) {
       installCranCommand <-
         getPoolPackageInstallationCommand("cran", poolConfig$rPackages$cran)
+      packages <- c(packages, installCranCommand)
     }
 
     if (!is.null(poolConfig$rPackages) &&
@@ -104,6 +106,7 @@ makeCluster <-
         length(poolConfig$rPackages$github) > 0) {
       installGithubCommand <-
         getPoolPackageInstallationCommand("github", poolConfig$rPackages$github)
+      packages <- c(packages, installGithubCommand)
     }
 
     if (!is.null(poolConfig$rPackages) &&
@@ -111,16 +114,6 @@ makeCluster <-
         length(poolConfig$rPackages$bioconductor) > 0) {
       installBioconductorCommand <-
         getPoolPackageInstallationCommand("bioconductor", poolConfig$rPackages$bioconductor)
-    }
-
-    packages <- c()
-    if (!is.null(installCranCommand)) {
-      packages <- c(packages, installCranCommand)
-    }
-    if (!is.null(installGithubCommand)) {
-      packages <- c(packages, installGithubCommand)
-    }
-    if (!is.null(installBioconductorCommand)) {
       packages <- c(packages, installBioconductorCommand)
     }
 
@@ -172,6 +165,17 @@ makeCluster <-
       registry <- config$dockerAuthentication$registry
 
       loginCommand <- dockerLoginCommand(username, password, registry)
+
+      containerRegistry <- list(
+        type = "docker",
+        containerImageNames = list(dockerImage),
+        containerRegistries = list(
+          list(password = config$dockerAuthentication$password,
+               username = config$dockerAuthentication$username,
+               registryServer = config$dockerAuthentication$registry)
+        )
+      )
+
       commandLine <- c(commandLine, loginCommand)
     }
 
