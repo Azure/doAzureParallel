@@ -17,7 +17,6 @@ BatchUtilities <- R6::R6Class(
       userOutputFiles <- args$outputFiles
       containerImage <- args$containerImage
 
-      resultFile <- paste0(taskId, "-result", ".rds")
       accountName <- storageClient$authentication$name
 
       resourceFiles <- NULL
@@ -46,8 +45,15 @@ BatchUtilities <- R6::R6Class(
       # Otherwise just leave it empty
       commands <- c()
 
+      containerSettings = list(
+        imageName = containerImage,
+        containerRunOptions = "--rm"
+      )
+
       if (!is.null(cloudCombine)) {
         assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
+        containerSettings$imageName <- "rocker/r-apt:xenial"
+
         copyCommand <- sprintf(
           "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include results/*.rds --endpoint %s",
           accountName,
@@ -56,9 +62,9 @@ BatchUtilities <- R6::R6Class(
           config$endpointSuffix
         )
 
-        downloadCommand <-
-          dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
-        commands <- c(downloadCommand)
+        #downloadCommand <-
+        #  dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
+        commands <- c("apt-get install -y python-pip", "pip install blobxfer", paste("blobxfer", copyCommand))
       }
 
       exitConditions <- NULL
@@ -108,7 +114,7 @@ BatchUtilities <- R6::R6Class(
 
       commands <-
         c(commands,
-          dockerRunCommand(containerImage, rCommand))
+          rCommand)
 
       commands <- linuxWrapCommands(commands)
 
@@ -141,7 +147,8 @@ BatchUtilities <- R6::R6Class(
         commandLine = commands,
         dependsOn = dependsOn,
         outputFiles = outputFiles,
-        exitConditions = exitConditions
+        exitConditions = exitConditions,
+        containerSettings = containerSettings
       )
     },
     addJob = function(jobId,
@@ -237,7 +244,11 @@ BatchUtilities <- R6::R6Class(
             scope = "pool",
             elevationLevel = "admin"
           )),
-          waitForSuccess = TRUE
+          waitForSuccess = TRUE,
+          containerSettings = list(
+            imageName = pool$containerImage,
+            containerRunOptions = "--rm"
+          )
         )
 
         if (!is.null(environmentSettings)) {
@@ -255,7 +266,8 @@ BatchUtilities <- R6::R6Class(
             sku = "16-04-lts",
             version = "latest"
           ),
-          nodeAgentSKUId = "batch.node.ubuntu 16.04"
+          nodeAgentSKUId = "batch.node.ubuntu 16.04",
+          containerConfiguration = args$containerConfiguration
         )
 
         response <- batchClient$poolOperations$addPool(

@@ -124,22 +124,21 @@ makeCluster <-
     commandLine <- NULL
 
     # install docker
+    containerConfiguration = list(
+      type = "docker"
+    )
+
     dockerImage <- "rocker/tidyverse:latest"
     if (!is.null(poolConfig$containerImage) &&
         nchar(poolConfig$containerImage) > 0) {
       dockerImage <- poolConfig$containerImage
     }
 
+    containerConfiguration$containerImageNames <- list(dockerImage, "rocker/r-apt:xenial")
     config$containerImage <- dockerImage
-    installAndStartContainerCommand <- "cluster_setup.sh"
 
     # Note: Revert it to master once PR is approved
     dockerInstallCommand <- c(
-      paste0(
-        "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "master/inst/startup/cluster_setup.sh"
-      ),
-      "chmod u+x cluster_setup.sh",
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
         "master/inst/startup/install_bioconductor.R"
@@ -148,8 +147,7 @@ makeCluster <-
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
         "master/inst/startup/install_custom.R"
       ),
-      "chmod u+x install_bioconductor.R",
-      installAndStartContainerCommand
+      "chmod u+x install_bioconductor.R"
     )
 
     commandLine <- dockerInstallCommand
@@ -164,24 +162,20 @@ makeCluster <-
       password <- config$dockerAuthentication$password
       registry <- config$dockerAuthentication$registry
 
-      loginCommand <- dockerLoginCommand(username, password, registry)
+      #loginCommand <- dockerLoginCommand(username, password, registry)
 
-      containerRegistry <- list(
-        type = "docker",
-        containerImageNames = list(dockerImage),
-        containerRegistries = list(
-          list(password = config$dockerAuthentication$password,
-               username = config$dockerAuthentication$username,
-               registryServer = config$dockerAuthentication$registry)
-        )
+      containerConfiguration$containerRegistries = list(
+        list(password = password,
+             username = username,
+             registryServer = registry)
       )
 
-      commandLine <- c(commandLine, loginCommand)
+      #commandLine <- c(commandLine, loginCommand)
     }
 
     # pull docker image
-    pullImageCommand <- dockerPullCommand(dockerImage)
-    commandLine <- c(commandLine, pullImageCommand)
+    # pullImageCommand <- dockerPullCommand(dockerImage)
+    #commandLine <- c(commandLine, pullImageCommand)
 
     if (!is.null(poolConfig$commandLine)) {
       commandLine <- c(commandLine, poolConfig$commandLine)
@@ -239,7 +233,8 @@ makeCluster <-
       environmentSettings = environmentSettings,
       resourceFiles = resourceFiles,
       commandLine = commandLine,
-      networkConfiguration = networkConfiguration
+      networkConfiguration = networkConfiguration,
+      containerConfiguration = containerConfiguration
     )
 
     if (nchar(response) > 0) {

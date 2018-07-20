@@ -88,7 +88,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
                                                                  "batchJobId",
                                                                  "chunkSize",
                                                                  "errorHandling",
-                                                                 "isError")) %dopar% {
+                                                                 "isError")) %do% {
       task <- tryCatch({
         readRDS(files[i])
       }, error = function(e) {
