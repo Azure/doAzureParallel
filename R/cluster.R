@@ -134,7 +134,10 @@ makeCluster <-
       dockerImage <- poolConfig$containerImage
     }
 
-    containerConfiguration$containerImageNames <- list(dockerImage, "rocker/r-apt:xenial")
+    containerConfiguration$containerImageNames <-
+      list(dockerImage,
+           "brianlovedocker/doazureparallel-merge-dockerfile:0.12.1")
+
     config$containerImage <- dockerImage
 
     # Note: Revert it to master once PR is approved

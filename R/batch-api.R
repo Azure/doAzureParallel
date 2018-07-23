@@ -52,7 +52,7 @@ BatchUtilities <- R6::R6Class(
 
       if (!is.null(cloudCombine)) {
         assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
-        containerSettings$imageName <- "rocker/r-apt:xenial"
+        containerSettings$imageName <- "brianlovedocker/doazureparallel-merge-dockerfile:0.12.1"
 
         copyCommand <- sprintf(
           "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include results/*.rds --endpoint %s",
@@ -64,7 +64,7 @@ BatchUtilities <- R6::R6Class(
 
         #downloadCommand <-
         #  dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
-        commands <- c("apt-get install -y python-pip", "pip install blobxfer", paste("blobxfer", copyCommand))
+        commands <- c(paste("blobxfer", copyCommand))
       }
 
       exitConditions <- NULL
