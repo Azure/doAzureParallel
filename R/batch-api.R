@@ -45,7 +45,7 @@ BatchUtilities <- R6::R6Class(
       # Otherwise just leave it empty
       commands <- c()
 
-      containerSettings = list(
+      containerSettings <- list(
         imageName = containerImage,
         containerRunOptions = "--rm"
       )
@@ -62,8 +62,6 @@ BatchUtilities <- R6::R6Class(
           config$endpointSuffix
         )
 
-        #downloadCommand <-
-        #  dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
         commands <- c(paste("blobxfer", copyCommand))
       }
 

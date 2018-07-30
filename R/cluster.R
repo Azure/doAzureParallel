@@ -165,20 +165,12 @@ makeCluster <-
       password <- config$dockerAuthentication$password
       registry <- config$dockerAuthentication$registry
 
-      #loginCommand <- dockerLoginCommand(username, password, registry)
-
       containerConfiguration$containerRegistries = list(
         list(password = password,
              username = username,
              registryServer = registry)
       )
-
-      #commandLine <- c(commandLine, loginCommand)
     }
-
-    # pull docker image
-    # pullImageCommand <- dockerPullCommand(dockerImage)
-    #commandLine <- c(commandLine, pullImageCommand)
 
     if (!is.null(poolConfig$commandLine)) {
       commandLine <- c(commandLine, poolConfig$commandLine)
