@@ -124,7 +124,7 @@ makeCluster <-
     commandLine <- NULL
 
     # install docker
-    containerConfiguration = list(
+    containerConfiguration <- list(
       type = "docker"
     )
 
@@ -165,7 +165,7 @@ makeCluster <-
       password <- config$dockerAuthentication$password
       registry <- config$dockerAuthentication$registry
 
-      containerConfiguration$containerRegistries = list(
+      containerConfiguration$containerRegistries <- list(
         list(password = password,
              username = username,
              registryServer = registry)
