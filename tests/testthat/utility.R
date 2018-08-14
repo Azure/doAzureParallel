@@ -1,6 +1,6 @@
-getSettings <- function(dedicatedMin = 2,
+getSettings <- function(dedicatedMin = 0,
                         dedicatedMax = 2,
-                        lowPriorityMin = 2,
+                        lowPriorityMin = 0,
                         lowPriorityMax = 2,
                         poolName = "test-pool"){
   list(

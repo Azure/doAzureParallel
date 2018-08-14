@@ -36,10 +36,6 @@ azbatchenv <-
 
 setwd(batchTaskWorkingDirectory)
 
-for (package in azbatchenv$packages) {
-  library(package, character.only = TRUE)
-}
-
 parent.env(azbatchenv$exportenv) <- globalenv()
 
 enableCloudCombine <- azbatchenv$enableCloudCombine
@@ -88,7 +84,7 @@ if (typeof(cloudCombine) == "list" && enableCloudCombine) {
                                                                  "batchJobId",
                                                                  "chunkSize",
                                                                  "errorHandling",
-                                                                 "isError")) %dopar% {
+                                                                 "isError")) %do% {
       task <- tryCatch({
         readRDS(files[i])
       }, error = function(e) {

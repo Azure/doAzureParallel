@@ -17,7 +17,6 @@ BatchUtilities <- R6::R6Class(
       userOutputFiles <- args$outputFiles
       containerImage <- args$containerImage
 
-      resultFile <- paste0(taskId, "-result", ".rds")
       accountName <- storageClient$authentication$name
 
       resourceFiles <- NULL
@@ -46,8 +45,15 @@ BatchUtilities <- R6::R6Class(
       # Otherwise just leave it empty
       commands <- c()
 
+      containerSettings <- list(
+        imageName = containerImage,
+        containerRunOptions = "--rm"
+      )
+
       if (!is.null(cloudCombine)) {
         assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
+        containerSettings$imageName <- "brianlovedocker/doazureparallel-merge-dockerfile:0.12.1"
+
         copyCommand <- sprintf(
           "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include results/*.rds --endpoint %s",
           accountName,
@@ -56,9 +62,7 @@ BatchUtilities <- R6::R6Class(
           config$endpointSuffix
         )
 
-        downloadCommand <-
-          dockerRunCommand("alfpark/blobxfer:0.12.1", copyCommand, "blobxfer", FALSE)
-        commands <- c(downloadCommand)
+        commands <- c(paste("blobxfer", copyCommand))
       }
 
       exitConditions <- NULL
@@ -108,7 +112,7 @@ BatchUtilities <- R6::R6Class(
 
       commands <-
         c(commands,
-          dockerRunCommand(containerImage, rCommand))
+          rCommand)
 
       commands <- linuxWrapCommands(commands)
 
@@ -141,7 +145,8 @@ BatchUtilities <- R6::R6Class(
         commandLine = commands,
         dependsOn = dependsOn,
         outputFiles = outputFiles,
-        exitConditions = exitConditions
+        exitConditions = exitConditions,
+        containerSettings = containerSettings
       )
     },
     addJob = function(jobId,
@@ -250,12 +255,13 @@ BatchUtilities <- R6::R6Class(
 
         virtualMachineConfiguration <- list(
           imageReference = list(
-            publisher = "Canonical",
-            offer = "UbuntuServer",
-            sku = "16.04-LTS",
+            publisher = "microsoft-azure-batch",
+            offer = "ubuntu-server-container",
+            sku = "16-04-lts",
             version = "latest"
           ),
-          nodeAgentSKUId = "batch.node.ubuntu 16.04"
+          nodeAgentSKUId = "batch.node.ubuntu 16.04",
+          containerConfiguration = args$containerConfiguration
         )
 
         response <- batchClient$poolOperations$addPool(

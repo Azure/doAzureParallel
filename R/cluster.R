@@ -92,11 +92,13 @@ makeCluster <-
     installGithubCommand <- NULL
     installBioconductorCommand <- NULL
 
+    packages <- c()
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$cran) &&
         length(poolConfig$rPackages$cran) > 0) {
       installCranCommand <-
         getPoolPackageInstallationCommand("cran", poolConfig$rPackages$cran)
+      packages <- c(packages, installCranCommand)
     }
 
     if (!is.null(poolConfig$rPackages) &&
@@ -104,6 +106,7 @@ makeCluster <-
         length(poolConfig$rPackages$github) > 0) {
       installGithubCommand <-
         getPoolPackageInstallationCommand("github", poolConfig$rPackages$github)
+      packages <- c(packages, installGithubCommand)
     }
 
     if (!is.null(poolConfig$rPackages) &&
@@ -111,16 +114,6 @@ makeCluster <-
         length(poolConfig$rPackages$bioconductor) > 0) {
       installBioconductorCommand <-
         getPoolPackageInstallationCommand("bioconductor", poolConfig$rPackages$bioconductor)
-    }
-
-    packages <- c()
-    if (!is.null(installCranCommand)) {
-      packages <- c(packages, installCranCommand)
-    }
-    if (!is.null(installGithubCommand)) {
-      packages <- c(packages, installGithubCommand)
-    }
-    if (!is.null(installBioconductorCommand)) {
       packages <- c(packages, installBioconductorCommand)
     }
 
@@ -128,25 +121,25 @@ makeCluster <-
       packages <- NULL
     }
 
-    commandLine <- NULL
-
     # install docker
+    containerConfiguration <- list(
+      type = "docker"
+    )
+
     dockerImage <- "rocker/tidyverse:latest"
     if (!is.null(poolConfig$containerImage) &&
         nchar(poolConfig$containerImage) > 0) {
       dockerImage <- poolConfig$containerImage
     }
 
+    containerConfiguration$containerImageNames <-
+      list(dockerImage,
+           "brianlovedocker/doazureparallel-merge-dockerfile:0.12.1")
+
     config$containerImage <- dockerImage
-    installAndStartContainerCommand <- "cluster_setup.sh"
 
     # Note: Revert it to master once PR is approved
     dockerInstallCommand <- c(
-      paste0(
-        "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "master/inst/startup/cluster_setup.sh"
-      ),
-      "chmod u+x cluster_setup.sh",
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
         "master/inst/startup/install_bioconductor.R"
@@ -155,11 +148,12 @@ makeCluster <-
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
         "master/inst/startup/install_custom.R"
       ),
-      "chmod u+x install_bioconductor.R",
-      installAndStartContainerCommand
+      "chmod u+x install_bioconductor.R"
     )
 
-    commandLine <- dockerInstallCommand
+    commandLine <- c(dockerInstallCommand,
+                    'mkdir -p $AZ_BATCH_NODE_SHARED_DIR/R/packages',
+                    'chmod -R 0777 $AZ_BATCH_NODE_SHARED_DIR/R')
 
     # log into private registry if registry credentials were provided
     if (!is.null(config$dockerAuthentication) &&
@@ -171,13 +165,12 @@ makeCluster <-
       password <- config$dockerAuthentication$password
       registry <- config$dockerAuthentication$registry
 
-      loginCommand <- dockerLoginCommand(username, password, registry)
-      commandLine <- c(commandLine, loginCommand)
+      containerConfiguration$containerRegistries <- list(
+        list(password = password,
+             username = username,
+             registryServer = registry)
+      )
     }
-
-    # pull docker image
-    pullImageCommand <- dockerPullCommand(dockerImage)
-    commandLine <- c(commandLine, pullImageCommand)
 
     if (!is.null(poolConfig$commandLine)) {
       commandLine <- c(commandLine, poolConfig$commandLine)
@@ -235,7 +228,8 @@ makeCluster <-
       environmentSettings = environmentSettings,
       resourceFiles = resourceFiles,
       commandLine = commandLine,
-      networkConfiguration = networkConfiguration
+      networkConfiguration = networkConfiguration,
+      containerConfiguration = containerConfiguration
     )
 
     if (nchar(response) > 0) {
