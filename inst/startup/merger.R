@@ -36,10 +36,6 @@ azbatchenv <-
 
 setwd(batchTaskWorkingDirectory)
 
-for (package in azbatchenv$packages) {
-  library(package, character.only = TRUE)
-}
-
 parent.env(azbatchenv$exportenv) <- globalenv()
 
 enableCloudCombine <- azbatchenv$enableCloudCombine

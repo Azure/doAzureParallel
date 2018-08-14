@@ -243,11 +243,6 @@ BatchUtilities <- R6::R6Class(
             elevationLevel = "admin"
           )),
           waitForSuccess = TRUE
-          #,
-          #containerSettings = list(
-          #  imageName = pool$containerImage,
-          #  containerRunOptions = "--rm"
-          #)
         )
 
         if (!is.null(environmentSettings)) {

@@ -121,8 +121,6 @@ makeCluster <-
       packages <- NULL
     }
 
-    commandLine <- NULL
-
     # install docker
     containerConfiguration <- list(
       type = "docker"
@@ -153,7 +151,9 @@ makeCluster <-
       "chmod u+x install_bioconductor.R"
     )
 
-    commandLine <- dockerInstallCommand
+    commandLine <- c(dockerInstallCommand,
+                    'mkdir -p $AZ_BATCH_NODE_SHARED_DIR/R/packages',
+                    'chmod -R 0777 $AZ_BATCH_NODE_SHARED_DIR/R')
 
     # log into private registry if registry credentials were provided
     if (!is.null(config$dockerAuthentication) &&
