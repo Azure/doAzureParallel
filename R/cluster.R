@@ -358,7 +358,7 @@ makeCluster <-
       }
     }
 
-    cat("Your cluster has been registered.", fill = TRUE)
+    cat("Your cluster has been created.", fill = TRUE)
     cat(sprintf("Dedicated Node Count: %i", pool$targetDedicatedNodes),
         fill = TRUE)
     cat(sprintf("Low Priority Node Count: %i", pool$targetLowPriorityNodes),
@@ -415,7 +415,7 @@ getCluster <- function(clusterName, verbose = TRUE) {
     clusterName)
 
   if (!is.null(nodes$value) && length(nodes$value) > 0) {
-    nodesInfo <- .processNodeCount(nodes)
+    nodesInfo <- processNodeCount(nodes)
     nodesState <- nodesInfo$nodesState
     nodesWithFailures <- nodesInfo$nodesWithFailures
 
@@ -431,7 +431,7 @@ getCluster <- function(clusterName, verbose = TRUE) {
       cat(sprintf("\tother:               %s", nodesState$other), fill = TRUE)
     }
 
-    .showNodesFailure(nodesWithFailures)
+    showNodesFailure(nodesWithFailures)
   }
 
   cat("Your cluster has been registered.", fill = TRUE)

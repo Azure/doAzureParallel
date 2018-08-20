@@ -82,7 +82,7 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
   stop("Timeout expired")
 }
 
-.processNodeCount <- function(nodes) {
+processNodeCount <- function(nodes) {
   nodesWithFailures <- c()
   currentNodeCount <- 0
   nodesState <- list(
@@ -141,7 +141,7 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
   return(list(currentNodeCount = currentNodeCount, nodesWithFailures = nodesWithFailures, nodesState = nodesState))
 }
 
-.showNodesFailure <- function(nodesWithFailures) {
+showNodesFailure <- function(nodesWithFailures) {
   if (length(nodesWithFailures) > 0) {
     nodesFailureWarningLabel <-
       sprintf(
