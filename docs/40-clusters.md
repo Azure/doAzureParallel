@@ -47,3 +47,13 @@ resizeCluster(cluster,
     lowPriorityMin = 0,
     lowPriorityMax = 0)
 ```
+
+### Getting Files from a Cluster Node
+You can download files from a specific node.
+```R
+getClusterFile(
+  cluster,
+  "tvm-3601533753_1-20180813t211014z",
+  "startup/stdout.txt")
+```
+

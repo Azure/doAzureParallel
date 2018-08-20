@@ -26,13 +26,9 @@ getClusterFile <-
            verbose = TRUE,
            overwrite = FALSE,
            downloadPath = NULL) {
-    prefixfilePath <- "startup/%s"
-
     if (startsWith(filePath, "/")) {
       filePath <- substring(filePath, 2)
     }
-
-    filePath <- sprintf(prefixfilePath, filePath)
 
     config <- getConfiguration()
     batchClient <- config$batchClient
