@@ -6,7 +6,15 @@ jobPrepDirectory <- Sys.getenv("AZ_BATCH_JOB_PREP_WORKING_DIR")
 .libPaths(c(jobPrepDirectory, "/mnt/batch/tasks/shared/R/packages", .libPaths()))
 status <- tryCatch({
     for (package in args) {
-      packageDirectory <- strsplit(package, "/")[[1]]
+      packageVersion <- strsplit(package, "@")[[1]]
+
+      if (length(packageVersion) > 1) {
+        packageDirectory <- strsplit(packageVersion[1], "/")[[1]]
+      }
+      else {
+        packageDirectory <- strsplit(package, "/")[[1]]
+      }
+
       packageName <- packageDirectory[length(packageDirectory)]
 
       if (!require(packageName, character.only = TRUE)) {
