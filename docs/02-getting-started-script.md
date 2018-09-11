@@ -12,7 +12,7 @@ The script outputs all of the necessary information to use `doAzureParallel`, ju
 
 ## Usage
 
-### Create credentials
+#### Create Shared Key Authentication Configuration (Default)
 Copy and paste the following into an [Azure Cloud Shell](https://shell.azure.com):
 ```sh
 wget -q https://raw.githubusercontent.com/Azure/doAzureParallel/master/account_setup.sh &&
@@ -26,7 +26,7 @@ Resource Group Name [doazp]:
 Storage Account Name [doazpstorage]:
 Batch Account Name [doazpbatch]:
 ```
-
+#### Create Service Principal Authentication Configuration
 following prompts will only show up when you use AAD auth by running
 ```sh
 wget -q https://raw.githubusercontent.com/Azure/doAzureParallel/master/account_setup.sh &&

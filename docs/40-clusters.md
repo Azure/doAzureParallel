@@ -7,7 +7,7 @@
 You can list all clusters currently running in your account by running:
 
 ``` R
-cluster <- listClusters()
+cluster <- getClusterList()
 ```
 
 ### Viewing a Cluster

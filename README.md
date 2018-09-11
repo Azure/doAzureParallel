@@ -42,7 +42,7 @@ devtools::install_github("Azure/doAzureParallel")
 2) Create an doAzureParallel's credentials file
 ``` R
 library(doAzureParallel)
-generateCredentials.json("credentials.json")
+generateCredentialsConfig("credentials.json")
 ```
 
 3) Login or register for an Azure Account, navigate to [Azure Cloud Shell](https://shell.azure.com)
