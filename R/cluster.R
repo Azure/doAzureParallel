@@ -387,10 +387,6 @@ getCluster <- function(clusterName, verbose = TRUE) {
     stop(sprintf("Code: %s - Message: %s", pool$code, pool$message))
   }
 
-  if (pool$targetDedicatedNodes + pool$targetLowPriorityNodes <= 0) {
-    stop("Cluster node count needs to be greater than 0.")
-  }
-
   if (!is.null(pool$resizeErrors)) {
     cat("\n")
 
