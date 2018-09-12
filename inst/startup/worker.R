@@ -93,7 +93,15 @@ for (package in azbatchenv$packages) {
 }
 
 for (package in azbatchenv$github) {
-  packageDirectory <- strsplit(package, "/")[[1]]
+  packageVersion <- strsplit(package, "@")[[1]]
+
+  if (length(packageVersion) > 1) {
+    packageDirectory <- strsplit(packageVersion[1], "/")[[1]]
+  }
+  else {
+    packageDirectory <- strsplit(package, "/")[[1]]
+  }
+
   packageName <- packageDirectory[length(packageDirectory)]
 
   library(packageName, character.only = TRUE)
