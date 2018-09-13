@@ -557,7 +557,7 @@ waitForTasksToComplete <-
           next
         }
 
-        if (mergeTask$executionInfo$result == "Success") {
+        if (tolower(mergeTask$executionInfo$result) == "success") {
           cat(" Completed.")
           break
         }
@@ -601,7 +601,7 @@ waitForJobPreparation <- function(jobId, poolId) {
     )
 
     statuses <- sapply(statuses$value, function(x) {
-      x$jobPreparationTaskExecutionInfo$result == "Success"
+      tolower(x$jobPreparationTaskExecutionInfo$result) == "success"
     })
 
     if (TRUE %in% statuses) {
