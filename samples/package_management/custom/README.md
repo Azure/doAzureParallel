@@ -28,5 +28,5 @@ Finds files that end with *.tar.gz in the current Azure File Share directory
     ]
 }
 ```
-3) For more information on using Azure Files on Batch, follow our other [sample](./azure_files/readme.md) of using Azure Files
+3) For more information on using Azure Files on Batch, follow our other [sample](../../azure_files/readme.md) of using Azure Files
 4) Replace your Storage Account name, endpoint and key in the cluster configuration file 

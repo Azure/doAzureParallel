@@ -499,7 +499,9 @@ waitForTasksToComplete <-
 
         for (i in 1:length(failedTasks$value)) {
           if (!is.null(failedTasks$value[[i]]$executionInfo$result) &&
-              failedTasks$value[[i]]$executionInfo$result == "Failure") {
+              grepl(failedTasks$value[[i]]$executionInfo$result,
+                    "failure",
+                    ignore.case = TRUE)) {
             tasksFailureWarningLabel <-
               paste0(tasksFailureWarningLabel,
                      sprintf("%s\n", failedTasks$value[[i]]$id))
@@ -557,7 +559,7 @@ waitForTasksToComplete <-
           next
         }
 
-        if (tolower(mergeTask$executionInfo$result) == "success") {
+        if (grepl(mergeTask$executionInfo$result, "success", ignore.case = TRUE)) {
           cat(" Completed.")
           break
         }
@@ -601,7 +603,9 @@ waitForJobPreparation <- function(jobId, poolId) {
     )
 
     statuses <- sapply(statuses$value, function(x) {
-      tolower(x$jobPreparationTaskExecutionInfo$result) == "success"
+      grepl(x$jobPreparationTaskExecutionInfo$result,
+            "success",
+            ignore.case = TRUE)
     })
 
     if (TRUE %in% statuses) {
