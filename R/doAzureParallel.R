@@ -626,7 +626,7 @@ setHttpTraffic <- function(value = FALSE) {
     )
     mergeOutput <- append(obj$options$azure$outputFiles, mergeOutput)
 
-    BatchUtilitiesOperations$addTask(
+    task <- TaskWorkflowManager$createTask(
       jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
@@ -644,11 +644,13 @@ setHttpTraffic <- function(value = FALSE) {
       maxRetryCount = maxTaskRetryCount
     )
 
-    cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")
+    cat("\r", sprintf("Creating tasks (%s/%s)", i, length(endIndices)), sep = "")
     flush.console()
 
-    return(taskId)
+    return(task)
   })
+
+  TaskWorkflowManager$addTaskCollection(id, tasks)
 
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")

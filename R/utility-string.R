@@ -115,3 +115,7 @@ printCluster <- function(cluster, resourceFiles = list()) {
   }
   cat(strrep('=', options("width")), fill = TRUE)
 }
+
+compare <- function(a, b) {
+  return(grepl(a, b, ignore.case = TRUE))
+}

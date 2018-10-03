@@ -499,9 +499,7 @@ waitForTasksToComplete <-
 
         for (i in 1:length(failedTasks$value)) {
           if (!is.null(failedTasks$value[[i]]$executionInfo$result) &&
-              grepl(failedTasks$value[[i]]$executionInfo$result,
-                    "failure",
-                    ignore.case = TRUE)) {
+              compare(failedTasks$value[[i]]$executionInfo$result, "failure")) {
             tasksFailureWarningLabel <-
               paste0(tasksFailureWarningLabel,
                      sprintf("%s\n", failedTasks$value[[i]]$id))
@@ -559,7 +557,7 @@ waitForTasksToComplete <-
           next
         }
 
-        if (grepl(mergeTask$executionInfo$result, "success", ignore.case = TRUE)) {
+        if (compare(mergeTask$executionInfo$result, "success")) {
           cat(" Completed.")
           break
         }
