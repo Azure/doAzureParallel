@@ -3,8 +3,10 @@ TaskWorkflowManager <- R6::R6Class(
   "TaskManager",
   public = list(
     initialize = function(){
-
+      errors = list()
     },
+    
+    errors = list(),
     threads = 1,
     maxTasksPerRequest = 100,
     createTask = function(jobId, taskId, rCommand, ...) {
@@ -223,7 +225,7 @@ TaskWorkflowManager <- R6::R6Class(
     addTasks = function(
       jobId,
       tasks,
-      chunksToAdd
+      chunkTasksToAdd
     ){
       config <- getConfiguration()
       batchClient <- config$batchClient
@@ -233,19 +235,29 @@ TaskWorkflowManager <- R6::R6Class(
         list(value = chunkTasksToAdd),
         content = "response"
       )
-
-      values <- httr::content(response)$value
+      
+      # In case of a chunk exceeding the MaxMessageSize split chunk in half
+      # and resubmit smaller chunk requests
       if (response$status_code == 413) {
-
+        midpoint <- length(chunkTasksToAdd) / 2
+        addTasks(jobId,
+                 tasks,
+                 chunkTasksToAdd[1:midpoint])
+        
+        <- addTasks(jobId,
+                 tasks,
+                 chunkTasksToAdd[midpoint:length(chunkTasksToAdd)])
       }
       else if (500 <= response$status_code &&
                response$status_code <= 599) {
-
+        
       }
       else {
 
       }
-
+      
+      values <- httr::content(response)$value
+      
       for (i in 1:length(values)) {
         if (compare(values[[i]]$status, "servererror")) {
 
@@ -258,6 +270,11 @@ TaskWorkflowManager <- R6::R6Class(
 
         }
       }
+      
+      return(list(
+        addedTasks = addedTasks,
+        failedTasks = failedToAdd
+      ))
     }
   )
 )
