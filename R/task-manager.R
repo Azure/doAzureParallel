@@ -2,11 +2,16 @@
 TaskWorkflowManager <- R6::R6Class(
   "TaskManager",
   public = list(
-    initialize = function(){
-      errors = list()
+    initialize = function(tasks = list()){
+      self$tasks = tasks
+      self$queue = tasks
+      self$results = vector("list", length(tasks))
+      self$failedTasks = vector("list", length(tasks))
     },
-    
-    errors = list(),
+    tasks = NULL,
+    queue = NULL,
+    results = NULL,
+    failedTasks = NULL,
     threads = 1,
     maxTasksPerRequest = 100,
     createTask = function(jobId, taskId, rCommand, ...) {
@@ -156,10 +161,8 @@ TaskWorkflowManager <- R6::R6Class(
 
       body
     },
-    addTaskCollection = function(
+    handleTaskCollection = function(
       jobId,
-      tasksToAdd,
-      chunksToAdd,
       threads = 1
     ){
       config <- getConfiguration()
@@ -167,69 +170,43 @@ TaskWorkflowManager <- R6::R6Class(
 
       len <- length(tasks)
 
-      startIndex <- 1
-      endIndex <- self$maxTasksPerRequest
-      front <- 1
-      back <- length(tasks)
-
-      failedToAdd <- vector("list", length = length(tasks))
-
-      chunkTasksToAdd <- list()
-      while (endIndex < len) {
-        chunkTasksToAdd <- tasks[startIndex:endIndex]
-        response <- batchClient$taskOperations$addCollection(
-          jobId,
-          list(value = chunkTasksToAdd),
-          content = "response"
-        )
-
-        values <- httr::content(response)$value
-        if (response$status_code == 413) {
-
+      queueFront <- 1
+      queueBack <- length(queue)
+      
+      unknownTasksFront <- 1
+      unknownTasksBack <- 1
+      
+      failedTasksFront <- 1
+      failedTasksBack <- 1
+      
+      tryCatch({
+        chunkTasksToAdd <- NULL
+        while (queueFront != queueBack) {
+          startIndex <- queue$front
+          endIndex <- startIndex + self$maxTasksPerRequest
+          chunkTasksToAdd <- tasks[startIndex:endIndex]
+          
+          report <- addBulkTasks(
+            jobId,
+            self$results,
+            chunkTasksToAdd
+          )
+          
+          queueFront = queueFront + self$maxTasksPerRequest
         }
-        else if (500 <= response$status_code &&
-            response$status_code <= 599) {
-
-        }
-        else {
-
-        }
-
-        for (i in 1:length(values)) {
-          if (compare(values[[i]]$status, "servererror")) {
-
-          }
-          else if (compare(values[[i]]$status, "clienterror") &&
-                   values[[i]]$error$code != "TaskExists") {
-            failedToAdd
-          }
-          else {
-
-          }
-        }
-
-        startIndex = startIndex + self$maxTasksPerRequest
-        endIndex = endIndex + self$maxTasksPerRequest
-      }
-
-      if (startIndex < len) {
-        response <- batchClient$taskOperations$addCollection(
-          jobId,
-          list(value = tasks[startIndex:len]),
-          content = "response"
-        )
-
-        print(response)
-      }
+      },
+      error = function(e){
+        
+      })
     },
-    addTasks = function(
+    addBulkTasks = function(
       jobId,
-      tasks,
+      results,
       chunkTasksToAdd
     ){
       config <- getConfiguration()
       batchClient <- config$batchClient
-
+      
       response <- batchClient$taskOperations$addCollection(
         jobId,
         list(value = chunkTasksToAdd),
@@ -239,44 +216,69 @@ TaskWorkflowManager <- R6::R6Class(
       # In case of a chunk exceeding the MaxMessageSize split chunk in half
       # and resubmit smaller chunk requests
       if (response$status_code == 413) {
-        midpoint <- length(chunkTasksToAdd) / 2
-        addTasks(jobId,
-                 tasks,
-                 chunkTasksToAdd[1:midpoint])
+        if(length(chunkTasksToAdd) == 1){
+          stop("Failed to add task with ID %s due to the body" +
+               " exceeding the maximum request size" + chunkTasksToAdd$id)
+        }
         
-        <- addTasks(jobId,
-                 tasks,
-                 chunkTasksToAdd[midpoint:length(chunkTasksToAdd)])
+        midpoint <- length(chunkTasksToAdd) / 2
+        
+        self$addBulkTasks(
+          jobId,
+          tasks,
+          chunkTasksToAdd[midpoint:length(chunkTasksToAdd)])
+        
+        self$addBulkTasks(
+          jobId,
+          tasks,
+          chunkTasksToAdd[midpoint:length(chunkTasksToAdd)])
       }
       else if (500 <= response$status_code &&
                response$status_code <= 599) {
-        
+        failedTasks[[failed]]
       }
       else {
-
+        unknownTasks[[unknown]]
       }
       
       values <- httr::content(response)$value
       
       for (i in 1:length(values)) {
         if (compare(values[[i]]$status, "servererror")) {
-
+          self$queue$push(values[[i]])
         }
         else if (compare(values[[i]]$status, "clienterror") &&
                  values[[i]]$error$code != "TaskExists") {
-          failedToAdd
+          self$failedTasks$push(values[[i]])
         }
         else {
-
+          self$results$push(values[[i]])
         }
       }
-      
-      return(list(
-        addedTasks = addedTasks,
-        failedTasks = failedToAdd
-      ))
     }
   )
 )
 
 TaskWorkflowManager <- TaskWorkflowManager$new()
+
+Queue <- R6::R6Class(
+  "Queue",
+  public = list(
+    initialize = function(size){
+      array = vector("list", size) 
+    },
+    slice = function(start, end){
+      array[start:end]
+    },
+    push = function(object){
+      
+    },
+    pop = function(){
+      
+    },
+    array = NULL,
+    size = NULL,
+    front = NULL,
+    back = NULL
+  )
+)
