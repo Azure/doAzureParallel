@@ -1,3 +1,16 @@
+## <small>0.7.2 (2018-10-08)</small>
+
+* Fix: Documentation typos and fixes (#307) ([1d26dd8](https://github.com/Azure/doAzureParallel/commit/1d26dd8)), closes [#307](https://github.com/Azure/doAzureParallel/issues/307)
+* Fix: File share sample (#312) ([96081cc](https://github.com/Azure/doAzureParallel/commit/96081cc)), closes [#312](https://github.com/Azure/doAzureParallel/issues/312)
+* Added 0.7.1 changelog version (#286) ([ad7acf1](https://github.com/Azure/doAzureParallel/commit/ad7acf1)), closes [#286](https://github.com/Azure/doAzureParallel/issues/286)
+* Added docs (#298) ([b9ffe3e](https://github.com/Azure/doAzureParallel/commit/b9ffe3e)), closes [#298](https://github.com/Azure/doAzureParallel/issues/298)
+* Added github branch installation (#302) ([4020a93](https://github.com/Azure/doAzureParallel/commit/4020a93)), closes [#302](https://github.com/Azure/doAzureParallel/issues/302)
+* Fix Azure foreach options documentation (#288) ([ce263e7](https://github.com/Azure/doAzureParallel/commit/ce263e7)), closes [#288](https://github.com/Azure/doAzureParallel/issues/288)
+* Fix dependency on enum being uppercase (#310) ([81dcb72](https://github.com/Azure/doAzureParallel/commit/81dcb72)), closes [#310](https://github.com/Azure/doAzureParallel/issues/310)
+* Feature: Add Batch Service Built-In Container support (#291) ([b97f447](https://github.com/Azure/doAzureParallel/commit/b97f447)), closes [#291](https://github.com/Azure/doAzureParallel/issues/291)
+
+
+
 ## <small>0.7.1 (2018-07-13)</small>
 
 * add sharedKey to credentials related code and doc (#266) ([6582af4](https://github.com/Azure/doAzureParallel/commit/6582af4)), closes [#266](https://github.com/Azure/doAzureParallel/issues/266)
