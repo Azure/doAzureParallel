@@ -643,7 +643,6 @@ setHttpTraffic <- function(value = FALSE) {
         as.character(obj$errorHandling)),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
-      resourceFiles = resourceFiles,
       outputFiles = mergeOutput,
       containerImage = data$containerImage,
       args = args,
