@@ -331,7 +331,12 @@ setHttpTraffic <- function(value = FALSE) {
   if (!is.null(obj$options$azure$chunksize)) {
     chunkSize <- obj$options$azure$chunksize
   }
-
+  
+  threads <- 1
+  if (!is.null(obj$options$azure$threads)) {
+    threads <- obj$options$azure$threads
+  }
+  
   chunkSizeKeyValuePair <-
     list(name = "chunkSize", value = as.character(chunkSize))
 
@@ -638,6 +643,7 @@ setHttpTraffic <- function(value = FALSE) {
         as.character(obj$errorHandling)),
       envir = .doAzureBatchGlobals,
       packages = obj$packages,
+      resourceFiles = resourceFiles,
       outputFiles = mergeOutput,
       containerImage = data$containerImage,
       args = args,
@@ -651,11 +657,8 @@ setHttpTraffic <- function(value = FALSE) {
   })
 
   # Submit collection of tasks
-  TaskWorkflowManager <- TaskWorkflowManager$new(tasks)
-  TaskWorkflowManager$handleTaskCollection(id, parallel)
-
-  # Process the report, validate 
-  TaskWorkflowManager$failedTasksToAdd
+  TaskWorkflowManager$handleTaskCollection(id, tasks, threads)
+  
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
     taskDependencies <- list(taskIdRanges = list(list(
@@ -712,9 +715,6 @@ setHttpTraffic <- function(value = FALSE) {
         if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           tempFile <- tempfile("doAzureParallel", fileext = ".rds")
 
-          tryCatch(
-            
-          )
           response <- storageClient$blobOperations$downloadBlob(
             id,
             paste0("results/", "merge-result.rds"),

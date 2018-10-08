@@ -2,16 +2,13 @@
 TaskWorkflowManager <- R6::R6Class(
   "TaskManager",
   public = list(
-    initialize = function(tasks = list()){
-      self$tasks = tasks
-      self$queue = tasks
-      self$results = vector("list", length(tasks))
-      self$failedTasks = vector("list", length(tasks))
+    initialize = function(){
     },
-    tasks = NULL,
-    queue = NULL,
+    originalTaskCollection = NULL,
+    tasksToAdd = NULL,
     results = NULL,
     failedTasks = NULL,
+    errors = NULL,
     threads = 1,
     maxTasksPerRequest = 100,
     createTask = function(jobId, taskId, rCommand, ...) {
@@ -25,10 +22,9 @@ TaskWorkflowManager <- R6::R6Class(
       cloudCombine <- args$cloudCombine
       userOutputFiles <- args$outputFiles
       containerImage <- args$containerImage
-
+      resourceFiles <- args$resourceFiles
       accountName <- storageClient$authentication$name
 
-      resourceFiles <- NULL
       if (!is.null(argsList)) {
         envFile <- paste0(taskId, ".rds")
         saveRDS(argsList, file = envFile)
@@ -163,36 +159,43 @@ TaskWorkflowManager <- R6::R6Class(
     },
     handleTaskCollection = function(
       jobId,
+      tasks,
       threads = 1
     ){
+      size <- length(tasks)
+      self$originalTaskCollection <- tasks
+      
+      self$tasksToAdd <- datastructures::queue()
+      self$tasksToAdd <- datastructures::insert(self$tasksToAdd, tasks)
+      
+      self$results <- datastructures::queue()
+      self$failedTasks <- datastructures::queue()
+      self$errors <- datastructures::queue()
+      
       config <- getConfiguration()
       batchClient <- config$batchClient
 
-      len <- length(tasks)
-
-      queueFront <- 1
-      queueBack <- length(queue)
-      
-      unknownTasksFront <- 1
-      unknownTasksBack <- 1
-      
-      failedTasksFront <- 1
-      failedTasksBack <- 1
-      
       tryCatch({
-        chunkTasksToAdd <- NULL
-        while (queueFront != queueBack) {
-          startIndex <- queue$front
-          endIndex <- startIndex + self$maxTasksPerRequest
-          chunkTasksToAdd <- tasks[startIndex:endIndex]
+        while (datastructures::size(self$tasksToAdd) > 0 &&
+               datastructures::size(self$errors) == 0) {
+          maxTasks <- self$maxTasksPerRequest
+          if (datastructures::size(self$tasksToAdd) < maxTasks) {
+            maxTasks <- datastructures::size(self$tasksToAdd)
+          }
           
-          report <- addBulkTasks(
+          chunkTasksToAdd <- vector("list", maxTasks)
+          index <- 1
+          
+          while (index <= maxTasks &&
+                 datastructures::size(self$tasksToAdd) > 0){
+            chunkTasksToAdd[[index]]<- datastructures::pop(self$tasksToAdd)
+            index <- index + 1
+          }
+          
+          report <- self$addBulkTasks(
             jobId,
-            self$results,
             chunkTasksToAdd
           )
-          
-          queueFront = queueFront + self$maxTasksPerRequest
         }
       },
       error = function(e){
@@ -201,7 +204,6 @@ TaskWorkflowManager <- R6::R6Class(
     },
     addBulkTasks = function(
       jobId,
-      results,
       chunkTasksToAdd
     ){
       config <- getConfiguration()
@@ -217,68 +219,52 @@ TaskWorkflowManager <- R6::R6Class(
       # and resubmit smaller chunk requests
       if (response$status_code == 413) {
         if(length(chunkTasksToAdd) == 1){
+          self$errors$push(response)
+          
           stop("Failed to add task with ID %s due to the body" +
-               " exceeding the maximum request size" + chunkTasksToAdd$id)
+               " exceeding the maximum request size" + chunkTasksToAdd[[1]]$id)
         }
         
-        midpoint <- length(chunkTasksToAdd) / 2
+        upperBound <- length(chunkTasksToAdd)
+        midBound <- upperBound / 2
+        
         
         self$addBulkTasks(
           jobId,
-          tasks,
-          chunkTasksToAdd[midpoint:length(chunkTasksToAdd)])
+          chunkTasksToAdd[1:midBound])
         
         self$addBulkTasks(
           jobId,
-          tasks,
-          chunkTasksToAdd[midpoint:length(chunkTasksToAdd)])
+          chunkTasksToAdd[(midBound+1):upperBound])
       }
       else if (500 <= response$status_code &&
                response$status_code <= 599) {
-        failedTasks[[failed]]
+        self$tasksToAdd <- datastructures::insert(self$tasksToAdd, chunkTasksToAdd)
+      }
+      else if (response$status_code == 200){
+        values <- httr::content(response)$value
+        
+        for (i in 1:length(values)) {
+          taskId <- values[[i]]$id
+          
+          if (compare(values[[i]]$status, "servererror")) {
+            self$tasksToAdd <- datastructures::insert(self$tasksToAdd, self$originalTaskCollection[[taskId]])
+          }
+          else if (compare(values[[i]]$status, "clienterror") &&
+                   values[[i]]$error$code != "TaskExists") {
+            self$failedTasks <- datastructures::insert(self$failedTasks, values[[i]])
+          }
+          else {
+            self$results <- datastructures::insert(self$results, values[[i]])
+          }
+        }
       }
       else {
-        unknownTasks[[unknown]]
-      }
-      
-      values <- httr::content(response)$value
-      
-      for (i in 1:length(values)) {
-        if (compare(values[[i]]$status, "servererror")) {
-          self$queue$push(values[[i]])
-        }
-        else if (compare(values[[i]]$status, "clienterror") &&
-                 values[[i]]$error$code != "TaskExists") {
-          self$failedTasks$push(values[[i]])
-        }
-        else {
-          self$results$push(values[[i]])
-        }
+        self$tasksToAdd <- datastructures::insert(self$tasksToAdd, chunkTasksToAdd)
+        self$errors <- datastructures::insert(self$errors, response)
       }
     }
   )
 )
 
 TaskWorkflowManager <- TaskWorkflowManager$new()
-
-Queue <- R6::R6Class(
-  "Queue",
-  public = list(
-    initialize = function(size){
-      array = vector("list", size) 
-    },
-    slice = function(start, end){
-      array[start:end]
-    },
-    push = function(object){
-      
-    },
-    pop = function(){
-      
-    },
-    array = NULL,
-    size = NULL,
-    front = NULL,
-    back = NULL
-  )
-)

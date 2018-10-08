@@ -304,3 +304,95 @@ getHttpErrorMessage <- function(responseObj) {
   detailMessage <- paste0(detailMessage, "\r\nodata.metadata: ", responseObj$odata.metadata)
   return(detailMessage)
 }
+
+viewErrors <- function(id, failTasks) {
+  config <- getConfiguration()
+  storageClient <- config$storageClient
+  
+  sasToken <- storageClient$generateSasToken("r", "c", id)
+  queryParameterUrl <- "?"
+  
+  for (query in names(sasToken)) {
+    queryParameterUrl <-
+      paste0(queryParameterUrl,
+             query,
+             "=",
+             RCurl::curlEscape(sasToken[[query]]),
+             "&")
+  }
+  
+  queryParameterUrl <-
+    substr(queryParameterUrl, 1, nchar(queryParameterUrl) - 1)
+  
+  tempDir <- tempfile()
+  dir.create(tempDir)
+  htmlFile <- file.path(tempDir, paste0(id, ".html"))
+  azureStorageUrl <-
+    paste0("http://",
+           storageCredentials$name,
+           sprintf(".blob.%s/", storageCredentials$endpointSuffix),
+           id)
+  
+  staticHtml <- "<h1>Errors:</h1>"
+  for (i in 1:length(failTasks)) {
+    if (failTasks[i] == 1) {
+      stdoutFile <- paste0(azureStorageUrl, "/", "stdout")
+      stderrFile <- paste0(azureStorageUrl, "/", "stderr")
+      rlogFile <- paste0(azureStorageUrl, "/", "logs")
+      
+      stdoutFile <-
+        paste0(stdoutFile,
+               "/",
+               id,
+               "-task",
+               i,
+               "-stdout.txt",
+               queryParameterUrl)
+      stderrFile <-
+        paste0(stderrFile,
+               "/",
+               id,
+               "-task",
+               i,
+               "-stderr.txt",
+               queryParameterUrl)
+      rlogFile <-
+        paste0(rlogFile,
+               "/",
+               id,
+               "-task",
+               i,
+               ".txt",
+               queryParameterUrl)
+      
+      staticHtml <-
+        paste0(
+          staticHtml,
+          "Task ",
+          i,
+          " | <a href='",
+          stdoutFile,
+          "'>",
+          "stdout.txt",
+          "</a> |",
+          " <a href='",
+          stderrFile,
+          "'>",
+          "stderr.txt",
+          "</a> | <a href='",
+          rlogFile,
+          "'>",
+          "R output",
+          "</a> <br/>"
+        )
+    }
+  }
+  
+  write(staticHtml, htmlFile)
+  
+  viewer <- getOption("viewer")
+  if (!is.null(viewer)) {
+    viewer(htmlFile)
+  }
+}
+
