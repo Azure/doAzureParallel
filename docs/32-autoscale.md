@@ -37,7 +37,7 @@ By default, doAzureParallel uses autoscale and uses the QUEUE autoscale formula.
 
 ## Autoscale Formulas:
 
-For four autoscale settings are can be selected for different scenarios:
+For five autoscale settings are can be selected for different scenarios:
 
 | Autoscale Formula | Description | 
 | ----------------- |:----------- |
