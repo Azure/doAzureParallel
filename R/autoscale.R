@@ -25,7 +25,19 @@ autoscaleQueueFormula <- paste0(
   "max( $ActiveTasks.GetSample(1), avg($ActiveTasks.GetSample(TimeInterval_Minute * 15)));",
   "$maxTasksPerNode = %s;",
   "$round = $maxTasksPerNode - 1;",
-  "$targetVMs = $tasks > 0? (($tasks + $round)/ $maxTasksPerNode) : max(0, $TargetDedicated/2) + 0.5;",
+  "$targetVMs = $tasks > 0 ? (($tasks + $round) / $maxTasksPerNode) : max(0, $TargetDedicated/2) + 0.5;",
+  "$TargetDedicatedNodes = max(%s, min($targetVMs, %s));",
+  "$TargetLowPriorityNodes = max(%s, min($targetVMs, %s));",
+  "$NodeDeallocationOption = taskcompletion;"
+)
+
+autoscaleQueueAndRunningFormula <- paste0(
+  "$samples = $PendingTasks.GetSamplePercent(TimeInterval_Minute * 15);",
+  "$tasks = $samples < 70 ? max(0,$PendingTasks.GetSample(1)) : ",
+  "max( $PendingTasks.GetSample(1), avg($PendingTasks.GetSample(TimeInterval_Minute * 15)));",
+  "$maxTasksPerNode = %s;",
+  "$round = $maxTasksPerNode - 1;",
+  "$targetVMs = $tasks > 0 ? (($tasks + $round) / $maxTasksPerNode) : max(0, $TargetDedicated/2) + 0.5;",
   "$TargetDedicatedNodes = max(%s, min($targetVMs, %s));",
   "$TargetLowPriorityNodes = max(%s, min($targetVMs, %s));",
   "$NodeDeallocationOption = taskcompletion;"
@@ -35,7 +47,8 @@ autoscaleFormula <- list(
   "WEEKEND" = autoscaleWeekendFormula,
   "WORKDAY" = autoscaleWorkdayFormula,
   "MAX_CPU" = autoscaleMaxCpuFormula,
-  "QUEUE" = autoscaleQueueFormula
+  "QUEUE" = autoscaleQueueFormula,
+  "QUEUE_AND_RUNNING" = autoscaleQueueAndRunningFormula
 )
 
 getAutoscaleFormula <-
@@ -68,8 +81,20 @@ getAutoscaleFormula <-
         )
       )
     }
+    else if (formulaName == formulas[5]) {
+      return(
+        sprintf(
+          autoscaleQueueAndRunningFormula,
+          maxTasksPerNode,
+          dedicatedMin,
+          dedicatedMax,
+          lowPriorityMin,
+          lowPriorityMax
+        )
+      )
+    }
     else{
-      stop("Incorrect autoscale formula: QUEUE, MAX_CPU, WEEKEND, WORKDAY")
+      stop("Incorrect autoscale formula: QUEUE, QUEUE_AND_RUNNING, MAX_CPU, WEEKEND, WORKDAY")
     }
   }
 
