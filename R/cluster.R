@@ -148,7 +148,12 @@ makeCluster <-
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
         "master/inst/startup/install_custom.R"
       ),
-      "chmod u+x install_bioconductor.R"
+      "chmod u+x install_bioconductor.R",
+      paste0(
+        "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
+        "fix/apt-lock/inst/startup/cluster_setup.R"
+      ),
+      "chmod u+x cluster_setup.sh"
     )
 
     commandLine <- c(dockerInstallCommand,
