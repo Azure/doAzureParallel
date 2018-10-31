@@ -151,7 +151,7 @@ makeCluster <-
       "chmod u+x install_bioconductor.R",
       paste0(
         "wget https://raw.githubusercontent.com/Azure/doAzureParallel/",
-        "fix/apt-lock/inst/startup/cluster_setup.R"
+        "fix/apt-lock/inst/startup/cluster_setup.sh"
       ),
       "chmod u+x cluster_setup.sh"
     )
