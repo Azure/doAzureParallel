@@ -9,11 +9,11 @@ while [ $retries -gt 0]; do
   fi
   let retries=retries-1
   if [ $retries -eq 0]; then
-    echo "ERROR: Could not update apt"
+    echo "ERROR: Could not update apt - Retries: $retries"
     exit 101
   fi
   sleep 5
 done
-echo "COMPLETED: apt updated"
+echo "COMPLETED: apt updated - Retries: $retries"
 set -e
   
