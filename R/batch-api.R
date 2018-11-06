@@ -164,11 +164,10 @@ BatchUtilities <- R6::R6Class(
       config <- getConfiguration()
       batchClient <- config$batchClient
 
-      # Default command for job preparation task
-      # Supports backwards compatibility if zip packages are missing, it will be installed
-      # Eventually, apt-get install command will be deprecated
+      # Default command for job preparation task to get resource files
+      # for all tasks on one node
       commands <- c(
-        "apt-get -y install zip unzip"
+        "echo 'Installing R Packages & Downloading Resource Files'"
       )
 
       if (!is.null(packages)) {
