@@ -26,17 +26,17 @@ setVerbose(FALSE)
 ```
 ### Setting HttpTraffic to Debug
 
-To debug your doAzureParallel jobs, you can set the package to operate on *verbose* mode:
+To debug your doAzureParallel jobs, you can set the verbosity for calling httr rest api calls:
 
 ```R
 # turn on verbose mode
-setVerbose(TRUE)
+setHttpTraffic(TRUE)
 
 # turn off verbose mode
-setVerbose(FALSE)
+setHttpTraffic(FALSE)
 ```
 ### Viewing files from Azure Storage
-In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. For more information on reading log files, check out [managing storage](./41-managing-storage-via-R.md).
+In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. For more information on reading log files, check out [managing storage](./73-managing-storage.md).
 
 By default, when wait is set to TRUE, job and its result is automatically deleted after the run is completed. To keep the job and its result for investigation purpose, you can set a global environment setting or specify an option in foreach loop to keep it.
 

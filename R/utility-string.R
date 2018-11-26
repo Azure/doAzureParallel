@@ -8,7 +8,7 @@ getTaskFailedErrorString <- function(...) {
     "For more information about getting job logs, follow this link:",
     paste0(
       "https://github.com/Azure/doAzureParallel/blob/master/docs/",
-      "40-troubleshooting.md#viewing-files-directly-from-compute-node"
+      "90-troubleshooting.md#viewing-files-directly-from-compute-node"
     )
   )
 

@@ -59,8 +59,8 @@ getClusterFile <-
 #'
 #' @examples
 #' \dontrun{
-#' stdoutFile <- getJobFile("job20170822055031", "job20170822055031-task1", "stderr.txt")
-#' getJobFile("job20170822055031", "job20170822055031-task1", "stdout.txt", downloadPath = "hello.txt")
+#' stdoutFile <- getJobFile("job20170822055031", "1", "stderr.txt")
+#' getJobFile("job20170822055031", "1", "stdout.txt", downloadPath = "hello.txt")
 #' }
 #' @export
 getJobFile <-
