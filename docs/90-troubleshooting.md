@@ -36,7 +36,7 @@ setHttpTraffic(TRUE)
 setHttpTraffic(FALSE)
 ```
 ### Viewing files from Azure Storage
-In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. For more information on reading log files, check out [managing storage](./41-managing-storage-via-R.md).
+In every foreach run, the job will push its logs into Azure Storage that can be fetched by the user. For more information on reading log files, check out [managing storage](./73-managing-storage.md).
 
 By default, when wait is set to TRUE, job and its result is automatically deleted after the run is completed. To keep the job and its result for investigation purpose, you can set a global environment setting or specify an option in foreach loop to keep it.
 
