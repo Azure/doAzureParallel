@@ -204,7 +204,9 @@ makeCluster <-
                    value = config$applicationInsights$instrumentationKey))
 
       commandLine <- c(commandLine,
-                       "wget  -O - https://raw.githubusercontent.com/Azure/batch-insights/master/ubuntu.sh | bash")
+                       "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/app-insights/inst/startup/cluster_setup.sh",
+                       "chmod 777 cluster_setup.sh",
+                       "cluster_setup.sh | bash")
     }
 
     networkConfiguration <- NULL
