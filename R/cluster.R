@@ -206,7 +206,7 @@ makeCluster <-
       commandLine <- c(commandLine,
                        "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/app-insights/inst/startup/cluster_setup.sh",
                        "chmod 777 cluster_setup.sh",
-                       "cluster_setup.sh | bash")
+                       "./cluster_setup.sh")
     }
 
     networkConfiguration <- NULL
