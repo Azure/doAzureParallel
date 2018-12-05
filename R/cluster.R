@@ -204,9 +204,8 @@ makeCluster <-
                    value = config$applicationInsights$instrumentationKey))
 
       commandLine <- c(commandLine,
-                       "wget https://raw.githubusercontent.com/Azure/doAzureParallel/feature/app-insights/inst/startup/cluster_setup.sh",
-                       "chmod 777 cluster_setup.sh",
-                       "./cluster_setup.sh")
+                       "wget https://github.com/Azure/batch-insights/releases/download/go-beta.1/batch-insights",
+                       "chmod +x ./batch-insights")
     }
 
     networkConfiguration <- NULL
@@ -243,7 +242,8 @@ makeCluster <-
       resourceFiles = resourceFiles,
       commandLine = commandLine,
       networkConfiguration = networkConfiguration,
-      containerConfiguration = containerConfiguration
+      containerConfiguration = containerConfiguration,
+      applicationInsights = config$applicationInsights
     )
 
     if (nchar(response) > 0) {
