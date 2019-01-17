@@ -18,8 +18,13 @@ waitForNodesToComplete <- function(poolId, timeout = 86400) {
     stop(sprintf("Code: %s - Message: %s", pool$code, pool$message))
   }
 
-  if (pool$targetDedicatedNodes + pool$targetLowPriorityNodes <= 0) {
-    stop("Pool count needs to be greater than 0.")
+  if (pool$targetDedicatedNodes + pool$targetLowPriorityNodes < 0) {
+    stop("Pool count needs to be greater or equal to 0.")
+  }
+
+  # Case: When user sets their pools to autoscale from 0 nodes
+  if (pool$targetDedicatedNodes + pool$targetLowPriorityNodes == 0) {
+    return(0)
   }
 
   totalNodes <-
