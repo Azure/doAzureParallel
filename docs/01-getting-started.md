@@ -63,6 +63,8 @@ Use your cluster configuration JSON file to define your cluster in Azure.
 ```
 NOTE: If you do **not** want your cluster to autoscale, simply set the number of min nodes equal to max nodes for low-priority and dedicated.
 
+NOTE: The *containerImage* property must include tag reference of the docker image. 
+
 In addition to setting credentials and cluster configuration through json files, you can specify them programmatically. This allows users to generate the configuration on the fly at runtime.
 
 ## Create Azure Cluster and Credential Objects via Programmatically
