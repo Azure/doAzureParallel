@@ -16,7 +16,7 @@ Note: Github has a rate limit of up to 60 requests per hour. Unauthenticated req
 
 For more information about these tools,
 - [Batch Explorer](https://github.com/azure/batchexplorer)
-- [Batch Insights](https://github.com/azure/batch-insights)
+- [Batch Insights](https://azure.github.io/BatchExplorer/)
 
 ### Using %do% vs %dopar%
 When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
