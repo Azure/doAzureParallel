@@ -2,6 +2,22 @@
 
 ## Debugging Tools
 
+### Batch Explorer & Batch Insights
+Batch Explorer is a tool to manage your Azure Batch accounts. This will help debug, monitor and manage your pools, jobs, and tasks. doAzureParallel has built-in support for Batch Insights. This allows you to debug and monitor the nodes' CPU usage, Memory, disk IO and other system stats.  
+
+You can invoke Batch Insights by adding *applicationInsights* parameter in the credentials configuration file with your application insights instrumentation key.
+``` json
+"applicationInsights": {
+    "applicationId": "",
+    "instrumentationKey": ""
+  }
+```
+Note: Github has a rate limit of up to 60 requests per hour. Unauthenticated requests are associated with the originating IP address. [Link](https://developer.github.com/v3/#rate-limiting)
+
+For more information about these tools,
+- [Batch Explorer](https://github.com/azure/batchexplorer)
+- [Batch Insights](https://azure.github.io/BatchExplorer/)
+
 ### Using %do% vs %dopar%
 When developing at scale, it is always recommended that you test and debug your code locally first. Switch between *%dopar%* and *%do%* to toggle between running in parallel on Azure and running in sequence on your local machine.
 

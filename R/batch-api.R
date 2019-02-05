@@ -235,8 +235,15 @@ BatchUtilities <- R6::R6Class(
           commands <- c(commands, args$commandLine)
         }
 
+        commands <- linuxWrapCommands(commands)
+        if (!is.null(args$applicationInsights)) {
+          commands <- gsub("wait",
+                           "wait; ./batch-insights > node-stats.log &",
+                           commands)
+        }
+
         startTask <- list(
-          commandLine = linuxWrapCommands(commands),
+          commandLine = commands,
           userIdentity = list(autoUser = list(
             scope = "pool",
             elevationLevel = "admin"

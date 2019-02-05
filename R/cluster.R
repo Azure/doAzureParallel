@@ -183,16 +183,29 @@ makeCluster <-
           dockerRunCommand(dockerImage, packages, NULL, FALSE, FALSE))
     }
 
-    environmentSettings <- NULL
+    environmentSettings <- data.frame(name = character(), value = character())
     if (!is.null(config$githubAuthenticationToken) &&
         config$githubAuthenticationToken != "") {
-      environmentSettings <-
-        list(
-          list(
-            name = "GITHUB_PAT",
-            value = config$githubAuthenticationToken
-          )
-        )
+      environmentSettings <- rbind(
+        environmentSettings,
+        data.frame(name = "GITHUB_PAT",
+                   value = config$githubAuthenticationToken)
+      )
+    }
+
+    if (!is.null(config$applicationInsights) &&
+        nchar(config$applicationInsights$applicationId) > 0 &&
+        nchar(config$applicationInsights$instrumentationKey) > 0) {
+      environmentSettings <- rbind(
+        environmentSettings,
+        data.frame(name = "APP_INSIGHTS_APP_ID",
+                   value = config$applicationInsights$applicationId),
+        data.frame(name = "APP_INSIGHTS_INSTRUMENTATION_KEY",
+                   value = config$applicationInsights$instrumentationKey))
+
+      commandLine <- c(commandLine,
+                       "wget https://github.com/Azure/batch-insights/releases/download/go-beta.1/batch-insights",
+                       "chmod +x ./batch-insights")
     }
 
     networkConfiguration <- NULL
@@ -229,7 +242,8 @@ makeCluster <-
       resourceFiles = resourceFiles,
       commandLine = commandLine,
       networkConfiguration = networkConfiguration,
-      containerConfiguration = containerConfiguration
+      containerConfiguration = containerConfiguration,
+      applicationInsights = config$applicationInsights
     )
 
     if (nchar(response) > 0) {

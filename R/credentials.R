@@ -80,6 +80,16 @@ generateCredentialsConfig <- function(fileName, authenticationType = "SharedKey"
            "",
            args$dockerRegistry)
 
+  appInsightsApplicationId <-
+    ifelse(is.null(args$appInsightsApplicationId),
+           "",
+           args$appInsightsApplicationId)
+
+  appInsightInstrumentationKey <-
+    ifelse(is.null(args$appInsightInstrumentationKey),
+           "",
+           args$appInsightInstrumentationKey)
+
   if (!file.exists(paste0(getwd(), "/", fileName))) {
     authenticationType <- tolower(authenticationType)
     if (authenticationType == "sharedkey") {
@@ -95,7 +105,11 @@ generateCredentialsConfig <- function(fileName, authenticationType = "SharedKey"
         githubAuthenticationToken = githubAuthenticationToken,
         dockerAuthentication = list(username = dockerUsername,
                                     password = dockerPassword,
-                                    registry = dockerRegistry)
+                                    registry = dockerRegistry),
+        applicationInsights = list(
+          applicationId = appInsightsApplicationId,
+          instrumentationKey = appInsightInstrumentationKey
+        )
       )
     }
     else if (authenticationType == "serviceprincipal") {
