@@ -1,0 +1,29 @@
+name: $(Build.SourceBranch)$(Rev:.r)
+
+trigger:
+  - master
+resources:
+- repo: self
+
+jobs:
+
+#Multi-configuration and multi-agent job options are not exported to YAML. Configure these options using documentation guidance: https://docs.microsoft.com/vsts/pipelines/process/phases
+
+- job: Phase_1
+  displayName: Unit Job
+  condition: succeeded()
+  pool:
+    vmImage: Hosted Ubuntu 1604
+    demands: sh
+
+  steps:
+  - task: ShellScript@2
+    displayName: Build
+    inputs:
+      scriptPath: 'tests/test_scripts/build.sh'
+
+  - task: ShellScript@2
+    displayName: 'Unit Tests'
+    inputs:
+      scriptPath: 'tests/test_scripts/unit_tests.sh'
+      disableAutoCwd: true
