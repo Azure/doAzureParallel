@@ -7,14 +7,11 @@ resources:
 
 jobs:
 
-#Multi-configuration and multi-agent job options are not exported to YAML. Configure these options using documentation guidance: https://docs.microsoft.com/vsts/pipelines/process/phases
-
 - job: Phase_1
   displayName: Unit Job
   condition: succeeded()
   pool:
     vmImage: 'ubuntu-16.04'
-    demands: sh
 
   steps:
   - task: ShellScript@2
@@ -26,4 +23,3 @@ jobs:
     displayName: 'Unit Tests'
     inputs:
       scriptPath: 'tests/test_scripts/unit_tests.sh'
-      disableAutoCwd: true
