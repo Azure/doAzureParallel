@@ -13,7 +13,7 @@ jobs:
   displayName: Unit Job
   condition: succeeded()
   pool:
-    vmImage: Hosted Ubuntu 1604
+    vmImage: 'ubuntu-16.04'
     demands: sh
 
   steps:
