@@ -21,11 +21,11 @@ jobs:
       scriptPath: 'tests/test_scripts/build.sh'
 
   - script: |
-      echo "Sys.setenv(SPARK_HOME ='"$(BATCH_ACCOUNT_NAME)"');" >> /usr/local/lib/R/etc/Rprofile.site
-      echo "Sys.setenv(SPARK_HOME ='"$(BATCH_ACCOUNT_KEY)"');" >> /usr/local/lib/R/etc/Rprofile.site
-      echo "Sys.setenv(SPARK_HOME ='"$(BATCH_ACCOUNT_URL)"');" >> /usr/local/lib/R/etc/Rprofile.site
-      echo "Sys.setenv(SPARK_HOME ='"$(STORAGE_ACCOUNT_NAME)"');" >> /usr/local/lib/R/etc/Rprofile.site
-      echo "Sys.setenv(SPARK_HOME ='"$(STORAGE_ACCOUNT_KEY)"');" >> /usr/local/lib/R/etc/Rprofile.site
+      echo "Sys.setenv(BATCH_ACCOUNT_NAME ='"$(BATCH_ACCOUNT_NAME)"');" >> /usr/lib/R/etc/Renviron
+      echo "Sys.setenv(BATCH_ACCOUNT_KEY ='"$(BATCH_ACCOUNT_KEY)"');" >> /usr/lib/R/etc/Renviron
+      echo "Sys.setenv(BATCH_ACCOUNT_URL ='"$(BATCH_ACCOUNT_URL)"');" >> /usr/lib/R/etc/Renviron
+      echo "Sys.setenv(STORAGE_ACCOUNT_NAME ='"$(STORAGE_ACCOUNT_NAME)"');" >> /usr/lib/R/etc/Renviron
+      echo "Sys.setenv(STORAGE_ACCOUNT_KEY ='"$(STORAGE_ACCOUNT_KEY)"');" >> /usr/lib/R/etc/Renviron
     condition: succeeded()
     displayName: Create R Profile Environment Setting
 
