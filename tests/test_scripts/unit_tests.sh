@@ -22,5 +22,3 @@ sudo R \
   -e "res <- devtools::test(reporter='summary');" \
   -e "df <- as.data.frame(res);" \
   -e "if(sum(df[['failed']]) > 0 || any(df[['error']])) { q(status=1) }"
-
-echo "Unit Test Completed."
