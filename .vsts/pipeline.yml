@@ -2,8 +2,12 @@ name: $(Build.SourceBranch)$(Rev:.r)
 
 trigger:
   - master
+
 resources:
 - repo: self
+  containers:
+  - container: linux
+    image: ubuntu:16.04
 
 jobs:
 - job: Build
@@ -22,4 +26,4 @@ jobs:
     displayName: 'Unit Tests'
     inputs:
       scriptPath: 'tests/test_scripts/unit_tests.sh'
-      args:'$(BATCH_ACCOUNT_NAME) $(BATCH_ACCOUNT_KEY) $(BATCH_ACCOUNT_URL) $(STORAGE_ACCOUNT_NAME) $(STORAGE_ACCOUNT_KEY)'
+      args: :'$(BATCH_ACCOUNT_NAME) $(BATCH_ACCOUNT_KEY) $(BATCH_ACCOUNT_URL) $(STORAGE_ACCOUNT_NAME) $(STORAGE_ACCOUNT_KEY)'
