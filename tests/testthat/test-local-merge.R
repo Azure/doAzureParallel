@@ -5,11 +5,7 @@ test_that("merge job result locally test", {
   testthat::skip_on_travis()
   testthat::skip("Skipping merge job locally")
   source("utility.R")
-  settings <- gettingSettings()
   settings <- getSettings()
-
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
 
   cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)

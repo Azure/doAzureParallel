@@ -5,9 +5,6 @@ test_that("Get Cluster List / Get Cluster test", {
 
   settings <- getSettings()
 
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
-
   cluster <-
     doAzureParallel::makeCluster(settings$clusterConfig, wait = FALSE)
 

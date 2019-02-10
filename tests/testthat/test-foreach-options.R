@@ -4,9 +4,6 @@ test_that("chunksize", {
   source("utility.R")
   settings <- getSettings()
 
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
-
   cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 

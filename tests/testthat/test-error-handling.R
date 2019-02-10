@@ -4,9 +4,6 @@ test_that("Remove error handling with combine test", {
   source("utility.R")
   settings <- getSettings()
 
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
-
   cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
@@ -31,9 +28,6 @@ test_that("Remove error handling test", {
   source("utility.R")
   settings <- getSettings()
 
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
-
   settings$clusterConfig$poolId <- "error-handling-test"
   cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
@@ -57,9 +51,6 @@ test_that("Pass error handling test", {
   testthat::skip_on_travis()
   source("utility.R")
   settings <- getSettings()
-
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
 
   settings$clusterConfig$poolId <- "error-handling-test"
   cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
@@ -86,9 +77,6 @@ test_that("Stop error handling test", {
   testthat::skip_on_travis()
   source("utility.R")
   settings <- getSettings()
-
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
 
   settings$clusterConfig$poolId <- "error-handling-test"
   cluster <- doAzureParallel::makeCluster(settings$clusterConfig)

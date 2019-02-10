@@ -6,11 +6,6 @@ test_that("simple foreach 1 to 4", {
   testthat::skip_on_travis()
   source("utility.R")
   settings <- getSettings()
-
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
-
-  cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
   '%dopar%' <- foreach::'%dopar%'
