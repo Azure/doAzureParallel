@@ -31,7 +31,7 @@ jobs:
         -e "getwd()" \
         -e "devtools::install()" \
         -e "devtools::build()" \
-        -e "doAzureParallel::generateCredentials('test_credentials.json', batchAccountName = Sys.getenv('BATCH_ACCOUNT_NAME'), batchAccountKey = Sys.getenv('BATCH_ACCOUNT_KEY'), batchAccountUrl = Sys.getenv('BATCH_ACCOUNT_URL'), storageAccountName = Sys.getenv('STORAGE_ACCOUNT_NAME'),  storageAccountKey = Sys.getenv('STORAGE_ACCOUNT_KEY'))"
+        -e "doAzureParallel::generateCredentialsConfig('test_credentials.json', batchAccountName = Sys.getenv('BATCH_ACCOUNT_NAME'), batchAccountKey = Sys.getenv('BATCH_ACCOUNT_KEY'), batchAccountUrl = Sys.getenv('BATCH_ACCOUNT_URL'), storageAccountName = Sys.getenv('STORAGE_ACCOUNT_NAME'),  storageAccountKey = Sys.getenv('STORAGE_ACCOUNT_KEY'))" 
     condition: succeeded()
     displayName: Create R Profile Environment Setting
 
