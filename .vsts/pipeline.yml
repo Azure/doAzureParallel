@@ -25,5 +25,5 @@ jobs:
   - task: ShellScript@2
     displayName: 'Unit Tests'
     inputs:
-      - scriptPath: 'tests/test_scripts/unit_tests.sh'
-      - args: '$(BATCH_ACCOUNT_NAME) $(BATCH_ACCOUNT_KEY) $(BATCH_ACCOUNT_URL) $(STORAGE_ACCOUNT_NAME) $(STORAGE_ACCOUNT_KEY)'
+      scriptPath: 'tests/test_scripts/unit_tests.sh'
+      args: '$(BATCH_ACCOUNT_NAME) $(BATCH_ACCOUNT_KEY) $(BATCH_ACCOUNT_URL) $(STORAGE_ACCOUNT_NAME) $(STORAGE_ACCOUNT_KEY)'
