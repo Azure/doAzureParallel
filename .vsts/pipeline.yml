@@ -21,11 +21,14 @@ jobs:
       scriptPath: 'tests/test_scripts/build.sh'
 
   - script: |
-      echo "Sys.setenv(BATCH_ACCOUNT_NAME ='"$(BATCH_ACCOUNT_NAME)"');" >> /usr/lib/R/etc/Renviron
-      echo "Sys.setenv(BATCH_ACCOUNT_KEY ='"$(BATCH_ACCOUNT_KEY)"');" >> /usr/lib/R/etc/Renviron
-      echo "Sys.setenv(BATCH_ACCOUNT_URL ='"$(BATCH_ACCOUNT_URL)"');" >> /usr/lib/R/etc/Renviron
-      echo "Sys.setenv(STORAGE_ACCOUNT_NAME ='"$(STORAGE_ACCOUNT_NAME)"');" >> /usr/lib/R/etc/Renviron
-      echo "Sys.setenv(STORAGE_ACCOUNT_KEY ='"$(STORAGE_ACCOUNT_KEY)"');" >> /usr/lib/R/etc/Renviron
+      touch .Rprofile
+      echo "Sys.setenv(BATCH_ACCOUNT_NAME ='"$(BATCH_ACCOUNT_NAME)"');" >> .Rprofile
+      echo "Sys.setenv(BATCH_ACCOUNT_KEY ='"$(BATCH_ACCOUNT_KEY)"');" >> .Rprofile
+      echo "Sys.setenv(BATCH_ACCOUNT_URL ='"$(BATCH_ACCOUNT_URL)"');" >> .Rprofile
+      echo "Sys.setenv(STORAGE_ACCOUNT_NAME ='"$(STORAGE_ACCOUNT_NAME)"');" >> .Rprofile
+      echo "Sys.setenv(STORAGE_ACCOUNT_KEY ='"$(STORAGE_ACCOUNT_KEY)"');" >> .Rprofile
+      sudo R \
+        -e "file.exists('~/.Rprofile')"
     condition: succeeded()
     displayName: Create R Profile Environment Setting
 
