@@ -30,16 +30,11 @@ jobs:
   steps:
   - script: |
       sudo R \
-        -e "getwd();" \
-        -e "devtools::install();" \
-        -e "devtools::build();" \
-        -e "doAzureParallel::generateCredentialsConfig('test_credentials.json')"
-      sed -i 's/$(BATCH_ACCOUNT_NAME)/batch_account_name/g' test_credentials.json
-      sed -i 's/$(BATCH_ACCOUNT_KEY)/batch_account_key/g' test_credentials.json
-      sed -i 's/$(BATCH_ACCOUNT_URL)/batch_account_url/g' test_credentials.json
-      sed -i 's/$(STORAGE_ACCOUNT_NAME)/batch_account_name/g' test_credentials.json
-      sed -i 's/$(STORAGE_ACCOUNT_KEY)/storage_account_key/g' test_credentials.json
-      cat test_credentials.json
+        -e "Sys.setenv(BATCH_ACCOUNT_NAME = '$(BATCH_ACCOUNT_NAME)')" \
+        -e "Sys.setenv(BATCH_ACCOUNT_KEY = '$(BATCH_ACCOUNT_KEY)')" \
+        -e "Sys.setenv(BATCH_ACCOUNT_URL = '$(BATCH_ACCOUNT_URL)')" \
+        -e "Sys.setenv(STORAGE_ACCOUNT_NAME = '$(STORAGE_ACCOUNT_NAME)')" \
+        -e "Sys.setenv(STORAGE_ACCOUNT_KEY = '$(STORAGE_ACCOUNT_KEY)')" \
     condition: succeeded()
     displayName: generate test credentials config
   - task: ShellScript@2
