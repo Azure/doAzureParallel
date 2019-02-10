@@ -21,7 +21,28 @@ jobs:
     inputs:
       scriptPath: 'tests/test_scripts/build.sh'
 
+- job: Unit_Tests
+  displayName: Unit Tests
+  condition: succeeded()
+  pool:
+    vmImage: 'ubuntu-16.04'
+  dependsOn: Build
+  steps:
+  - script: |
+      sudo R \
+        -e "getwd();" \
+        -e "devtools::install();" \
+        -e "devtools::build();" \
+        -e "doAzureParallel::generateCredentialsConfig('test_credentials.json')"
+      sed -i 's/$(BATCH_ACCOUNT_NAME)/batch_account_name/g' test_credentials.json
+      sed -i 's/$(BATCH_ACCOUNT_KEY)/batch_account_key/g' test_credentials.json
+      sed -i 's/$(BATCH_ACCOUNT_URL)/batch_account_url/g' test_credentials.json
+      sed -i 's/$(STORAGE_ACCOUNT_NAME)/batch_account_name/g' test_credentials.json
+      sed -i 's/$(STORAGE_ACCOUNT_KEY)/storage_account_key/g' test_credentials.json
+      cat test_credentials.json
+    condition: succeeded()
+    displayName: generate test credentials config
   - task: ShellScript@2
-    displayName: 'Unit Tests'
+    displayName: Unit Tests
     inputs:
       scriptPath: 'tests/test_scripts/unit_tests.sh'
