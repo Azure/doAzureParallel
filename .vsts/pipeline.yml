@@ -20,7 +20,16 @@ jobs:
     inputs:
       scriptPath: 'tests/test_scripts/build.sh'
 
+  - script: |
+      echo "Sys.setenv(SPARK_HOME ='"$(BATCH_ACCOUNT_NAME)"');" >> /usr/local/lib/R/etc/Rprofile.site
+      echo "Sys.setenv(SPARK_HOME ='"$(BATCH_ACCOUNT_KEY)"');" >> /usr/local/lib/R/etc/Rprofile.site
+      echo "Sys.setenv(SPARK_HOME ='"$(BATCH_ACCOUNT_URL)"');" >> /usr/local/lib/R/etc/Rprofile.site
+      echo "Sys.setenv(SPARK_HOME ='"$(STORAGE_ACCOUNT_NAME)"');" >> /usr/local/lib/R/etc/Rprofile.site
+      echo "Sys.setenv(SPARK_HOME ='"$(STORAGE_ACCOUNT_KEY)"');" >> /usr/local/lib/R/etc/Rprofile.site
+    condition: succeeded()
+    displayName: Create R Profile Environment Setting
+
   - task: ShellScript@2
-    displayName: Unit Tests
+    displayName: Run Unit Tests
     inputs:
       scriptPath: 'tests/test_scripts/unit_tests.sh'
