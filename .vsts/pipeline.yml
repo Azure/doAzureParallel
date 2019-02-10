@@ -14,29 +14,12 @@ jobs:
   condition: succeeded()
   pool:
     vmImage: 'ubuntu-16.04'
-
   steps:
   - task: ShellScript@2
     displayName: Build
     inputs:
       scriptPath: 'tests/test_scripts/build.sh'
 
-- job: Unit_Tests
-  displayName: Unit Tests
-  condition: succeeded()
-  pool:
-    vmImage: 'ubuntu-16.04'
-  dependsOn: Build
-  steps:
-  - script: |
-      sudo R \
-        -e "Sys.setenv(BATCH_ACCOUNT_NAME = '$(BATCH_ACCOUNT_NAME)')" \
-        -e "Sys.setenv(BATCH_ACCOUNT_KEY = '$(BATCH_ACCOUNT_KEY)')" \
-        -e "Sys.setenv(BATCH_ACCOUNT_URL = '$(BATCH_ACCOUNT_URL)')" \
-        -e "Sys.setenv(STORAGE_ACCOUNT_NAME = '$(STORAGE_ACCOUNT_NAME)')" \
-        -e "Sys.setenv(STORAGE_ACCOUNT_KEY = '$(STORAGE_ACCOUNT_KEY)')" \
-    condition: succeeded()
-    displayName: generate test credentials config
   - task: ShellScript@2
     displayName: Unit Tests
     inputs:
