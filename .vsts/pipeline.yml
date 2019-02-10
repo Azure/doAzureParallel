@@ -21,12 +21,12 @@ jobs:
       scriptPath: 'tests/test_scripts/build.sh'
 
   - script: |
-      touch .Rprofile
-      echo "Sys.setenv(BATCH_ACCOUNT_NAME ='"$(BATCH_ACCOUNT_NAME)"');" >> .Rprofile
-      echo "Sys.setenv(BATCH_ACCOUNT_KEY ='"$(BATCH_ACCOUNT_KEY)"');" >> .Rprofile
-      echo "Sys.setenv(BATCH_ACCOUNT_URL ='"$(BATCH_ACCOUNT_URL)"');" >> .Rprofile
-      echo "Sys.setenv(STORAGE_ACCOUNT_NAME ='"$(STORAGE_ACCOUNT_NAME)"');" >> .Rprofile
-      echo "Sys.setenv(STORAGE_ACCOUNT_KEY ='"$(STORAGE_ACCOUNT_KEY)"');" >> .Rprofile
+      touch ~/.Rprofile
+      echo "Sys.setenv(BATCH_ACCOUNT_NAME ='"$(BATCH_ACCOUNT_NAME)"');" >> ~/.Rprofile
+      echo "Sys.setenv(BATCH_ACCOUNT_KEY ='"$(BATCH_ACCOUNT_KEY)"');" >> ~/.Rprofile
+      echo "Sys.setenv(BATCH_ACCOUNT_URL ='"$(BATCH_ACCOUNT_URL)"');" >> ~/.Rprofile
+      echo "Sys.setenv(STORAGE_ACCOUNT_NAME ='"$(STORAGE_ACCOUNT_NAME)"');" >> ~/.Rprofile
+      echo "Sys.setenv(STORAGE_ACCOUNT_KEY ='"$(STORAGE_ACCOUNT_KEY)"');" >> ~/.Rprofile
       sudo R \
         -e "file.exists('~/.Rprofile')"
     condition: succeeded()
