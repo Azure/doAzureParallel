@@ -1,5 +1,5 @@
 {
-  "name": "package_management",
+  "name": "bioconductor_pool",
   "vmSize": "Standard_A2_v2",
   "maxTasksPerNode": 1,
   "poolSize": {

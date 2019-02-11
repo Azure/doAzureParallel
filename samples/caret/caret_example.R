@@ -17,10 +17,10 @@ generateCredentialsConfig("credentials.json")
 setCredentials("credentials.json")
 
 # generate cluster config json file
-generateClusterConfig("cluster-caret.json")
+generateClusterConfig("caret_cluster.json")
 
 # Creating an Azure parallel backend
-cluster <- makeCluster(cluster = "cluster-caret.json")
+cluster <- makeCluster("caret_cluster.json")
 
 # Register your Azure parallel backend to the foreach implementation
 registerDoAzureParallel(cluster)
@@ -33,7 +33,7 @@ registerDoAzureParallel(cluster)
 # https://topepo.github.io/caret/index.html
 library(caret)
 
-# Set your chunk size of your tasks to 8 
+# Set your chunk size of your tasks to 8
 # So that caret knows in group tasks into larger chunks
 setChunkSize(8)
 
@@ -41,10 +41,10 @@ setChunkSize(8)
 install.packages("DAAG")
 library(DAAG)
 
-# 'spam7' is a data set that consists of 4601 email items, 
-# of which 1813 items were identified as spam. This sample 
-# has 7 features, one of which is titled 'yesno'. In this 
-# example, we will be classifying our data into 'yesno' to 
+# 'spam7' is a data set that consists of 4601 email items,
+# of which 1813 items were identified as spam. This sample
+# has 7 features, one of which is titled 'yesno'. In this
+# example, we will be classifying our data into 'yesno' to
 # identify which rows are spam, and which are not.
 
 # split the data into training and testing
@@ -53,7 +53,7 @@ inTraining <- createDataPartition(spam7$yesno, p = .75, list = FALSE)
 training <- spam7[ inTraining,]
 testing  <- spam7[-inTraining,]
 
-# Define the settings for the cv. Because we have already 
+# Define the settings for the cv. Because we have already
 # registered our parallel backend, Caret will know to use it
 fitControl <- trainControl(## 10-fold cross validation
                            method = "repeatedcv",
@@ -68,9 +68,9 @@ fitControl <- trainControl(## 10-fold cross validation
 
 
 rf_fit <- train(## classification column
-                 yesno ~ ., 
+                 yesno ~ .,
                  ## dataframe to train on
-                 data = training, 
+                 data = training,
                  ## model to use - other models are also available (see caret documentation)
                  method = "rf",
                  ## the metric to use for evaluation
