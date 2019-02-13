@@ -33,7 +33,7 @@ getSettings <- function(dedicatedMin = 0,
     doAzureParallel::setCredentials("test_credentials.json")
   }
   else{
-    settings['credentials'] = list(
+    settings['credentials'] <- list(
       "sharedKey" = list(
         "batchAccount" = list(
           "name" = Sys.getenv("BATCH_ACCOUNT_NAME"),
