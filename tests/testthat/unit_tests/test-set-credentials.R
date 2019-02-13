@@ -1,7 +1,7 @@
 # Run this test for users to make sure the set credentials from json or R object features
 # of doAzureParallel are still working
 context("set credentials from R object scenario test")
-test_that("set credentials/cluster config programmatically scenario test", {
+test_that("setCredentials_Sdk_Success", {
   testthat::skip("Live test")
   testthat::skip_on_travis()
 
@@ -47,7 +47,7 @@ test_that("set credentials/cluster config programmatically scenario test", {
   validation$isValidClusterConfig(clusterConfig)
 })
 
-test_that("set credentials/cluster config from Json file scenario test", {
+test_that("SetCredentials_Json_Success", {
   testthat::skip("Live test")
   testthat::skip_on_travis()
 

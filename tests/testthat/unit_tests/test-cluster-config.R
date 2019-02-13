@@ -1,6 +1,6 @@
 context("validating cluster config")
 
-test_that("validating a cluster config file with null pool property", {
+test_that("generateClusterConfig_NullPoolValue_Success", {
   clusterConfig <- "badcluster.json"
 
   generateClusterConfig(clusterConfig)
@@ -11,7 +11,7 @@ test_that("validating a cluster config file with null pool property", {
   on.exit(file.remove(clusterConfig))
 })
 
-test_that("validating a cluster config file with bad autoscale formula property", {
+test_that("generateClusterConfig_BadAutoscaleFormula_Failed", {
   clusterConfig <- "badcluster.json"
 
   generateClusterConfig(clusterConfig)
@@ -27,7 +27,7 @@ test_that("validating a cluster config file with bad autoscale formula property"
 })
 
 
-test_that("validating a cluster config file with incorrect data types", {
+test_that("generateClusterConfig_InvalidDataTypes_Failed", {
   clusterConfig <- "badcluster.json"
 
   generateClusterConfig(clusterConfig)
@@ -43,7 +43,7 @@ test_that("validating a cluster config file with incorrect data types", {
   on.exit(file.remove(clusterConfig))
 })
 
-test_that("validating a cluster config file with null values", {
+test_that("generateClusterConfig_NullValues_Failed", {
   clusterConfig <- "nullcluster.json"
 
   generateClusterConfig(clusterConfig)
