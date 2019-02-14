@@ -31,11 +31,11 @@ jobs:
         -e "getwd()" \
         -e "devtools::install()" \
         -e "devtools::build()" \
-        -e "doAzureParallel::generateCredentialsConfig('test_credentials.json', batchAccountName = Sys.getenv('BATCH_ACCOUNT_NAME'), batchAccountKey = Sys.getenv('BATCH_ACCOUNT_KEY'), batchAccountUrl = Sys.getenv('BATCH_ACCOUNT_URL'), storageAccountName = Sys.getenv('STORAGE_ACCOUNT_NAME'),  storageAccountKey = Sys.getenv('STORAGE_ACCOUNT_KEY'))" 
+        -e "doAzureParallel::generateCredentialsConfig('test_credentials.json', batchAccountName = Sys.getenv('BATCH_ACCOUNT_NAME'), batchAccountKey = Sys.getenv('BATCH_ACCOUNT_KEY'), batchAccountUrl = Sys.getenv('BATCH_ACCOUNT_URL'), storageAccountName = Sys.getenv('STORAGE_ACCOUNT_NAME'),  storageAccountKey = Sys.getenv('STORAGE_ACCOUNT_KEY'))"
     condition: succeeded()
     displayName: Create R Profile Environment Setting
 
   - task: ShellScript@2
     displayName: Run Unit Tests
     inputs:
-      scriptPath: 'tests/test_scripts/unit_tests.sh'
+      scriptPath: 'tests/testthat/unit_tests/unit_tests.sh'
