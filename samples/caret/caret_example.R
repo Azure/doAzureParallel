@@ -33,7 +33,7 @@ registerDoAzureParallel(cluster)
 # https://topepo.github.io/caret/index.html
 library(caret)
 
-# Set your chunk size of your tasks to 8
+# Set the chunk size of your tasks to 8
 # So that caret knows in group tasks into larger chunks
 setChunkSize(8)
 
