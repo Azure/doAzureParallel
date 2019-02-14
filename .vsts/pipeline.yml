@@ -1,0 +1,41 @@
+name: $(Build.SourceBranch)$(Rev:.r)
+
+trigger:
+  - master
+
+resources:
+  containers:
+  - container: linux
+    image: ubuntu:16.04
+
+jobs:
+- job: Build
+  displayName: Build Job
+  condition: succeeded()
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - task: ShellScript@2
+    displayName: Build
+    inputs:
+      scriptPath: 'tests/test_scripts/build.sh'
+
+  - script: |
+      touch ~/.Rprofile
+      echo "Sys.setenv(BATCH_ACCOUNT_NAME ='"$(BATCH_ACCOUNT_NAME)"');" >> ~/.Rprofile
+      echo "Sys.setenv(BATCH_ACCOUNT_KEY ='"$(BATCH_ACCOUNT_KEY)"');" >> ~/.Rprofile
+      echo "Sys.setenv(BATCH_ACCOUNT_URL ='"$(BATCH_ACCOUNT_URL)"');" >> ~/.Rprofile
+      echo "Sys.setenv(STORAGE_ACCOUNT_NAME ='"$(STORAGE_ACCOUNT_NAME)"');" >> ~/.Rprofile
+      echo "Sys.setenv(STORAGE_ACCOUNT_KEY ='"$(STORAGE_ACCOUNT_KEY)"');" >> ~/.Rprofile
+      sudo R \
+        -e "getwd()" \
+        -e "devtools::install()" \
+        -e "devtools::build()" \
+        -e "doAzureParallel::generateCredentialsConfig('test_credentials.json', batchAccountName = Sys.getenv('BATCH_ACCOUNT_NAME'), batchAccountKey = Sys.getenv('BATCH_ACCOUNT_KEY'), batchAccountUrl = Sys.getenv('BATCH_ACCOUNT_URL'), storageAccountName = Sys.getenv('STORAGE_ACCOUNT_NAME'),  storageAccountKey = Sys.getenv('STORAGE_ACCOUNT_KEY'))"
+    condition: succeeded()
+    displayName: Create R Profile Environment Setting
+
+  - task: ShellScript@2
+    displayName: Run Unit Tests
+    inputs:
+      scriptPath: 'tests/testthat/unit_tests/unit_tests.sh'

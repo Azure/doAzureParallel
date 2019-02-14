@@ -1,12 +1,12 @@
 context("linux wrap commands")
 
-test_that("single command on command line", {
+test_that("linuxWrapCommands_SingleCommand_Success", {
   commandLine <- linuxWrapCommands("ls")
 
   expect_equal(commandLine, "/bin/bash -c \"set -e; set -o pipefail; ls; wait\"")
 })
 
-test_that("multiple commands on command line", {
+test_that("linuxWrapCommands_MultipleCommand_Success", {
   commands <- c("ls", "echo \"hello\"", "cp origfile newfile")
   commandLine <- linuxWrapCommands(commands)
 

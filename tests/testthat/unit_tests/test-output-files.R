@@ -1,6 +1,6 @@
 context("creating output files")
 
-test_that("verify output file properties", {
+test_that("createOutputFile_FileProperties_Success", {
   fakeUrl <-
     "https://accountname.blob.core.windows.net/outputs?se=2017-07-31&sr=c&st=2017-07-12"
 
@@ -12,7 +12,7 @@ test_that("verify output file properties", {
 })
 
 
-test_that("create output file with null path", {
+test_that("createOutputFile_NullValue_Success", {
   fakeUrl <-
     "https://accountname.blob.core.windows.net/outputs?se=2017-07-31&sr=c&st=2017-07-12"
 
@@ -25,7 +25,7 @@ test_that("create output file with null path", {
   )
 })
 
-test_that("create output file with multiple virtual directories", {
+test_that("createOutputFile_MultipleVirtualDirectories_Success", {
   fakeUrl <-
     "https://accountname.blob.core.windows.net/outputs/foo/baz/bar?se=2017-07-31&sr=c&st=2017-07-12"
 

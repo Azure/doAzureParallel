@@ -4,9 +4,6 @@ test_that("Remove error handling with combine test", {
   source("utility.R")
   settings <- getSettings()
 
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
-
   cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
 
@@ -30,9 +27,6 @@ test_that("Remove error handling test", {
   testthat::skip_on_travis()
   source("utility.R")
   settings <- getSettings()
-
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
 
   settings$clusterConfig$poolId <- "error-handling-test"
   cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
@@ -58,9 +52,6 @@ test_that("Pass error handling test", {
   source("utility.R")
   settings <- getSettings()
 
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
-
   settings$clusterConfig$poolId <- "error-handling-test"
   cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
   doAzureParallel::registerDoAzureParallel(cluster)
@@ -82,13 +73,9 @@ test_that("Pass error handling test", {
 })
 
 test_that("Stop error handling test", {
-  testthat::skip("Manual Test")
   testthat::skip_on_travis()
   source("utility.R")
   settings <- getSettings()
-
-  # set your credentials
-  doAzureParallel::setCredentials(settings$credentials)
 
   settings$clusterConfig$poolId <- "error-handling-test"
   cluster <- doAzureParallel::makeCluster(settings$clusterConfig)
@@ -99,11 +86,7 @@ test_that("Stop error handling test", {
   testthat::expect_error(
     res <-
       foreach::foreach(i = 1:4, .errorhandling = "stop") %dopar% {
-        if (i == 2) {
-          randomObject
-        }
-
-        i
+        randomObject
       }
   )
 })

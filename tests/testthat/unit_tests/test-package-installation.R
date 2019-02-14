@@ -1,5 +1,5 @@
 context("Package Command Line Tests")
-test_that("successfully create cran job package command line", {
+test_that("getJobPackageInstallationCommand_Cran_Success", {
   jobInstallation <-
     getJobPackageInstallationCommand("cran", c("hts", "lubridate", "tidyr", "dplyr"))
   expect_equal(
@@ -8,7 +8,7 @@ test_that("successfully create cran job package command line", {
   )
 })
 
-test_that("successfully create github job package command line", {
+test_that("getJobPackageInstallationCommand_Github_Success", {
   jobInstallation <-
     getJobPackageInstallationCommand("github", c("Azure/doAzureParallel", "Azure/rAzureBatch"))
   expect_equal(
@@ -17,7 +17,7 @@ test_that("successfully create github job package command line", {
   )
 })
 
-test_that("successfully create cran pool package command line", {
+test_that("getPoolPackageInstallationCommand_Cran_Success", {
   poolInstallation <-
     getPoolPackageInstallationCommand("cran", c("hts", "lubridate", "tidyr"))
   expect_equal(length(poolInstallation), 1)
@@ -36,7 +36,7 @@ test_that("successfully create cran pool package command line", {
   expect_equal(poolInstallation, expected)
 })
 
-test_that("successfully create github pool package command line", {
+test_that("getPoolPackageInstallationCommand_Github_Success", {
   poolInstallation <-
     getPoolPackageInstallationCommand("github", c("Azure/doAzureParallel", "Azure/rAzureBatch"))
   expect_equal(length(poolInstallation), 1)
@@ -55,7 +55,7 @@ test_that("successfully create github pool package command line", {
   expect_equal(poolInstallation, expected)
 })
 
-test_that("successfully create bioconductor pool package command line", {
+test_that("getPoolPackageInstallationCommand_Bioconductor_Success", {
   poolInstallation <-
     getPoolPackageInstallationCommand("bioconductor", c("IRanges", "a4"))
 
