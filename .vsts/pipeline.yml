@@ -39,3 +39,6 @@ jobs:
     displayName: Run Unit Tests
     inputs:
       scriptPath: 'tests/testthat/unit_tests/unit_tests.sh'
+
+  - task: ComponentGovernanceComponentDetection@0
+    displayName: 'Component Detection'
