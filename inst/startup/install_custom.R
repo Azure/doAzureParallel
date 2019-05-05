@@ -18,6 +18,13 @@ if (length(args) > 1) {
   }
 }
 
+if (length(args) < 1) {
+  stop("Given arguments were not passed,",
+       "install_custom.R file_share_directory pattern")
+}
+
+directory <- args[1]
+
 devtoolsPackage <- "devtools"
 if (!require(devtoolsPackage, character.only = TRUE)) {
   install.packages(devtoolsPackage)
@@ -25,7 +32,8 @@ if (!require(devtoolsPackage, character.only = TRUE)) {
 }
 
 packageDirs <- list.files(
-  path = tempDir,
+  path = directory,
+  pattern = pattern,
   full.names = TRUE,
   recursive = FALSE)
 

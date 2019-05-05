@@ -331,7 +331,12 @@ setHttpTraffic <- function(value = FALSE) {
   if (!is.null(obj$options$azure$chunksize)) {
     chunkSize <- obj$options$azure$chunksize
   }
-
+  
+  threads <- 1
+  if (!is.null(obj$options$azure$threads)) {
+    threads <- obj$options$azure$threads
+  }
+  
   chunkSizeKeyValuePair <-
     list(name = "chunkSize", value = as.character(chunkSize))
 
@@ -626,7 +631,7 @@ setHttpTraffic <- function(value = FALSE) {
     )
     mergeOutput <- append(obj$options$azure$outputFiles, mergeOutput)
 
-    BatchUtilitiesOperations$addTask(
+    task <- TaskWorkflowManager$createTask(
       jobId = id,
       taskId = taskId,
       rCommand =  sprintf(
@@ -644,12 +649,15 @@ setHttpTraffic <- function(value = FALSE) {
       maxRetryCount = maxTaskRetryCount
     )
 
-    cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")
+    cat("\r", sprintf("Creating tasks (%s/%s)", i, length(endIndices)), sep = "")
     flush.console()
 
-    return(taskId)
+    return(task)
   })
 
+  # Submit collection of tasks
+  TaskWorkflowManager$handleTaskCollection(id, tasks, threads)
+  
   if (enableCloudCombine) {
     cat("\nSubmitting merge task")
     taskDependencies <- list(taskIdRanges = list(list(
@@ -722,7 +730,7 @@ setHttpTraffic <- function(value = FALSE) {
           numberOfFailedTasks <- sum(unlist(failTasks))
 
           if (numberOfFailedTasks > 0 && autoDeleteJob == FALSE) {
-            .createErrorViewerPane(id, failTasks)
+            viewErrors(id, failTasks)
           }
 
           if (!identical(function(a, ...) c(a, list(...)),
@@ -783,96 +791,5 @@ setHttpTraffic <- function(value = FALSE) {
       )
     )
     return(id)
-  }
-}
-
-.createErrorViewerPane <- function(id, failTasks) {
-  config <- getConfiguration()
-  storageClient <- config$storageClient
-
-  sasToken <- storageClient$generateSasToken("r", "c", id)
-  queryParameterUrl <- "?"
-
-  for (query in names(sasToken)) {
-    queryParameterUrl <-
-      paste0(queryParameterUrl,
-             query,
-             "=",
-             RCurl::curlEscape(sasToken[[query]]),
-             "&")
-  }
-
-  queryParameterUrl <-
-    substr(queryParameterUrl, 1, nchar(queryParameterUrl) - 1)
-
-  tempDir <- tempfile()
-  dir.create(tempDir)
-  htmlFile <- file.path(tempDir, paste0(id, ".html"))
-  azureStorageUrl <-
-    paste0("http://",
-           storageCredentials$name,
-           sprintf(".blob.%s/", storageCredentials$endpointSuffix),
-           id)
-
-  staticHtml <- "<h1>Errors:</h1>"
-  for (i in 1:length(failTasks)) {
-    if (failTasks[i] == 1) {
-      stdoutFile <- paste0(azureStorageUrl, "/", "stdout")
-      stderrFile <- paste0(azureStorageUrl, "/", "stderr")
-      rlogFile <- paste0(azureStorageUrl, "/", "logs")
-
-      stdoutFile <-
-        paste0(stdoutFile,
-               "/",
-               id,
-               "-task",
-               i,
-               "-stdout.txt",
-               queryParameterUrl)
-      stderrFile <-
-        paste0(stderrFile,
-               "/",
-               id,
-               "-task",
-               i,
-               "-stderr.txt",
-               queryParameterUrl)
-      rlogFile <-
-        paste0(rlogFile,
-               "/",
-               id,
-               "-task",
-               i,
-               ".txt",
-               queryParameterUrl)
-
-      staticHtml <-
-        paste0(
-          staticHtml,
-          "Task ",
-          i,
-          " | <a href='",
-          stdoutFile,
-          "'>",
-          "stdout.txt",
-          "</a> |",
-          " <a href='",
-          stderrFile,
-          "'>",
-          "stderr.txt",
-          "</a> | <a href='",
-          rlogFile,
-          "'>",
-          "R output",
-          "</a> <br/>"
-        )
-    }
-  }
-
-  write(staticHtml, htmlFile)
-
-  viewer <- getOption("viewer")
-  if (!is.null(viewer)) {
-    viewer(htmlFile)
   }
 }
