@@ -474,12 +474,12 @@ setHttpTraffic <- function(value = FALSE) {
                                  storageEndpointSuffix = config$endpointSuffix)
 
     requiredJobResourceFiles <- list(
-      rAzureBatch::createResourceFile(url = workerScriptUrl, fileName = "worker.R"),
-      rAzureBatch::createResourceFile(url = mergerScriptUrl, fileName = "merger.R"),
-      rAzureBatch::createResourceFile(url = installGithubScriptUrl, fileName = "install_github.R"),
-      rAzureBatch::createResourceFile(url = installCranScriptUrl, fileName = "install_cran.R"),
-      rAzureBatch::createResourceFile(url = installBioConductorScriptUrl, fileName = "install_bioconductor.R"),
-      rAzureBatch::createResourceFile(url = jobCommonFileUrl, fileName = jobFileName)
+      rAzureBatch::createResourceFile(filePath = "worker.R", httpUrl = workerScriptUrl),
+      rAzureBatch::createResourceFile(filePath = "merger.R", httpUrl = mergerScriptUrl),
+      rAzureBatch::createResourceFile(filePath = "install_github.R", httpUrl = installGithubScriptUrl),
+      rAzureBatch::createResourceFile(filePath = "install_cran.R", httpUrl = installCranScriptUrl),
+      rAzureBatch::createResourceFile(filePath = "install_bioconductor.R", httpUrl = installBioConductorScriptUrl),
+      rAzureBatch::createResourceFile(filePath = jobFileName, httpUrl = jobCommonFileUrl)
     )
 
     resourceFiles <-
@@ -669,6 +669,22 @@ setHttpTraffic <- function(value = FALSE) {
       )
     )
 
+    mergeReadSasToken <- storageClient$generateSasToken("rl", "c", id)
+    mergeResourceFileUrl <-
+      rAzureBatch::createBlobUrl(
+        storageAccount = storageClient$authentication$name,
+        containerName = id,
+        sasToken = mergeReadSasToken,
+        storageEndpointSuffix = config$endpointSuffix
+      )
+
+    #mergeResourceFileUrl <- paste0(mergeResourceFileUrl, "&restype=container")
+    mergeResources <-
+      list(
+        rAzureBatch::createResourceFile(
+          storageContainerUrl = mergeResourceFileUrl,
+          blobPrefix = "results"))
+
     BatchUtilitiesOperations$addTask(
       jobId = id,
       taskId = "merge",
@@ -684,7 +700,8 @@ setHttpTraffic <- function(value = FALSE) {
       dependsOn = taskDependencies,
       cloudCombine = cloudCombine,
       outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
-      containerImage = data$containerImage
+      containerImage = data$containerImage,
+      resourceFiles = mergeResources
     )
 
     cat(". . .")
@@ -726,7 +743,7 @@ setHttpTraffic <- function(value = FALSE) {
           }
 
           if (!identical(function(a, ...) c(a, list(...)),
-                        obj$combineInfo$fun, ignore.environment = TRUE)){
+                        obj$combineInfo$fun, ignore.environment = TRUE)) {
             tryCatch({
               accumulator <- foreach::makeAccum(it)
               accumulator(results, as.numeric(names(results)))
