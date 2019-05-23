@@ -678,7 +678,6 @@ setHttpTraffic <- function(value = FALSE) {
         storageEndpointSuffix = config$endpointSuffix
       )
 
-    #mergeResourceFileUrl <- paste0(mergeResourceFileUrl, "&restype=container")
     mergeResources <-
       list(
         rAzureBatch::createResourceFile(
