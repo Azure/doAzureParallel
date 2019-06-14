@@ -43,11 +43,11 @@ BatchUtilities <- R6::R6Class(
 
         if (is.null(resourceFiles))
         {
-          resourceFiles <- append(resourceFiles, environmentResourceFile)
-        }
-        else {
           resourceFiles <-
             list(environmentResourceFile)
+        }
+        else {
+          resourceFiles <- append(resourceFiles, environmentResourceFile)
         }
       }
 

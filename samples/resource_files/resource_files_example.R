@@ -34,12 +34,12 @@ doAzureParallel::setCredentials("credentials.json")
 # Using the NYC taxi datasets, http://www.nyc.gov/html/tlc/html/about/trip_record_data.shtml
 azureStorageUrl <- "http://playdatastore.blob.core.windows.net/nyc-taxi-dataset"
 resource_files <- list(
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-1.csv"), fileName = "yellow_tripdata_2016-1.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-2.csv"), fileName = "yellow_tripdata_2016-2.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-3.csv"), fileName = "yellow_tripdata_2016-3.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-4.csv"), fileName = "yellow_tripdata_2016-4.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-5.csv"), fileName = "yellow_tripdata_2016-5.csv"),
-  rAzureBatch::createResourceFile(url = paste0(azureStorageUrl, "/yellow_tripdata_2016-6.csv"), fileName = "yellow_tripdata_2016-6.csv")
+  rAzureBatch::createResourceFile(httpUrl = paste0(azureStorageUrl, "/yellow_tripdata_2016-1.csv"), filePath = "yellow_tripdata_2016-1.csv"),
+  rAzureBatch::createResourceFile(httpUrl = paste0(azureStorageUrl, "/yellow_tripdata_2016-2.csv"), filePath = "yellow_tripdata_2016-2.csv"),
+  rAzureBatch::createResourceFile(httpUrl = paste0(azureStorageUrl, "/yellow_tripdata_2016-3.csv"), filePath = "yellow_tripdata_2016-3.csv"),
+  rAzureBatch::createResourceFile(httpUrl = paste0(azureStorageUrl, "/yellow_tripdata_2016-4.csv"), filePath = "yellow_tripdata_2016-4.csv"),
+  rAzureBatch::createResourceFile(httpUrl = paste0(azureStorageUrl, "/yellow_tripdata_2016-5.csv"), filePath = "yellow_tripdata_2016-5.csv"),
+  rAzureBatch::createResourceFile(httpUrl = paste0(azureStorageUrl, "/yellow_tripdata_2016-6.csv"), filePath = "yellow_tripdata_2016-6.csv")
 )
 
 # add the parameter 'resourceFiles' to download files to nodes

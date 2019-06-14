@@ -56,8 +56,8 @@ csvFileUrl2 <- rAzureBatch::createBlobUrl(storageAccount = storageAccountName,
 # Create a list of files to download to the cluster using read-only permissions
 # Place the files in a directory called 'data'
 resource_files = list(
-  rAzureBatch::createResourceFile(url = csvFileUrl1, fileName = "data/1989.csv"),
-  rAzureBatch::createResourceFile(url = csvFileUrl2, fileName = "data/1990.csv")
+  rAzureBatch::createResourceFile(httpUrl = csvFileUrl1, filePath = "data/1989.csv"),
+  rAzureBatch::createResourceFile(httpUrl = csvFileUrl2, filePath = "data/1990.csv")
 )
 
 # Create the cluster

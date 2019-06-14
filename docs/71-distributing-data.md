@@ -39,12 +39,12 @@ Here's an example that uses data stored in a public location on Azure Blob Stora
 # define where to download data from
 resource_files = list(
     rAzureBatch::createResourceFile(
-        url = "https://<accountname>.blob.core.windows.net/<container>/2010.csv",
-        fileName = "2010.csv"
+        httpUrl = "https://<accountname>.blob.core.windows.net/<container>/2010.csv",
+        filePath = "2010.csv"
     ),
     rAzureBatch::createResourceFile(
-        url = "https://<accountname>.blob.core.windows.net/<container>/2011.csv",
-        fileName = "2011.csv"
+        httpUrl = "https://<accountname>.blob.core.windows.net/<container>/2011.csv",
+        filePath = "2011.csv"
     )
 )
 
