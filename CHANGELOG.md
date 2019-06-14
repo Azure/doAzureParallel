@@ -1,5 +1,26 @@
+##  (2019-06-14)
+
+
+
+
+## <small>0.7.3 (2019-04-16)</small>
+
+* Added documentation for containerImage (#339) ([82c149a](https://github.com/Azure/doAzureParallel/commit/82c149a)), closes [#339](https://github.com/Azure/doAzureParallel/issues/339)
+* Added fix for cluster of autoscale node 0 (#337) ([40b74da](https://github.com/Azure/doAzureParallel/commit/40b74da)), closes [#337](https://github.com/Azure/doAzureParallel/issues/337)
+* Minor documentation  fixes (#331) ([6d14d45](https://github.com/Azure/doAzureParallel/commit/6d14d45)), closes [#331](https://github.com/Azure/doAzureParallel/issues/331)
+* Update pipeline.yml for Azure Pipelines ([a2154d2](https://github.com/Azure/doAzureParallel/commit/a2154d2))
+* Fix: Remove unnecessary apt packages installation on job preparation task (#321) ([975d68e](https://github.com/Azure/doAzureParallel/commit/975d68e)), closes [#321](https://github.com/Azure/doAzureParallel/issues/321)
+* Fix: Revert Cluster Setup File (#342) ([372e382](https://github.com/Azure/doAzureParallel/commit/372e382)), closes [#342](https://github.com/Azure/doAzureParallel/issues/342)
+* Fix: Test Coverage on  Azure Pipeline CI (#348) ([9758580](https://github.com/Azure/doAzureParallel/commit/9758580)), closes [#348](https://github.com/Azure/doAzureParallel/issues/348)
+* Bugfix: Don't break when fetching batch-insights (#340) ([ec1a4df](https://github.com/Azure/doAzureParallel/commit/ec1a4df)), closes [#340](https://github.com/Azure/doAzureParallel/issues/340)
+* Feature: Added Queue/Running Autoscale Formula (#316) ([7192e08](https://github.com/Azure/doAzureParallel/commit/7192e08)), closes [#316](https://github.com/Azure/doAzureParallel/issues/316)
+* Feature: Batch Insights support (#336) ([31eec56](https://github.com/Azure/doAzureParallel/commit/31eec56)), closes [#336](https://github.com/Azure/doAzureParallel/issues/336)
+
+
+
 ## <small>0.7.2 (2018-10-08)</small>
 
+* Release: v0.7.2 (#317) ([844ebde](https://github.com/Azure/doAzureParallel/commit/844ebde)), closes [#317](https://github.com/Azure/doAzureParallel/issues/317)
 * Fix: Documentation typos and fixes (#307) ([1d26dd8](https://github.com/Azure/doAzureParallel/commit/1d26dd8)), closes [#307](https://github.com/Azure/doAzureParallel/issues/307)
 * Fix: File share sample (#312) ([96081cc](https://github.com/Azure/doAzureParallel/commit/96081cc)), closes [#312](https://github.com/Azure/doAzureParallel/issues/312)
 * Added 0.7.1 changelog version (#286) ([ad7acf1](https://github.com/Azure/doAzureParallel/commit/ad7acf1)), closes [#286](https://github.com/Azure/doAzureParallel/issues/286)
