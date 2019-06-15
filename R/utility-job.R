@@ -525,8 +525,8 @@ waitForTasksToComplete <-
 
       jobInfo <- getJob(jobId, verbose = FALSE)
       if (taskCounts$completed >= totalTasks ||
-          jobInfo$state == "completed" ||
-          jobInfo$state == "terminating") {
+          jobInfo$jobState == "completed" ||
+          jobInfo$jobState == "terminating") {
         cat("\n")
         break
       }
