@@ -1,6 +1,7 @@
-##  (2019-06-14)
+## 0.8.0 (2019-06-19)
 
-
+* Feature: Upgrading to R Batch SDK to 2018-12-01.8.0 (#354) ([96bfc22](https://github.com/Azure/doAzureParallel/commit/96bfc22)), closes [#354](https://github.com/Azure/doAzureParallel/issues/354)
+* Fix: Remove 'List Task Counts' api dependency for job progress (#354) ([96bfc22](https://github.com/Azure/doAzureParallel/commit/96bfc22)), closes [#354](https://github.com/Azure/doAzureParallel/issues/354)
 
 
 ## <small>0.7.3 (2019-04-16)</small>
