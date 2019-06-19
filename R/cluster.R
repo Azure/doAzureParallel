@@ -123,7 +123,7 @@ makeCluster <-
 
     # install docker
     containerConfiguration <- list(
-      type = "docker"
+      type = "dockerCompatible"
     )
 
     dockerImage <- "rocker/tidyverse:latest"

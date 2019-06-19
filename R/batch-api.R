@@ -19,7 +19,7 @@ BatchUtilities <- R6::R6Class(
 
       accountName <- storageClient$authentication$name
 
-      resourceFiles <- NULL
+      resourceFiles <- args$resourceFiles
       if (!is.null(argsList)) {
         envFile <- paste0(taskId, ".rds")
         saveRDS(argsList, file = envFile)
@@ -37,8 +37,18 @@ BatchUtilities <- R6::R6Class(
             envFile,
             readToken,
             config$endpointSuffix)
-        resourceFiles <-
-          list(rAzureBatch::createResourceFile(url = envFileUrl, fileName = envFile))
+
+        environmentResourceFile <-
+          rAzureBatch::createResourceFile(filePath = envFile, httpUrl = envFileUrl)
+
+        if (is.null(resourceFiles))
+        {
+          resourceFiles <-
+            list(environmentResourceFile)
+        }
+        else {
+          resourceFiles <- append(resourceFiles, environmentResourceFile)
+        }
       }
 
       # Only use the download command if cloudCombine is enabled
@@ -52,17 +62,6 @@ BatchUtilities <- R6::R6Class(
 
       if (!is.null(cloudCombine)) {
         assign("cloudCombine", cloudCombine, .doAzureBatchGlobals)
-        containerSettings$imageName <- "brianlovedocker/doazureparallel-merge-dockerfile:0.12.1"
-
-        copyCommand <- sprintf(
-          "%s %s %s --download --saskey $BLOBXFER_SASKEY --remoteresource . --include results/*.rds --endpoint %s",
-          accountName,
-          jobId,
-          "$AZ_BATCH_TASK_WORKING_DIR",
-          config$endpointSuffix
-        )
-
-        commands <- c(paste("blobxfer", copyCommand))
       }
 
       exitConditions <- NULL

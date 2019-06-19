@@ -472,19 +472,14 @@ waitForTasksToComplete <-
 
       flush.console()
 
-      validationFlag <-
-        (taskCounts$validationStatus == "Validated" &&
-           totalTasks <= 200000) ||
-        totalTasks > 200000
-
       if (taskCounts$failed > 0 &&
-          errorHandling == "stop" &&
-          validationFlag) {
+          errorHandling == "stop") {
         cat("\n")
 
         select <- "id, executionInfo"
+        filter <- "executionInfo/result	eq 'failure'"
         failedTasks <-
-          batchClient$taskOperations$list(jobId, select = select)
+          batchClient$taskOperations$list(jobId, select = select, filter = filter)
 
         tasksFailureWarningLabel <-
           sprintf(
@@ -498,14 +493,9 @@ waitForTasksToComplete <-
           )
 
         for (i in 1:length(failedTasks$value)) {
-          if (!is.null(failedTasks$value[[i]]$executionInfo$result) &&
-              grepl(failedTasks$value[[i]]$executionInfo$result,
-                    "failure",
-                    ignore.case = TRUE)) {
             tasksFailureWarningLabel <-
               paste0(tasksFailureWarningLabel,
                      sprintf("%s\n", failedTasks$value[[i]]$id))
-          }
         }
 
         warning(sprintf(tasksFailureWarningLabel,
@@ -533,9 +523,10 @@ waitForTasksToComplete <-
         jobId)
       }
 
-      if (taskCounts$completed >= totalTasks &&
-          (taskCounts$validationStatus == "Validated" ||
-           totalTasks >= 200000)) {
+      jobInfo <- getJob(jobId, verbose = FALSE)
+      if (taskCounts$completed >= totalTasks ||
+          jobInfo$jobState == "completed" ||
+          jobInfo$jobState == "terminating") {
         cat("\n")
         break
       }
