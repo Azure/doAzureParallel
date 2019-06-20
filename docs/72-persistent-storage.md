@@ -40,8 +40,8 @@ doAzureParallel::setCredentials("credentials.json")
 config <- rjson::fromJSON(file = paste0("credentials.json"))
 
 storageCredentials <- rAzureBatch::SharedKeyCredentials$new(
-  name = config$sharedKey$storageAccount$name,
-  key = config$sharedKey$storageAccount$key
+  name = config$storageAccount$name,
+  key = config$storageAccount$key
 )
 
 storageAccountName <- storageCredentials$name
@@ -56,12 +56,11 @@ storageClient <- rAzureBatch::StorageServiceClient$new(
 )
 
 # Pushing output files
-storageAccount <- "storageAccountName"
 outputFolder <- "outputs"
 
 storageClient$containerOperations$createContainer(outputFolder)
 writeToken <- storageClient$generateSasToken("w", "c", outputFolder)
-containerUrl <- rAzureBatch::createBlobUrl(storageAccount = storageAccount,
+containerUrl <- rAzureBatch::createBlobUrl(storageAccount = storageAccountName,
                                            containerName = outputFolder,
                                            sasToken = writeToken)
 
