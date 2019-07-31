@@ -104,8 +104,17 @@ makeCluster <-
     if (!is.null(poolConfig$rPackages) &&
         !is.null(poolConfig$rPackages$github) &&
         length(poolConfig$rPackages$github) > 0) {
-      installGithubCommand <-
-        getPoolPackageInstallationCommand("github", poolConfig$rPackages$github)
+
+      if (!is.null(config$githubAuthenticationToken) &&
+          config$githubAuthenticationToken != "") {
+        installGithubCommand <-
+          getPoolPackageInstallationCommand("github", poolConfig$rPackages$github, config$githubAuthenticationToken)
+      }
+      else {
+        installGithubCommand <-
+          getPoolPackageInstallationCommand("github", poolConfig$rPackages$github)
+      }
+
       packages <- c(packages, installGithubCommand)
     }
 
