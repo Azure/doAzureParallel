@@ -16,6 +16,7 @@ BatchUtilities <- R6::R6Class(
       cloudCombine <- args$cloudCombine
       userOutputFiles <- args$outputFiles
       containerImage <- args$containerImage
+      maxDate <- args$maxDate
 
       accountName <- storageClient$authentication$name
 
@@ -76,7 +77,7 @@ BatchUtilities <- R6::R6Class(
         rAzureBatch::createBlobUrl(
           storageAccount = storageClient$authentication$name,
           containerName = jobId,
-          sasToken = storageClient$generateSasToken("w", "c", jobId),
+          sasToken = storageClient$generateSasToken("w", "c", jobId, end = maxDate),
           storageEndpointSuffix = config$endpointSuffix
         )
 
@@ -109,13 +110,14 @@ BatchUtilities <- R6::R6Class(
 
       outputFiles <- append(outputFiles, userOutputFiles)
 
+
       commands <-
         c(commands,
           rCommand)
 
       commands <- linuxWrapCommands(commands)
 
-      sasToken <- storageClient$generateSasToken("rwcl", "c", jobId)
+      sasToken <- storageClient$generateSasToken("rwcl", "c", jobId, end = maxDate)
       queryParameterUrl <- "?"
 
       for (query in names(sasToken)) {

@@ -557,11 +557,17 @@ setHttpTraffic <- function(value = FALSE) {
 
   job <- batchClient$jobOperations$getJob(id)
 
+  if(!is.null(obj$options$azure$maxDate)) {
+    maxDate <- obj$options$azure$maxDate
+  } else {
+    maxDate <- Sys.time() + 60 * 60 * 24 * 2 # same as default value for rAzureBatch::StorageServiceClient$public_methods$generateSasToken
+  }
+
   outputContainerUrl <-
     rAzureBatch::createBlobUrl(
       storageAccount = storageClient$authentication$name,
       containerName = id,
-      sasToken = storageClient$generateSasToken("w", "c", id),
+      sasToken = storageClient$generateSasToken("w", "c", id, end = maxDate),
       storageEndpointSuffix = config$endpointSuffix
     )
 
@@ -641,7 +647,8 @@ setHttpTraffic <- function(value = FALSE) {
       outputFiles = mergeOutput,
       containerImage = data$containerImage,
       args = args,
-      maxRetryCount = maxTaskRetryCount
+      maxRetryCount = maxTaskRetryCount,
+      maxDate = maxDate
     )
 
     cat("\r", sprintf("Submitting tasks (%s/%s)", i, length(endIndices)), sep = "")
@@ -700,7 +707,8 @@ setHttpTraffic <- function(value = FALSE) {
       cloudCombine = cloudCombine,
       outputFiles = append(obj$options$azure$outputFiles, mergeOutput),
       containerImage = data$containerImage,
-      resourceFiles = mergeResources
+      resourceFiles = mergeResources,
+      maxDate = maxDate
     )
 
     cat(". . .")
