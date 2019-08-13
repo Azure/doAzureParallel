@@ -20,7 +20,7 @@ getJobPackageInstallationCommand <- function(type, packages) {
   }
 }
 
-getPoolPackageInstallationCommand <- function(type, packages) {
+getPoolPackageInstallationCommand <- function(type, packages, githubAuthenticationToken = "") {
   sharedPackagesDirectory <- "/mnt/batch/tasks/shared/R/packages"
 
   libPathsCommand <- paste0('\'.libPaths( c( \\\"',
@@ -41,6 +41,13 @@ getPoolPackageInstallationCommand <- function(type, packages) {
             )
   }
   else if (type == "github") {
+    if (githubAuthenticationToken != "") {
+      installCommand <-
+        paste(installCommand,
+              sprintf("-e \'githubAuthToken <- \\\"%s\\\"\'", githubAuthenticationToken),
+              "-e \'Sys.setenv(GITHUB_PAT = githubAuthToken)\'")
+    }
+
     poolInstallationCommand <-
       paste(
         installCommand,
@@ -130,6 +137,16 @@ dockerRunCommand <-
           "-e AZ_BATCH_JOB_PREP_WORKING_DIR=$AZ_BATCH_JOB_PREP_WORKING_DIR",
           "-e BLOBXFER_SASKEY=$BLOBXFER_SASKEY"
         )
+
+      config <- getConfiguration()
+      if (!is.null(config$githubAuthenticationToken)
+          && config$githubAuthenticationToken != "") {
+        dockerOptions <-
+          paste(
+            dockerOptions,
+            "-e GITHUB_PAT=$GITHUB_PAT"
+          )
+      }
     }
 
     dockerRunCommand <-
