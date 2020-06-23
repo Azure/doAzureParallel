@@ -450,14 +450,7 @@ setHttpTraffic <- function(value = FALSE) {
                     permissions = "r",
                     services = "b",
                     resource_types = "co")
-    # sasToken <- storageClient$generateSasToken("r", "c", id)
 
-    # workerScriptUrl <-
-    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
-    #                              containerName = id,
-    #                              fileName = "worker.R",
-    #                              sasToken = sasToken,
-    #                              storageEndpointSuffix = config$endpointSuffix)
     workerScriptUrl <- sprintf(
       "https://%s.blob.%s/%s/%s?%s",
       storageClient$authentication$name,
@@ -511,39 +504,6 @@ setHttpTraffic <- function(value = FALSE) {
       jobFileName,
       sasToken
     )
-
-    # mergerScriptUrl <-
-    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
-    #                              containerName = id,
-    #                              fileName = "merger.R",
-    #                              sasToken = sasToken,
-    #                              storageEndpointSuffix = config$endpointSuffix)
-    #
-    # installGithubScriptUrl <-
-    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
-    #                              containerName = id,
-    #                              fileName = "install_github.R",
-    #                              sasToken = sasToken,
-    #                              storageEndpointSuffix = config$endpointSuffix)
-    # installCranScriptUrl <-
-    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
-    #                              containerName = id,
-    #                              fileName = "install_cran.R",
-    #                              sasToken = sasToken,
-    #                              storageEndpointSuffix = config$endpointSuffix)
-    #
-    # installBioConductorScriptUrl <-
-    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
-    #                              containerName = id,
-    #                              fileName = "install_bioconductor.R",
-    #                              sasToken = sasToken,
-    #                              storageEndpointSuffix = config$endpointSuffix)
-    # jobCommonFileUrl <-
-    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
-    #                              containerName = id,
-    #                              fileName = jobFileName,
-    #                              sasToken = sasToken,
-    #                              storageEndpointSuffix = config$endpointSuffix)
 
     requiredJobResourceFiles <- list(
       rAzureBatch::createResourceFile(filePath = "worker.R", httpUrl = workerScriptUrl),
@@ -636,13 +596,7 @@ setHttpTraffic <- function(value = FALSE) {
                 permissions = "w",
                 services = "b",
                 resource_types = "co")
-  # outputContainerUrl <-
-  #   rAzureBatch::createBlobUrl(
-  #     storageAccount = storageClient$authentication$name,
-  #     containerName = id,
-  #     sasToken = sasToken,
-  #     storageEndpointSuffix = config$endpointSuffix
-  #   )
+
   outputContainerUrl <- sprintf(
     "https://%s.blob.%s/%s?%s",
     storageClient$authentication$name,
@@ -771,14 +725,6 @@ setHttpTraffic <- function(value = FALSE) {
       id,
       mergeReadSasToken
     )
-
-    # mergeResourceFileUrl <-
-    #   rAzureBatch::createBlobUrl(
-    #     storageAccount = storageClient$authentication$name,
-    #     containerName = id,
-    #     sasToken = mergeReadSasToken,
-    #     storageEndpointSuffix = config$endpointSuffix
-    #   )
 
     mergeResources <-
       list(
