@@ -201,9 +201,11 @@ setCredentials <- function(credentials = "az_config.json",
 
   batchServiceClient <- makeBatchClient(config)
   storageServiceClient <- makeStorageClient(config)
+  storageServiceClientV2 <- makeStorageClientV2(config);
 
   config$batchClient <- batchServiceClient
   config$storageClient <- storageServiceClient
+  config$storageClientV2 <- storageServiceClientV2
 
   cat(strrep('=', options("width")), fill = TRUE)
   if (!is.null(config$sharedKey)) {
@@ -357,6 +359,67 @@ makeStorageClient <- function(config) {
     authentication = storageCredentials,
     url = baseUrl
   )
+}
+
+makeStorageClientV2 <- function(config) {
+  if (!is.null(config$sharedKey) ||
+      !is.null(config$storageAccount)) {
+    credentials <- config
+    if (!is.null(config$sharedKey)) {
+      credentials <- config$sharedKey
+    }
+
+    storageCredentials <- rAzureBatch::SharedKeyCredentials$new(
+      name = credentials$storageAccount$name,
+      key = credentials$storageAccount$key
+    )
+
+    endpointSuffix <- credentials$storageAccount$endpointSuffix
+    if (is.null(endpointSuffix)) {
+      endpointSuffix <- "core.windows.net"
+    }
+
+    baseUrl <- sprintf("https://%s.blob.%s",
+                       credentials$storageAccount$name,
+                       endpointSuffix)
+  }
+  # Set up ServicePrincipalCredentials
+  else {
+    info <-
+      getAccountInformation(config$servicePrincipal$storageAccountResourceId)
+
+    endpointSuffix <- config$servicePrincipal$storageEndpointSuffix
+    if (is.null(endpointSuffix)) {
+      endpointSuffix <- "core.windows.net"
+    }
+
+    servicePrincipal <- rAzureBatch::ServicePrincipalCredentials$new(
+      tenantId = config$servicePrincipal$tenantId,
+      clientId = config$servicePrincipal$clientId,
+      clientSecrets = config$servicePrincipal$credential,
+      resource = config$azureEnvironment$armUrl,
+      aadUrl = config$azureEnvironment$aadUrl
+    )
+
+    storageKeys <- rAzureBatch::getStorageKeys(
+      storageAccount = info$account,
+      resourceGroup =  info$resourceGroup,
+      subscriptionId = info$subscriptionId,
+      servicePrincipal = servicePrincipal,
+      verbose = TRUE
+    )
+
+    storageCredentials <- rAzureBatch::SharedKeyCredentials$new(
+      name = info$account,
+      key = storageKeys$keys[[1]]$value
+    )
+
+    baseUrl <- sprintf("https://%s.blob.%s",
+                       info$account,
+                       endpointSuffix)
+  }
+
+  AzureStor::storage_endpoint(baseUrl, credentials$storageAccount$key)
 }
 
 getConfiguration <- function(){

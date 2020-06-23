@@ -149,6 +149,7 @@ setHttpTraffic <- function(value = FALSE) {
   config <- getConfiguration()
   storageClient <- config$storageClient
   batchClient <- config$batchClient
+  blob_endp <- config$storageClientV2
 
   githubPackages <- eval(obj$args$github)
   bioconductorPackages <- eval(obj$args$bioconductor)
@@ -385,93 +386,164 @@ setHttpTraffic <- function(value = FALSE) {
       retryCounter <- retryCounter + 1
     }
 
-    containerResponse <- storageClient$containerOperations$createContainer(
-      id, content = "response"
-    )
 
-    if (containerResponse$status_code >= 400 && containerResponse$status_code <= 499) {
-      containerContent <- xml2::as_list(httr::content(containerResponse))
+    tryCatch({
+      AzureStor::create_blob_container(blob_endp, name = id)
+    }, error = function(e) {
+      print(e)
+      e
+    })
 
-      if (!is.null(obj$options$azure$job) && containerContent$Code[[1]] == "ContainerAlreadyExists") {
-        stop(paste("Error creating job: Job's storage container already exists for an unique job id.",
-                 "Either delete the storage container or change the job argument in the foreach."))
-      }
+    # if (containerResponse$status_code >= 400 && containerResponse$status_code <= 499) {
+    #   containerContent <- xml2::as_list(httr::content(containerResponse))
+    #
+    #   if (!is.null(obj$options$azure$job) && containerContent$Code[[1]] == "ContainerAlreadyExists") {
+    #     stop(paste("Error creating job: Job's storage container already exists for an unique job id.",
+    #              "Either delete the storage container or change the job argument in the foreach."))
+    #   }
+    #
+    #   Sys.sleep(retryCounter * retryCounter)
+    #
+    #   time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
+    #   id <-  sprintf("%s%s",
+    #                  "job",
+    #                  time)
+    #   next
+    # }
+    # else if (containerResponse$status_code >= 500 && containerResponse$status_code <= 599) {
+    #   containerContent <- xml2::as_list(httr::content(containerResponse))
+    #   stop(paste0("Error creating job: ", containerContent$message$value))
+    # }
 
-      Sys.sleep(retryCounter * retryCounter)
-
-      time <- format(Sys.time(), "%Y%m%d%H%M%S", tz = "GMT")
-      id <-  sprintf("%s%s",
-                     "job",
-                     time)
-      next
-    }
-    else if (containerResponse$status_code >= 500 && containerResponse$status_code <= 599) {
-      containerContent <- xml2::as_list(httr::content(containerResponse))
-      stop(paste0("Error creating job: ", containerContent$message$value))
-    }
+    jobContainer <- AzureStor::blob_container(blob_endp, id)
 
     # Uploading common job files for the worker node
-    storageClient$blobOperations$uploadBlob(id,
-                            system.file(startupFolderName, "worker.R", package = "doAzureParallel"))
-    storageClient$blobOperations$uploadBlob(id,
-                            system.file(startupFolderName, "merger.R", package = "doAzureParallel"))
-    storageClient$blobOperations$uploadBlob(id,
-                            system.file(startupFolderName, "install_github.R", package = "doAzureParallel"))
-    storageClient$blobOperations$uploadBlob(id,
-                            system.file(startupFolderName, "install_cran.R", package = "doAzureParallel"))
-    storageClient$blobOperations$uploadBlob(id,
-                            system.file(startupFolderName, "install_bioconductor.R", package = "doAzureParallel"))
+    AzureStor::upload_blob(jobContainer,
+                           src = system.file(startupFolderName, "worker.R", package = "doAzureParallel"))
+
+    AzureStor::upload_blob(jobContainer,
+                           src = system.file(startupFolderName, "merger.R", package = "doAzureParallel"))
+
+    AzureStor::upload_blob(jobContainer,
+                           src = system.file(startupFolderName, "install_github.R", package = "doAzureParallel"))
+
+    AzureStor::upload_blob(jobContainer,
+                           src = system.file(startupFolderName, "install_cran.R", package = "doAzureParallel"))
+
+    AzureStor::upload_blob(jobContainer,
+                           src = system.file(startupFolderName, "install_bioconductor.R", package = "doAzureParallel"))
+
 
     # Creating common job environment for all tasks
     jobFileName <- paste0(id, ".rds")
     saveRDS(.doAzureBatchGlobals, file = jobFileName)
-    storageClient$blobOperations$uploadBlob(
-      id,
-      paste0(getwd(), "/", jobFileName)
-    )
+
+    AzureStor::upload_blob(jobContainer, src = jobFileName, dest = jobFileName)
+
     file.remove(jobFileName)
 
     # Creating read-only SAS token blob resource file urls
-    sasToken <- storageClient$generateSasToken("r", "c", id)
-    workerScriptUrl <-
-      rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 containerName = id,
-                                 fileName = "worker.R",
-                                 sasToken = sasToken,
-                                 storageEndpointSuffix = config$endpointSuffix)
+    sasToken <- AzureStor::get_account_sas(blob_endp,
+                    start = Sys.time() - 60 * 60 * 24 * 1,
+                    expiry = Sys.time() + 60 * 60 * 24 * 2,
+                    resource = id,
+                    permissions = "r",
+                    services = "b",
+                    resource_types = "co")
+    # sasToken <- storageClient$generateSasToken("r", "c", id)
 
-    mergerScriptUrl <-
-      rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 containerName = id,
-                                 fileName = "merger.R",
-                                 sasToken = sasToken,
-                                 storageEndpointSuffix = config$endpointSuffix)
+    # workerScriptUrl <-
+    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
+    #                              containerName = id,
+    #                              fileName = "worker.R",
+    #                              sasToken = sasToken,
+    #                              storageEndpointSuffix = config$endpointSuffix)
+    workerScriptUrl <- sprintf(
+      "https://%s.blob.%s/%s/%s?%s",
+      storageClient$authentication$name,
+      config$endpointSuffix,
+      id,
+      "worker.R",
+      sasToken
+    )
 
-    installGithubScriptUrl <-
-      rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 containerName = id,
-                                 fileName = "install_github.R",
-                                 sasToken = sasToken,
-                                 storageEndpointSuffix = config$endpointSuffix)
-    installCranScriptUrl <-
-      rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 containerName = id,
-                                 fileName = "install_cran.R",
-                                 sasToken = sasToken,
-                                 storageEndpointSuffix = config$endpointSuffix)
+    mergerScriptUrl <- sprintf(
+      "https://%s.blob.%s/%s/%s?%s",
+      storageClient$authentication$name,
+      config$endpointSuffix,
+      id,
+      "merger.R",
+      sasToken
+    )
 
-    installBioConductorScriptUrl <-
-      rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 containerName = id,
-                                 fileName = "install_bioconductor.R",
-                                 sasToken = sasToken,
-                                 storageEndpointSuffix = config$endpointSuffix)
-    jobCommonFileUrl <-
-      rAzureBatch::createBlobUrl(storageClient$authentication$name,
-                                 containerName = id,
-                                 fileName = jobFileName,
-                                 sasToken = sasToken,
-                                 storageEndpointSuffix = config$endpointSuffix)
+    installGithubScriptUrl <- sprintf(
+      "https://%s.blob.%s/%s/%s?%s",
+      storageClient$authentication$name,
+      config$endpointSuffix,
+      id,
+      "install_github.R",
+      sasToken
+    )
+
+    installCranScriptUrl <- sprintf(
+      "https://%s.blob.%s/%s/%s?%s",
+      storageClient$authentication$name,
+      config$endpointSuffix,
+      id,
+      "install_cran.R",
+      sasToken
+    )
+
+    installBioConductorScriptUrl <- sprintf(
+      "https://%s.blob.%s/%s/%s?%s",
+      storageClient$authentication$name,
+      config$endpointSuffix,
+      id,
+      "install_bioconductor.R",
+      sasToken
+    )
+
+    jobCommonFileUrl <- sprintf(
+      "https://%s.blob.%s/%s/%s?%s",
+      storageClient$authentication$name,
+      config$endpointSuffix,
+      id,
+      jobFileName,
+      sasToken
+    )
+
+    # mergerScriptUrl <-
+    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
+    #                              containerName = id,
+    #                              fileName = "merger.R",
+    #                              sasToken = sasToken,
+    #                              storageEndpointSuffix = config$endpointSuffix)
+    #
+    # installGithubScriptUrl <-
+    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
+    #                              containerName = id,
+    #                              fileName = "install_github.R",
+    #                              sasToken = sasToken,
+    #                              storageEndpointSuffix = config$endpointSuffix)
+    # installCranScriptUrl <-
+    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
+    #                              containerName = id,
+    #                              fileName = "install_cran.R",
+    #                              sasToken = sasToken,
+    #                              storageEndpointSuffix = config$endpointSuffix)
+    #
+    # installBioConductorScriptUrl <-
+    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
+    #                              containerName = id,
+    #                              fileName = "install_bioconductor.R",
+    #                              sasToken = sasToken,
+    #                              storageEndpointSuffix = config$endpointSuffix)
+    # jobCommonFileUrl <-
+    #   rAzureBatch::createBlobUrl(storageClient$authentication$name,
+    #                              containerName = id,
+    #                              fileName = jobFileName,
+    #                              sasToken = sasToken,
+    #                              storageEndpointSuffix = config$endpointSuffix)
 
     requiredJobResourceFiles <- list(
       rAzureBatch::createResourceFile(filePath = "worker.R", httpUrl = workerScriptUrl),
@@ -557,13 +629,27 @@ setHttpTraffic <- function(value = FALSE) {
 
   job <- batchClient$jobOperations$getJob(id)
 
-  outputContainerUrl <-
-    rAzureBatch::createBlobUrl(
-      storageAccount = storageClient$authentication$name,
-      containerName = id,
-      sasToken = storageClient$generateSasToken("w", "c", id),
-      storageEndpointSuffix = config$endpointSuffix
-    )
+  sasToken <- AzureStor::get_account_sas(blob_endp,
+                start = Sys.time() - 60 * 60 * 24 * 1,
+                expiry = Sys.time() + 60 * 60 * 24 * 2,
+                resource = id,
+                permissions = "w",
+                services = "b",
+                resource_types = "co")
+  # outputContainerUrl <-
+  #   rAzureBatch::createBlobUrl(
+  #     storageAccount = storageClient$authentication$name,
+  #     containerName = id,
+  #     sasToken = sasToken,
+  #     storageEndpointSuffix = config$endpointSuffix
+  #   )
+  outputContainerUrl <- sprintf(
+    "https://%s.blob.%s/%s?%s",
+    storageClient$authentication$name,
+    config$endpointSuffix,
+    id,
+    sasToken
+  )
 
   printJobInformation(
     jobId = job$id,
@@ -669,14 +755,30 @@ setHttpTraffic <- function(value = FALSE) {
       )
     )
 
-    mergeReadSasToken <- storageClient$generateSasToken("rl", "c", id)
-    mergeResourceFileUrl <-
-      rAzureBatch::createBlobUrl(
-        storageAccount = storageClient$authentication$name,
-        containerName = id,
-        sasToken = mergeReadSasToken,
-        storageEndpointSuffix = config$endpointSuffix
-      )
+    #mergeReadSasToken <- storageClient$generateSasToken("rl", "c", id)
+    mergeReadSasToken <- AzureStor::get_account_sas(blob_endp,
+                start = Sys.time() - 60 * 60 * 24 * 1,
+                expiry = Sys.time() + 60 * 60 * 24 * 2,
+                resource = id,
+                permissions = "rl",
+                services = "b",
+                resource_types = "co")
+
+    mergeResourceFileUrl <- sprintf(
+      "https://%s.blob.%s/%s?%s",
+      storageClient$authentication$name,
+      config$endpointSuffix,
+      id,
+      mergeReadSasToken
+    )
+
+    # mergeResourceFileUrl <-
+    #   rAzureBatch::createBlobUrl(
+    #     storageAccount = storageClient$authentication$name,
+    #     containerName = id,
+    #     sasToken = mergeReadSasToken,
+    #     storageEndpointSuffix = config$endpointSuffix
+    #   )
 
     mergeResources <-
       list(
@@ -722,15 +824,11 @@ setHttpTraffic <- function(value = FALSE) {
         if (typeof(cloudCombine) == "list" && enableCloudCombine) {
           tempFile <- tempfile("doAzureParallel", fileext = ".rds")
 
-          response <- storageClient$blobOperations$downloadBlob(
-            id,
+          response <- AzureStor::download_blob(
+            jobContainer,
             paste0("results/", "merge-result.rds"),
-            sasToken = sasToken,
-            accountName = storageClient$authentication$name,
-            endpointSuffix = config$endpointSuffix,
-            downloadPath = tempFile,
-            overwrite = TRUE
-          )
+            tempFile,
+            overwrite = TRUE)
 
           results <- readRDS(tempFile)
           failTasks <- sapply(results, .isError)

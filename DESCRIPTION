@@ -28,5 +28,6 @@ Suggests:
     plyr,
     lintr
 Remotes:
-  Azure/rAzureBatch@v0.7.0
+  Azure/rAzureBatch@v0.7.0,
+  Azure/AzureStor
 RoxygenNote: 6.0.1
