@@ -140,5 +140,5 @@ resizeCluster <- function(cluster,
     autoscaleInterval = timeInterval
   )
 
-  print("Cluster autoscale formula ")
+  print("Cluster autoscale formula has been updated. Run 'getCluster' for updated target node count.")
 }
