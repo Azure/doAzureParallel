@@ -111,7 +111,7 @@ getAutoscaleFormula <-
 #' @examples
 #' \dontrun{
 #' resizeCluster(cluster, dedicatedMin = 2, dedicatedMax = 6,
-#'              dedicatedMin = 2, dedicatedMax = 6, algorithm = "QUEUE", timeInterval = "PT10M")
+#'              lowPriorityMin = 2, lowPriorityMax = 6, algorithm = "QUEUE", timeInterval = "PT10M")
 #' }
 #' @export
 resizeCluster <- function(cluster,
@@ -122,11 +122,13 @@ resizeCluster <- function(cluster,
                           algorithm = "QUEUE",
                           timeInterval = "PT5M") {
   config <- getOption("az_config")
+
+  # Use the Pool GET API to get the correct pool properties: MaxTaskPerNodes
   cluster <- config$batchClient$poolOperations$getPool(
     cluster$poolId)
 
   config$batchClient$poolOperations$resizePool(
-    cluster$poolId,
+    cluster$id,
     autoscaleFormula = getAutoscaleFormula(
       algorithm,
       dedicatedMin,
@@ -137,4 +139,6 @@ resizeCluster <- function(cluster,
     ),
     autoscaleInterval = timeInterval
   )
+
+  print("Cluster autoscale formula has been updated. Run 'getCluster' for updated target node count.")
 }
