@@ -1,5 +1,8 @@
 [![Build Status](https://travis-ci.org/Azure/doAzureParallel.svg?branch=master)](https://travis-ci.org/Azure/doAzureParallel)
-# doAzureParallel
+
+# This repo is no longer maintained and no new features will be added.
+
+## doAzureParallel
 
 ## Introduction
 
