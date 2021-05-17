@@ -262,10 +262,10 @@ BatchUtilities <- R6::R6Class(
           imageReference = list(
             publisher = "microsoft-azure-batch",
             offer = "ubuntu-server-container",
-            sku = "16-04-lts",
+            sku = "20-04-lts",
             version = "latest"
           ),
-          nodeAgentSKUId = "batch.node.ubuntu 16.04",
+          nodeAgentSKUId = "batch.node.ubuntu 20.04",
           containerConfiguration = args$containerConfiguration
         )
 
